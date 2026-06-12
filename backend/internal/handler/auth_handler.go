@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
@@ -73,8 +74,9 @@ type SendPhoneVerifyCodeRequest struct {
 
 // SendVerifyCodeResponse 发送验证码响应
 type SendVerifyCodeResponse struct {
-	Message   string `json:"message"`
-	Countdown int    `json:"countdown"` // 倒计时秒数
+	Message   string     `json:"message"`
+	Countdown int        `json:"countdown"`            // 倒计时秒数
+	ExpiresAt *time.Time `json:"expires_at,omitempty"` // 验证码过期时间
 }
 
 // LoginRequest represents the login request payload
@@ -225,6 +227,7 @@ func (h *AuthHandler) SendPhoneVerifyCode(c *gin.Context) {
 	response.Success(c, SendVerifyCodeResponse{
 		Message:   "Verification code sent successfully",
 		Countdown: result.Countdown,
+		ExpiresAt: &result.ExpiresAt,
 	})
 }
 

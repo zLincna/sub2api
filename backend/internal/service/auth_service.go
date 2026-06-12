@@ -86,8 +86,9 @@ type AuthService struct {
 }
 
 type smsChallenge struct {
-	OutID     string
-	ExpiresAt time.Time
+	OutID         string
+	ExpiresAt     time.Time
+	CooldownUntil time.Time
 }
 
 type DefaultSubscriptionAssigner interface {

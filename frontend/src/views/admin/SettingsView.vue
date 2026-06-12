@@ -1382,103 +1382,36 @@
               </div>
 
               <!-- Registration Verification -->
-              <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
-                <div class="mb-3">
-                  <label class="font-medium text-gray-900 dark:text-white">
-                    {{ localText("注册验证方式", "Registration verification") }}
-                  </label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{
-                      localText(
-                        "邮箱验证和手机验证互斥，只能选择一种注册验证方式。",
-                        "Email and phone verification are mutually exclusive.",
-                      )
-                    }}
-                  </p>
-                </div>
-                <div class="grid gap-3 md:grid-cols-3">
-                  <label
-                    class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors"
-                    :class="
-                      registrationVerificationMode === 'none'
-                        ? 'border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500'
-                    "
-                  >
-                    <input
-                      data-testid="registration-verification-none"
-                      type="radio"
-                      name="registration-verification-mode"
-                      value="none"
-                      class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
-                      :checked="registrationVerificationMode === 'none'"
-                      @change="setRegistrationVerificationMode('none')"
-                    />
-                    <span>
-                      <span class="block text-sm font-medium text-gray-900 dark:text-white">
-                        {{ localText("不验证", "No verification") }}
-                      </span>
-                      <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
-                        {{ localText("注册时不要求验证码。", "No code is required during registration.") }}
-                      </span>
-                    </span>
-                  </label>
-
-                  <label
-                    class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors"
-                    :class="
-                      registrationVerificationMode === 'email'
-                        ? 'border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500'
-                    "
-                  >
-                    <input
-                      data-testid="registration-verification-email"
-                      type="radio"
-                      name="registration-verification-mode"
-                      value="email"
-                      class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
-                      :checked="registrationVerificationMode === 'email'"
-                      @change="setRegistrationVerificationMode('email')"
-                    />
-                    <span>
-                      <span class="block text-sm font-medium text-gray-900 dark:text-white">
-                        {{ t("admin.settings.registration.emailVerification") }}
-                      </span>
-                      <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
-                        {{ t("admin.settings.registration.emailVerificationHint") }}
-                      </span>
-                    </span>
-                  </label>
-
-                  <div
-                    class="rounded-lg border p-4 transition-colors"
-                    :class="
-                      registrationVerificationMode === 'phone'
-                        ? 'border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500'
-                    "
-                  >
-                    <label class="flex cursor-pointer items-start gap-3">
-                      <input
-                        data-testid="registration-verification-phone"
-                        type="radio"
-                        name="registration-verification-mode"
-                        value="phone"
-                        class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
-                        :checked="registrationVerificationMode === 'phone'"
-                        @change="setRegistrationVerificationMode('phone')"
-                      />
-                      <span>
-                        <span class="block text-sm font-medium text-gray-900 dark:text-white">
-                          {{ localText("手机验证", "Phone verification") }}
-                        </span>
-                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
-                          {{ localText("注册时通过阿里云短信验证手机号。", "Verify the phone number through Aliyun SMS.") }}
-                        </span>
-                      </span>
+              <div class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <label class="font-medium text-gray-900 dark:text-white">
+                      {{ t("admin.settings.registration.emailVerification") }}
                     </label>
-                    <div v-if="registrationVerificationMode === 'phone'" class="mt-3 pl-7">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      {{ t("admin.settings.registration.emailVerificationHint") }}
+                    </p>
+                  </div>
+                  <Toggle
+                    v-model="form.email_verify_enabled"
+                    data-testid="registration-email-verification-toggle"
+                  />
+                </div>
+
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <label class="font-medium text-gray-900 dark:text-white">
+                      {{ localText("手机验证", "Phone verification") }}
+                    </label>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      {{
+                        localText(
+                          "注册仍使用邮箱作为登录账号；开启后注册必须填写手机号和短信验证码。",
+                          "Email remains the login account; when enabled, registration requires a phone number and SMS code.",
+                        )
+                      }}
+                    </p>
+                    <div v-if="form.phone_verify_enabled" class="mt-3">
                       <button
                         data-testid="open-aliyun-sms-settings"
                         type="button"
@@ -1503,6 +1436,10 @@
                       </p>
                     </div>
                   </div>
+                  <Toggle
+                    v-model="form.phone_verify_enabled"
+                    data-testid="registration-phone-verification-toggle"
+                  />
                 </div>
               </div>
 
@@ -7473,18 +7410,6 @@ const form = reactive<SettingsForm>({
   allow_user_view_error_requests: false,
 });
 
-type RegistrationVerificationMode = "none" | "email" | "phone";
-
-const registrationVerificationMode = computed<RegistrationVerificationMode>(() => {
-  if (form.phone_verify_enabled) {
-    return "phone";
-  }
-  if (form.email_verify_enabled) {
-    return "email";
-  }
-  return "none";
-});
-
 const aliyunSmsConfigured = computed(() => {
   const hasSecret =
     form.aliyun_sms_access_key_secret.trim() !== "" ||
@@ -7496,21 +7421,6 @@ const aliyunSmsConfigured = computed(() => {
       (form.aliyun_sms_template_code || "").trim(),
   );
 });
-
-function setRegistrationVerificationMode(mode: RegistrationVerificationMode): void {
-  form.email_verify_enabled = mode === "email";
-  form.phone_verify_enabled = mode === "phone";
-  if (mode !== "email") {
-    form.password_reset_enabled = false;
-  }
-}
-
-function normalizeRegistrationVerificationFlags(): void {
-  if (form.phone_verify_enabled) {
-    form.email_verify_enabled = false;
-    form.password_reset_enabled = false;
-  }
-}
 
 const authSourceDefaults = reactive<AuthSourceDefaultsState>(
   buildAuthSourceDefaultsState({}),
@@ -8112,7 +8022,6 @@ async function loadSettings() {
         (form as Record<string, unknown>)[key] = value;
       }
     }
-    normalizeRegistrationVerificationFlags();
     form.login_agreement_mode =
       settings.login_agreement_mode === "checkbox" ? "checkbox" : "modal";
     form.login_agreement_updated_at =
@@ -8307,7 +8216,6 @@ function findDuplicateDefaultSubscription(
 async function saveSettings() {
   saving.value = true;
   try {
-    normalizeRegistrationVerificationFlags();
     const normalizedTableDefaultPageSize = Math.floor(
       Number(form.table_default_page_size),
     );

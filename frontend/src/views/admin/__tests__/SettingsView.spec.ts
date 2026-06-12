@@ -573,29 +573,29 @@ describe("admin SettingsView registration verification controls", () => {
     adminSettingsFetch.mockResolvedValue(undefined);
   });
 
-  it("renders email and phone registration verification as an exclusive choice", async () => {
+  it("allows email and phone registration verification to be enabled independently", async () => {
     const wrapper = mountView();
 
     await flushPromises();
     await openSecurityTab(wrapper);
 
-    const emailRadio = wrapper.get<HTMLInputElement>(
-      '[data-testid="registration-verification-email"]',
+    const emailToggle = wrapper.get<HTMLInputElement>(
+      '[data-testid="registration-email-verification-toggle"]',
     );
-    const phoneRadio = wrapper.get<HTMLInputElement>(
-      '[data-testid="registration-verification-phone"]',
+    const phoneToggle = wrapper.get<HTMLInputElement>(
+      '[data-testid="registration-phone-verification-toggle"]',
     );
 
-    expect(emailRadio.element.checked).toBe(true);
-    expect(phoneRadio.element.checked).toBe(false);
+    expect(emailToggle.element.checked).toBe(true);
+    expect(phoneToggle.element.checked).toBe(false);
 
-    await phoneRadio.setValue(true);
+    await phoneToggle.setValue(true);
     await wrapper.find("form").trigger("submit.prevent");
     await flushPromises();
 
     expect(updateSettings).toHaveBeenCalledWith(
       expect.objectContaining({
-        email_verify_enabled: false,
+        email_verify_enabled: true,
         phone_verify_enabled: true,
       }),
     );

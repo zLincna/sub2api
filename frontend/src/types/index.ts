@@ -169,6 +169,7 @@ export interface SendPhoneVerifyCodeRequest {
 export interface SendVerifyCodeResponse {
   message: string
   countdown: number
+  expires_at?: string
 }
 
 export interface CustomMenuItem {

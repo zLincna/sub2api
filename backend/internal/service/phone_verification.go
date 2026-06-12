@@ -21,6 +21,7 @@ import (
 )
 
 var ErrAliyunSMSNotConfigured = infraerrors.ServiceUnavailable("ALIYUN_SMS_NOT_CONFIGURED", "aliyun sms service not configured")
+var ErrPhoneVerifyCooldown = infraerrors.TooManyRequests("PHONE_VERIFY_COOLDOWN", "phone verification code was sent too frequently")
 
 type AliyunSMSConfig struct {
 	AccessKeyID          string
@@ -35,7 +36,8 @@ type AliyunSMSConfig struct {
 }
 
 type SendPhoneVerifyCodeResult struct {
-	Countdown int `json:"countdown"`
+	Countdown int       `json:"countdown"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 func NormalizeMainlandPhone(phone string) (string, error) {
@@ -83,19 +85,39 @@ func (s *AuthService) SendPhoneVerifyCode(ctx context.Context, phone string) (*S
 		return nil, err
 	}
 
-	outID := "sub2api-register-" + randomPhoneVerificationHex(16)
-	if err := sendAliyunSMSVerifyCode(ctx, cfg, normalizedPhone, outID); err != nil {
-		return nil, fmt.Errorf("send phone verify code: %w", err)
-	}
-
+	now := time.Now()
 	s.smsChallengeMu.Lock()
-	s.smsChallenges[normalizedPhone] = smsChallenge{
-		OutID:     outID,
-		ExpiresAt: time.Now().Add(time.Duration(cfg.ValidTimeSeconds) * time.Second),
+	if challenge, ok := s.smsChallenges[normalizedPhone]; ok {
+		if now.After(challenge.ExpiresAt) {
+			delete(s.smsChallenges, normalizedPhone)
+		} else if now.Before(challenge.CooldownUntil) {
+			s.smsChallengeMu.Unlock()
+			return nil, ErrPhoneVerifyCooldown
+		}
 	}
 	s.smsChallengeMu.Unlock()
 
-	return &SendPhoneVerifyCodeResult{Countdown: cfg.IntervalSeconds}, nil
+	outID := "sub2api-register-" + randomPhoneVerificationHex(16)
+	aliyunOutID, err := sendAliyunSMSVerifyCode(ctx, cfg, normalizedPhone, outID)
+	if err != nil {
+		return nil, fmt.Errorf("send phone verify code: %w", err)
+	}
+	if aliyunOutID != "" {
+		outID = aliyunOutID
+	}
+
+	expiresAt := now.Add(time.Duration(cfg.ValidTimeSeconds) * time.Second)
+	cooldownUntil := now.Add(time.Duration(cfg.IntervalSeconds) * time.Second)
+
+	s.smsChallengeMu.Lock()
+	s.smsChallenges[normalizedPhone] = smsChallenge{
+		OutID:         outID,
+		ExpiresAt:     expiresAt,
+		CooldownUntil: cooldownUntil,
+	}
+	s.smsChallengeMu.Unlock()
+
+	return &SendPhoneVerifyCodeResult{Countdown: cfg.IntervalSeconds, ExpiresAt: expiresAt}, nil
 }
 
 func (s *AuthService) VerifyPhoneRegistrationCode(ctx context.Context, phone, code string) error {
@@ -201,7 +223,7 @@ func parseSMSStaticParams(raw string) (map[string]string, error) {
 	return out, nil
 }
 
-func sendAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, outID string) error {
+func sendAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, outID string) (string, error) {
 	params := aliyunSMSBaseParams(cfg, "SendSmsVerifyCode")
 	templateParams := make(map[string]string, len(cfg.TemplateStaticParams)+1)
 	for k, v := range cfg.TemplateStaticParams {
@@ -226,12 +248,12 @@ func sendAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, o
 	}
 	var resp aliyunSMSResponse
 	if err := aliyunSMSRPC(ctx, cfg, params, &resp); err != nil {
-		return err
+		return "", err
 	}
 	if !resp.ok() || !strings.EqualFold(resp.responseCode(), "OK") {
-		return fmt.Errorf("%s: %s", resp.responseCode(), resp.responseMessage())
+		return "", fmt.Errorf("%s: %s", resp.responseCode(), resp.responseMessage())
 	}
-	return nil
+	return firstNonEmpty(resp.Model.OutID, resp.LowerModel.OutID), nil
 }
 
 func checkAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, code, outID string) (bool, error) {
@@ -259,12 +281,16 @@ type aliyunSMSResponse struct {
 	Code    string `json:"Code"`
 	Message string `json:"Message"`
 	Model   struct {
+		BizID        string `json:"BizId"`
+		OutID        string `json:"OutId"`
 		VerifyResult string `json:"VerifyResult"`
 	} `json:"Model"`
 	LowerSuccess bool   `json:"success"`
 	LowerCode    string `json:"code"`
 	LowerMessage string `json:"message"`
 	LowerModel   struct {
+		BizID        string `json:"bizId"`
+		OutID        string `json:"outId"`
 		VerifyResult string `json:"verifyResult"`
 	} `json:"model"`
 }
