@@ -297,14 +297,7 @@ func checkAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, 
 	if resp == nil || resp.Body == nil {
 		return false, fmt.Errorf("empty aliyun sms response")
 	}
-	body := resp.Body
-	if body.Success == nil || !dara.BoolValue(body.Success) || !strings.EqualFold(dara.StringValue(body.Code), "OK") {
-		return false, aliyunSMSError(dara.StringValue(body.Code), dara.StringValue(body.Message), dara.StringValue(body.AccessDeniedDetail))
-	}
-	if body.Model == nil {
-		return false, nil
-	}
-	return strings.EqualFold(dara.StringValue(body.Model.VerifyResult), "PASS"), nil
+	return parseAliyunSMSVerifyResult(resp.Body)
 }
 
 func newAliyunSMSClient(cfg *AliyunSMSConfig) (*dypnsapi.Client, error) {
@@ -334,6 +327,28 @@ func aliyunSMSError(code, message, detail string) error {
 	default:
 		return fmt.Errorf("aliyun sms request failed")
 	}
+}
+
+func parseAliyunSMSVerifyResult(body *dypnsapi.CheckSmsVerifyCodeResponseBody) (bool, error) {
+	if body == nil {
+		return false, fmt.Errorf("empty aliyun sms response")
+	}
+	verifyResult := ""
+	if body.Model != nil {
+		verifyResult = strings.TrimSpace(dara.StringValue(body.Model.VerifyResult))
+	}
+	if strings.EqualFold(verifyResult, "UNKNOWN") {
+		return false, nil
+	}
+	if body.Success == nil || !dara.BoolValue(body.Success) || !strings.EqualFold(dara.StringValue(body.Code), "OK") {
+		code := dara.StringValue(body.Code)
+		message := dara.StringValue(body.Message)
+		if strings.EqualFold(code, "UNKNOWN") || strings.EqualFold(message, "UNKNOWN") {
+			return false, nil
+		}
+		return false, aliyunSMSError(code, message, dara.StringValue(body.AccessDeniedDetail))
+	}
+	return strings.EqualFold(verifyResult, "PASS"), nil
 }
 
 func randomPhoneVerificationHex(size int) string {
