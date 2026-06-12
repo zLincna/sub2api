@@ -697,6 +697,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 	keys := []string{
 		SettingKeyRegistrationEnabled,
 		SettingKeyEmailVerifyEnabled,
+		SettingKeyPhoneVerifyEnabled,
 		SettingKeyForceEmailOnThirdPartySignup,
 		SettingKeyRegistrationEmailSuffixWhitelist,
 		SettingKeyPromoCodeEnabled,
@@ -822,6 +823,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 	return &PublicSettings{
 		RegistrationEnabled:              settings[SettingKeyRegistrationEnabled] == "true",
 		EmailVerifyEnabled:               emailVerifyEnabled,
+		PhoneVerifyEnabled:               settings[SettingKeyPhoneVerifyEnabled] == "true",
 		ForceEmailOnThirdPartySignup:     settings[SettingKeyForceEmailOnThirdPartySignup] == "true",
 		RegistrationEmailSuffixWhitelist: registrationEmailSuffixWhitelist,
 		PromoCodeEnabled:                 settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
@@ -1137,6 +1139,7 @@ func (s *SettingService) SetVersion(version string) {
 type PublicSettingsInjectionPayload struct {
 	RegistrationEnabled              bool                     `json:"registration_enabled"`
 	EmailVerifyEnabled               bool                     `json:"email_verify_enabled"`
+	PhoneVerifyEnabled               bool                     `json:"phone_verify_enabled"`
 	RegistrationEmailSuffixWhitelist []string                 `json:"registration_email_suffix_whitelist"`
 	PromoCodeEnabled                 bool                     `json:"promo_code_enabled"`
 	PasswordResetEnabled             bool                     `json:"password_reset_enabled"`
@@ -1203,6 +1206,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 	return &PublicSettingsInjectionPayload{
 		RegistrationEnabled:              settings.RegistrationEnabled,
 		EmailVerifyEnabled:               settings.EmailVerifyEnabled,
+		PhoneVerifyEnabled:               settings.PhoneVerifyEnabled,
 		RegistrationEmailSuffixWhitelist: settings.RegistrationEmailSuffixWhitelist,
 		PromoCodeEnabled:                 settings.PromoCodeEnabled,
 		PasswordResetEnabled:             settings.PasswordResetEnabled,
@@ -1668,6 +1672,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	// 注册设置
 	updates[SettingKeyRegistrationEnabled] = strconv.FormatBool(settings.RegistrationEnabled)
 	updates[SettingKeyEmailVerifyEnabled] = strconv.FormatBool(settings.EmailVerifyEnabled)
+	updates[SettingKeyPhoneVerifyEnabled] = strconv.FormatBool(settings.PhoneVerifyEnabled)
 	registrationEmailSuffixWhitelistJSON, err := json.Marshal(settings.RegistrationEmailSuffixWhitelist)
 	if err != nil {
 		return nil, fmt.Errorf("marshal registration email suffix whitelist: %w", err)
@@ -1702,6 +1707,37 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeySMTPFrom] = settings.SMTPFrom
 	updates[SettingKeySMTPFromName] = settings.SMTPFromName
 	updates[SettingKeySMTPUseTLS] = strconv.FormatBool(settings.SMTPUseTLS)
+
+	updates[SettingKeyAliyunSMSAccessKeyID] = strings.TrimSpace(settings.AliyunSMSAccessKeyID)
+	if strings.TrimSpace(settings.AliyunSMSAccessKeySecret) != "" {
+		updates[SettingKeyAliyunSMSAccessKeySecret] = strings.TrimSpace(settings.AliyunSMSAccessKeySecret)
+	}
+	updates[SettingKeyAliyunSMSSignName] = strings.TrimSpace(settings.AliyunSMSSignName)
+	updates[SettingKeyAliyunSMSTemplateCode] = strings.TrimSpace(settings.AliyunSMSTemplateCode)
+	templateParamKey := strings.TrimSpace(settings.AliyunSMSTemplateParamKey)
+	if templateParamKey == "" {
+		templateParamKey = "code"
+	}
+	updates[SettingKeyAliyunSMSTemplateParamKey] = templateParamKey
+	if strings.TrimSpace(settings.AliyunSMSTemplateStaticParams) != "" {
+		if !json.Valid([]byte(settings.AliyunSMSTemplateStaticParams)) {
+			return nil, infraerrors.BadRequest("INVALID_ALIYUN_SMS_TEMPLATE_STATIC_PARAMS", "aliyun sms template static params must be valid JSON")
+		}
+		updates[SettingKeyAliyunSMSTemplateStaticJSON] = strings.TrimSpace(settings.AliyunSMSTemplateStaticParams)
+	} else {
+		updates[SettingKeyAliyunSMSTemplateStaticJSON] = "{}"
+	}
+	updates[SettingKeyAliyunSMSSchemeName] = strings.TrimSpace(settings.AliyunSMSSchemeName)
+	validSeconds := settings.AliyunSMSValidTimeSeconds
+	if validSeconds <= 0 {
+		validSeconds = 300
+	}
+	intervalSeconds := settings.AliyunSMSIntervalSeconds
+	if intervalSeconds <= 0 {
+		intervalSeconds = 60
+	}
+	updates[SettingKeyAliyunSMSValidTimeSeconds] = strconv.Itoa(validSeconds)
+	updates[SettingKeyAliyunSMSIntervalSeconds] = strconv.Itoa(intervalSeconds)
 
 	// Cloudflare Turnstile 设置（只有非空才更新密钥）
 	updates[SettingKeyTurnstileEnabled] = strconv.FormatBool(settings.TurnstileEnabled)
@@ -2197,6 +2233,18 @@ func (s *SettingService) IsRegistrationEnabled(ctx context.Context) bool {
 	return value == "true"
 }
 
+// IsPhoneVerifyEnabled 检查注册手机号短信验证是否开启。
+func (s *SettingService) IsPhoneVerifyEnabled(ctx context.Context) bool {
+	if s == nil || s.settingRepo == nil {
+		return false
+	}
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyPhoneVerifyEnabled)
+	if err != nil {
+		return false
+	}
+	return value == "true"
+}
+
 // IsBackendModeEnabled checks if backend mode is enabled
 // Uses in-process atomic.Value cache with 60s TTL, zero-lock hot path
 func (s *SettingService) IsBackendModeEnabled(ctx context.Context) bool {
@@ -2681,6 +2729,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	defaults := map[string]string{
 		SettingKeyRegistrationEnabled:                       "true",
 		SettingKeyEmailVerifyEnabled:                        "false",
+		SettingKeyPhoneVerifyEnabled:                        "false",
 		SettingKeyRegistrationEmailSuffixWhitelist:          "[]",
 		SettingKeyPromoCodeEnabled:                          "true", // 默认启用优惠码功能
 		SettingKeyLoginAgreementEnabled:                     "false",
@@ -2790,6 +2839,15 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyForceEmailOnThirdPartySignup:              "false",
 		SettingKeySMTPPort:                                  "587",
 		SettingKeySMTPUseTLS:                                "false",
+		SettingKeyAliyunSMSAccessKeyID:                      "",
+		SettingKeyAliyunSMSAccessKeySecret:                  "",
+		SettingKeyAliyunSMSSignName:                         "",
+		SettingKeyAliyunSMSTemplateCode:                     "",
+		SettingKeyAliyunSMSTemplateParamKey:                 "code",
+		SettingKeyAliyunSMSTemplateStaticJSON:               "{}",
+		SettingKeyAliyunSMSSchemeName:                       "",
+		SettingKeyAliyunSMSValidTimeSeconds:                 "300",
+		SettingKeyAliyunSMSIntervalSeconds:                  "60",
 		// Model fallback defaults
 		SettingKeyEnableModelFallback:      "false",
 		SettingKeyFallbackModelAnthropic:   "claude-3-5-sonnet-20241022",
@@ -2856,41 +2914,51 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		apiKeyACLTrustForwardedIP = s.cfg.Security.TrustForwardedIPForAPIKeyACL
 	}
 	result := &SystemSettings{
-		RegistrationEnabled:              settings[SettingKeyRegistrationEnabled] == "true",
-		EmailVerifyEnabled:               emailVerifyEnabled,
-		RegistrationEmailSuffixWhitelist: ParseRegistrationEmailSuffixWhitelist(settings[SettingKeyRegistrationEmailSuffixWhitelist]),
-		PromoCodeEnabled:                 settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
-		PasswordResetEnabled:             emailVerifyEnabled && settings[SettingKeyPasswordResetEnabled] == "true",
-		FrontendURL:                      settings[SettingKeyFrontendURL],
-		InvitationCodeEnabled:            settings[SettingKeyInvitationCodeEnabled] == "true",
-		TotpEnabled:                      settings[SettingKeyTotpEnabled] == "true",
-		LoginAgreementEnabled:            settings[SettingKeyLoginAgreementEnabled] == "true",
-		LoginAgreementMode:               normalizeLoginAgreementMode(settings[SettingKeyLoginAgreementMode]),
-		LoginAgreementUpdatedAt:          loginAgreementUpdatedAt,
-		LoginAgreementDocuments:          loginAgreementDocuments,
-		SMTPHost:                         settings[SettingKeySMTPHost],
-		SMTPUsername:                     settings[SettingKeySMTPUsername],
-		SMTPFrom:                         settings[SettingKeySMTPFrom],
-		SMTPFromName:                     settings[SettingKeySMTPFromName],
-		SMTPUseTLS:                       settings[SettingKeySMTPUseTLS] == "true",
-		SMTPPasswordConfigured:           settings[SettingKeySMTPPassword] != "",
-		TurnstileEnabled:                 settings[SettingKeyTurnstileEnabled] == "true",
-		TurnstileSiteKey:                 settings[SettingKeyTurnstileSiteKey],
-		TurnstileSecretKeyConfigured:     settings[SettingKeyTurnstileSecretKey] != "",
-		APIKeyACLTrustForwardedIP:        apiKeyACLTrustForwardedIP,
-		SiteName:                         s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
-		SiteLogo:                         settings[SettingKeySiteLogo],
-		SiteSubtitle:                     s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
-		APIBaseURL:                       settings[SettingKeyAPIBaseURL],
-		ContactInfo:                      settings[SettingKeyContactInfo],
-		DocURL:                           settings[SettingKeyDocURL],
-		HomeContent:                      settings[SettingKeyHomeContent],
-		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
-		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
-		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
-		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
-		CustomEndpoints:                  settings[SettingKeyCustomEndpoints],
-		BackendModeEnabled:               settings[SettingKeyBackendModeEnabled] == "true",
+		RegistrationEnabled:                settings[SettingKeyRegistrationEnabled] == "true",
+		EmailVerifyEnabled:                 emailVerifyEnabled,
+		PhoneVerifyEnabled:                 settings[SettingKeyPhoneVerifyEnabled] == "true",
+		RegistrationEmailSuffixWhitelist:   ParseRegistrationEmailSuffixWhitelist(settings[SettingKeyRegistrationEmailSuffixWhitelist]),
+		PromoCodeEnabled:                   settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
+		PasswordResetEnabled:               emailVerifyEnabled && settings[SettingKeyPasswordResetEnabled] == "true",
+		FrontendURL:                        settings[SettingKeyFrontendURL],
+		InvitationCodeEnabled:              settings[SettingKeyInvitationCodeEnabled] == "true",
+		TotpEnabled:                        settings[SettingKeyTotpEnabled] == "true",
+		LoginAgreementEnabled:              settings[SettingKeyLoginAgreementEnabled] == "true",
+		LoginAgreementMode:                 normalizeLoginAgreementMode(settings[SettingKeyLoginAgreementMode]),
+		LoginAgreementUpdatedAt:            loginAgreementUpdatedAt,
+		LoginAgreementDocuments:            loginAgreementDocuments,
+		SMTPHost:                           settings[SettingKeySMTPHost],
+		SMTPUsername:                       settings[SettingKeySMTPUsername],
+		SMTPFrom:                           settings[SettingKeySMTPFrom],
+		SMTPFromName:                       settings[SettingKeySMTPFromName],
+		SMTPUseTLS:                         settings[SettingKeySMTPUseTLS] == "true",
+		SMTPPasswordConfigured:             settings[SettingKeySMTPPassword] != "",
+		AliyunSMSAccessKeyID:               strings.TrimSpace(settings[SettingKeyAliyunSMSAccessKeyID]),
+		AliyunSMSAccessKeySecretConfigured: strings.TrimSpace(settings[SettingKeyAliyunSMSAccessKeySecret]) != "",
+		AliyunSMSSignName:                  strings.TrimSpace(settings[SettingKeyAliyunSMSSignName]),
+		AliyunSMSTemplateCode:              strings.TrimSpace(settings[SettingKeyAliyunSMSTemplateCode]),
+		AliyunSMSTemplateParamKey:          firstNonEmpty(settings[SettingKeyAliyunSMSTemplateParamKey], "code"),
+		AliyunSMSTemplateStaticParams:      firstNonEmpty(settings[SettingKeyAliyunSMSTemplateStaticJSON], "{}"),
+		AliyunSMSSchemeName:                strings.TrimSpace(settings[SettingKeyAliyunSMSSchemeName]),
+		AliyunSMSValidTimeSeconds:          parsePositiveIntOrDefault(settings[SettingKeyAliyunSMSValidTimeSeconds], 300),
+		AliyunSMSIntervalSeconds:           parsePositiveIntOrDefault(settings[SettingKeyAliyunSMSIntervalSeconds], 60),
+		TurnstileEnabled:                   settings[SettingKeyTurnstileEnabled] == "true",
+		TurnstileSiteKey:                   settings[SettingKeyTurnstileSiteKey],
+		TurnstileSecretKeyConfigured:       settings[SettingKeyTurnstileSecretKey] != "",
+		APIKeyACLTrustForwardedIP:          apiKeyACLTrustForwardedIP,
+		SiteName:                           s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
+		SiteLogo:                           settings[SettingKeySiteLogo],
+		SiteSubtitle:                       s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
+		APIBaseURL:                         settings[SettingKeyAPIBaseURL],
+		ContactInfo:                        settings[SettingKeyContactInfo],
+		DocURL:                             settings[SettingKeyDocURL],
+		HomeContent:                        settings[SettingKeyHomeContent],
+		HideCcsImportButton:                settings[SettingKeyHideCcsImportButton] == "true",
+		PurchaseSubscriptionEnabled:        settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
+		PurchaseSubscriptionURL:            strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
+		CustomMenuItems:                    settings[SettingKeyCustomMenuItems],
+		CustomEndpoints:                    settings[SettingKeyCustomEndpoints],
+		BackendModeEnabled:                 settings[SettingKeyBackendModeEnabled] == "true",
 	}
 	result.TableDefaultPageSize, result.TablePageSizeOptions = parseTablePreferences(
 		settings[SettingKeyTableDefaultPageSize],
@@ -3603,6 +3671,14 @@ func (s *SettingService) getStringOrDefault(settings map[string]string, key, def
 		return value
 	}
 	return defaultValue
+}
+
+func parsePositiveIntOrDefault(raw string, defaultValue int) int {
+	value, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || value <= 0 {
+		return defaultValue
+	}
+	return value
 }
 
 // IsTurnstileEnabled 检查是否启用 Turnstile 验证

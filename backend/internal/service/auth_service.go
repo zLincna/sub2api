@@ -11,6 +11,7 @@ import (
 	"net/mail"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
@@ -37,6 +38,11 @@ var (
 	ErrRefreshTokenExpired     = infraerrors.Unauthorized("REFRESH_TOKEN_EXPIRED", "refresh token has expired")
 	ErrRefreshTokenReused      = infraerrors.Unauthorized("REFRESH_TOKEN_REUSED", "refresh token has been reused")
 	ErrEmailVerifyRequired     = infraerrors.BadRequest("EMAIL_VERIFY_REQUIRED", "email verification is required")
+	ErrPhoneRequired           = infraerrors.BadRequest("PHONE_REQUIRED", "phone number is required")
+	ErrInvalidPhone            = infraerrors.BadRequest("INVALID_PHONE", "invalid phone number")
+	ErrPhoneExists             = infraerrors.Conflict("PHONE_EXISTS", "phone number already exists")
+	ErrPhoneVerifyRequired     = infraerrors.BadRequest("PHONE_VERIFY_REQUIRED", "phone verification is required")
+	ErrPhoneVerifyInvalid      = infraerrors.BadRequest("PHONE_VERIFY_INVALID", "invalid or expired phone verification code")
 	ErrEmailSuffixNotAllowed   = infraerrors.BadRequest("EMAIL_SUFFIX_NOT_ALLOWED", "email suffix is not allowed")
 	ErrRegDisabled             = infraerrors.Forbidden("REGISTRATION_DISABLED", "registration is currently disabled")
 	ErrServiceUnavailable      = infraerrors.ServiceUnavailable("SERVICE_UNAVAILABLE", "service temporarily unavailable")
@@ -75,6 +81,13 @@ type AuthService struct {
 	affiliateService      *AffiliateService
 	defaultSubAssigner    DefaultSubscriptionAssigner
 	userPlatformQuotaRepo UserPlatformQuotaRepository
+	smsChallengeMu        sync.Mutex
+	smsChallenges         map[string]smsChallenge
+}
+
+type smsChallenge struct {
+	OutID     string
+	ExpiresAt time.Time
 }
 
 type DefaultSubscriptionAssigner interface {
@@ -118,6 +131,7 @@ func NewAuthService(
 		affiliateService:      affiliateService,
 		defaultSubAssigner:    defaultSubAssigner,
 		userPlatformQuotaRepo: userPlatformQuotaRepo,
+		smsChallenges:         make(map[string]smsChallenge),
 	}
 }
 
@@ -135,29 +149,80 @@ func (s *AuthService) Register(ctx context.Context, email, password string) (str
 
 // RegisterWithVerification 用户注册（支持邮件验证、优惠码、邀请码和邀请返利码），返回token和用户。
 func (s *AuthService) RegisterWithVerification(ctx context.Context, email, password, verifyCode, promoCode, invitationCode, affiliateCode string) (string, *User, error) {
+	return s.registerWithVerificationOptions(ctx, registerOptions{
+		email:          email,
+		password:       password,
+		verifyCode:     verifyCode,
+		promoCode:      promoCode,
+		invitationCode: invitationCode,
+		affiliateCode:  affiliateCode,
+		requirePhone:   false,
+	})
+}
+
+// RegisterWithPhoneVerification 用户注册（支持邮箱验证、手机号记录/短信验证、优惠码、邀请码和邀请返利码）。
+func (s *AuthService) RegisterWithPhoneVerification(ctx context.Context, email, password, verifyCode, phone, phoneVerifyCode, promoCode, invitationCode, affiliateCode string) (string, *User, error) {
+	return s.registerWithVerificationOptions(ctx, registerOptions{
+		email:           email,
+		password:        password,
+		verifyCode:      verifyCode,
+		phone:           phone,
+		phoneVerifyCode: phoneVerifyCode,
+		promoCode:       promoCode,
+		invitationCode:  invitationCode,
+		affiliateCode:   affiliateCode,
+		requirePhone:    true,
+	})
+}
+
+type registerOptions struct {
+	email           string
+	password        string
+	verifyCode      string
+	phone           string
+	phoneVerifyCode string
+	promoCode       string
+	invitationCode  string
+	affiliateCode   string
+	requirePhone    bool
+}
+
+func (s *AuthService) registerWithVerificationOptions(ctx context.Context, opts registerOptions) (string, *User, error) {
 	// 检查是否开放注册（默认关闭：settingService 未配置时不允许注册）
 	if s.settingService == nil || !s.settingService.IsRegistrationEnabled(ctx) {
 		return "", nil, ErrRegDisabled
 	}
 
+	normalizedPhone := ""
+	if opts.requirePhone || strings.TrimSpace(opts.phone) != "" {
+		var err error
+		normalizedPhone, err = NormalizeMainlandPhone(opts.phone)
+		if err != nil {
+			if errors.Is(err, ErrPhoneRequired) {
+				return "", nil, ErrPhoneRequired
+			}
+			return "", nil, ErrInvalidPhone
+		}
+	}
+
 	// 防止用户注册 LinuxDo OAuth 合成邮箱，避免第三方登录与本地账号发生碰撞。
-	if isReservedEmail(email) {
+	if isReservedEmail(opts.email) {
 		return "", nil, ErrEmailReserved
 	}
-	if err := s.validateRegistrationEmailPolicy(ctx, email); err != nil {
+	if err := s.validateRegistrationEmailPolicy(ctx, opts.email); err != nil {
 		return "", nil, err
 	}
 
 	// 检查是否需要邀请码
 	var invitationRedeemCode *RedeemCode
 	if s.settingService != nil && s.settingService.IsInvitationCodeEnabled(ctx) {
-		if invitationCode == "" {
+		if opts.invitationCode == "" {
 			return "", nil, ErrInvitationCodeRequired
 		}
 		// 验证邀请码
-		redeemCode, err := s.redeemRepo.GetByCode(ctx, invitationCode)
+		redeemCode, err := s.redeemRepo.GetByCode(ctx, opts.invitationCode)
 		if err != nil {
-			logger.LegacyPrintf("service.auth", "[Auth] Invalid invitation code: %s, error: %v", invitationCode, err)
+			logger.LegacyPrintf("service.auth", "[Auth] Invalid invitation code: %s, error: %v", opts.invitationCode, err)
 			return "", nil, ErrInvitationCodeInvalid
 		}
 		// 检查类型和状态
@@ -176,17 +241,27 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 			logger.LegacyPrintf("service.auth", "%s", "[Auth] Email verification enabled but email service not configured, rejecting registration")
 			return "", nil, ErrServiceUnavailable
 		}
-		if verifyCode == "" {
+		if opts.verifyCode == "" {
 			return "", nil, ErrEmailVerifyRequired
 		}
 		// 验证邮箱验证码
-		if err := s.emailService.VerifyCode(ctx, email, verifyCode); err != nil {
+		if err := s.emailService.VerifyCode(ctx, opts.email, opts.verifyCode); err != nil {
 			return "", nil, fmt.Errorf("verify code: %w", err)
 		}
 	}
 
+	phoneVerifyEnabled := s.settingService != nil && s.settingService.IsPhoneVerifyEnabled(ctx)
+	if opts.requirePhone && phoneVerifyEnabled {
+		if strings.TrimSpace(opts.phoneVerifyCode) == "" {
+			return "", nil, ErrPhoneVerifyRequired
+		}
+		if err := s.VerifyPhoneRegistrationCode(ctx, normalizedPhone, opts.phoneVerifyCode); err != nil {
+			return "", nil, err
+		}
+	}
+
 	// 检查邮箱是否已存在
-	existsEmail, err := s.userRepo.ExistsByEmail(ctx, email)
+	existsEmail, err := s.userRepo.ExistsByEmail(ctx, opts.email)
 	if err != nil {
 		logger.LegacyPrintf("service.auth", "[Auth] Database error checking email exists: %v", err)
 		return "", nil, ErrServiceUnavailable
@@ -194,9 +269,19 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 	if existsEmail {
 		return "", nil, ErrEmailExists
 	}
+	if normalizedPhone != "" {
+		existsPhone, err := s.userRepo.ExistsByPhone(ctx, normalizedPhone)
+		if err != nil {
+			logger.LegacyPrintf("service.auth", "[Auth] Database error checking phone exists: %v", err)
+			return "", nil, ErrServiceUnavailable
+		}
+		if existsPhone {
+			return "", nil, ErrPhoneExists
+		}
+	}
 
 	// 密码哈希
-	hashedPassword, err := s.HashPassword(password)
+	hashedPassword, err := s.HashPassword(opts.password)
 	if err != nil {
 		return "", nil, fmt.Errorf("hash password: %w", err)
 	}
@@ -211,7 +296,8 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 
 	// 创建用户
 	user := &User{
-		Email:        email,
+		Email:        opts.email,
+		Phone:        normalizedPhone,
 		PasswordHash: hashedPassword,
 		Role:         RoleUser,
 		Balance:      grantPlan.Balance,
@@ -219,11 +305,18 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		RPMLimit:     defaultRPMLimit,
 		Status:       StatusActive,
 	}
+	if opts.requirePhone && phoneVerifyEnabled {
+		now := time.Now().UTC()
+		user.PhoneVerifiedAt = &now
+	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
 		// 优先检查邮箱冲突错误（竞态条件下可能发生）
 		if errors.Is(err, ErrEmailExists) {
 			return "", nil, ErrEmailExists
+		}
+		if errors.Is(err, ErrPhoneExists) {
+			return "", nil, ErrPhoneExists
 		}
 		logger.LegacyPrintf("service.auth", "[Auth] Database error creating user: %v", err)
 		return "", nil, ErrServiceUnavailable
@@ -236,7 +329,7 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		if _, err := s.affiliateService.EnsureUserAffiliate(ctx, user.ID); err != nil {
 			logger.LegacyPrintf("service.auth", "[Auth] Failed to initialize affiliate profile for user %d: %v", user.ID, err)
 		}
-		if code := strings.TrimSpace(affiliateCode); code != "" {
+		if code := strings.TrimSpace(opts.affiliateCode); code != "" {
 			if err := s.affiliateService.BindInviterByCode(ctx, user.ID, code); err != nil {
 				// 邀请返利码绑定失败不影响注册，只记录日志
 				logger.LegacyPrintf("service.auth", "[Auth] Failed to bind affiliate inviter for user %d: %v", user.ID, err)
@@ -252,8 +345,8 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		}
 	}
 	// 应用优惠码（如果提供且功能已启用）
-	if promoCode != "" && s.promoService != nil && s.settingService != nil && s.settingService.IsPromoCodeEnabled(ctx) {
-		if err := s.promoService.ApplyPromoCode(ctx, user.ID, promoCode); err != nil {
+	if opts.promoCode != "" && s.promoService != nil && s.settingService != nil && s.settingService.IsPromoCodeEnabled(ctx) {
+		if err := s.promoService.ApplyPromoCode(ctx, user.ID, opts.promoCode); err != nil {
 			// 优惠码应用失败不影响注册，只记录日志
 			logger.LegacyPrintf("service.auth", "[Auth] Failed to apply promo code for user %d: %v", user.ID, err)
 		} else {
@@ -373,8 +466,8 @@ func (s *AuthService) SendVerifyCodeAsync(ctx context.Context, email string, loc
 // 当邮箱验证开启且已提交验证码时，说明验证码发送阶段已完成 Turnstile 校验，
 // 此处跳过二次校验，避免一次性 token 在注册提交时重复使用导致误报失败。
 func (s *AuthService) VerifyTurnstileForRegister(ctx context.Context, token, remoteIP, verifyCode string) error {
-	if s.IsEmailVerifyEnabled(ctx) && strings.TrimSpace(verifyCode) != "" {
-		logger.LegacyPrintf("service.auth", "%s", "[Auth] Email verify flow detected, skip duplicate Turnstile check on register")
+	if strings.TrimSpace(verifyCode) != "" && (s.IsEmailVerifyEnabled(ctx) || (s.settingService != nil && s.settingService.IsPhoneVerifyEnabled(ctx))) {
+		logger.LegacyPrintf("service.auth", "%s", "[Auth] Verification-code register flow detected, skip duplicate Turnstile check on register")
 		return nil
 	}
 	return s.VerifyTurnstile(ctx, token, remoteIP)

@@ -118,8 +118,10 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   email: string
+  phone: string
   password: string
   verify_code?: string
+  phone_verify_code?: string
   turnstile_token?: string
   promo_code?: string
   invitation_code?: string
@@ -159,6 +161,11 @@ export interface SendVerifyCodeRequest {
   pending_oauth_token?: string
 }
 
+export interface SendPhoneVerifyCodeRequest {
+  phone: string
+  turnstile_token?: string
+}
+
 export interface SendVerifyCodeResponse {
   message: string
   countdown: number
@@ -189,6 +196,7 @@ export interface LoginAgreementDocument {
 export interface PublicSettings {
   registration_enabled: boolean
   email_verify_enabled: boolean
+  phone_verify_enabled: boolean
   force_email_on_third_party_signup: boolean
   registration_email_suffix_whitelist: string[]
   promo_code_enabled: boolean

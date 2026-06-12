@@ -2845,6 +2845,9 @@ func (r *oauthPendingFlowUserRepo) ExistsByEmail(ctx context.Context, email stri
 	count, err := r.client.User.Query().Where(dbuser.EmailEQ(email)).Count(ctx)
 	return count > 0, err
 }
+func (r *oauthPendingFlowUserRepo) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
+	return false, nil
+}
 
 func (r *oauthPendingFlowUserRepo) RemoveGroupFromAllowedGroups(context.Context, int64) (int64, error) {
 	panic("unexpected RemoveGroupFromAllowedGroups call")

@@ -1453,6 +1453,9 @@ func (r *stubUserRepo) BatchAddConcurrency(context.Context, []int64, int) (int, 
 func (r *stubUserRepo) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	return false, errors.New("not implemented")
 }
+func (r *stubUserRepo) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
+	return false, errors.New("not implemented")
+}
 
 func (r *stubUserRepo) RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error) {
 	return 0, errors.New("not implemented")

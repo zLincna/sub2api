@@ -14,6 +14,7 @@ func firstNonEmpty(values ...string) string {
 type SystemSettings struct {
 	RegistrationEnabled              bool
 	EmailVerifyEnabled               bool
+	PhoneVerifyEnabled               bool
 	RegistrationEmailSuffixWhitelist []string
 	PromoCodeEnabled                 bool
 	PasswordResetEnabled             bool
@@ -33,6 +34,17 @@ type SystemSettings struct {
 	SMTPFrom               string
 	SMTPFromName           string
 	SMTPUseTLS             bool
+
+	AliyunSMSAccessKeyID               string
+	AliyunSMSAccessKeySecret           string
+	AliyunSMSAccessKeySecretConfigured bool
+	AliyunSMSSignName                  string
+	AliyunSMSTemplateCode              string
+	AliyunSMSTemplateParamKey          string
+	AliyunSMSTemplateStaticParams      string
+	AliyunSMSSchemeName                string
+	AliyunSMSValidTimeSeconds          int
+	AliyunSMSIntervalSeconds           int
 
 	TurnstileEnabled             bool
 	TurnstileSiteKey             string
@@ -236,6 +248,7 @@ type DefaultSubscriptionSetting struct {
 type PublicSettings struct {
 	RegistrationEnabled              bool
 	EmailVerifyEnabled               bool
+	PhoneVerifyEnabled               bool
 	ForceEmailOnThirdPartySignup     bool
 	RegistrationEmailSuffixWhitelist []string
 	PromoCodeEnabled                 bool

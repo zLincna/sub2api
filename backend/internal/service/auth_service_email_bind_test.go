@@ -819,6 +819,9 @@ func (s *emailBindUserRepoStub) ExistsByEmail(_ context.Context, email string) (
 	_, ok := s.usersByEmail[email]
 	return ok, nil
 }
+func (s *emailBindUserRepoStub) ExistsByPhone(context.Context, string) (bool, error) {
+	return false, nil
+}
 
 func (s *emailBindUserRepoStub) BatchSetConcurrency(context.Context, []int64, int) (int, error) {
 	return 0, nil

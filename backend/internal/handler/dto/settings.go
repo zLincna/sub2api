@@ -29,6 +29,7 @@ type CustomEndpoint struct {
 type SystemSettings struct {
 	RegistrationEnabled              bool                     `json:"registration_enabled"`
 	EmailVerifyEnabled               bool                     `json:"email_verify_enabled"`
+	PhoneVerifyEnabled               bool                     `json:"phone_verify_enabled"`
 	RegistrationEmailSuffixWhitelist []string                 `json:"registration_email_suffix_whitelist"`
 	PromoCodeEnabled                 bool                     `json:"promo_code_enabled"`
 	PasswordResetEnabled             bool                     `json:"password_reset_enabled"`
@@ -48,6 +49,16 @@ type SystemSettings struct {
 	SMTPFrom               string `json:"smtp_from_email"`
 	SMTPFromName           string `json:"smtp_from_name"`
 	SMTPUseTLS             bool   `json:"smtp_use_tls"`
+
+	AliyunSMSAccessKeyID               string `json:"aliyun_sms_access_key_id"`
+	AliyunSMSAccessKeySecretConfigured bool   `json:"aliyun_sms_access_key_secret_configured"`
+	AliyunSMSSignName                  string `json:"aliyun_sms_sign_name"`
+	AliyunSMSTemplateCode              string `json:"aliyun_sms_template_code"`
+	AliyunSMSTemplateParamKey          string `json:"aliyun_sms_template_param_key"`
+	AliyunSMSTemplateStaticParams      string `json:"aliyun_sms_template_static_params"`
+	AliyunSMSSchemeName                string `json:"aliyun_sms_scheme_name"`
+	AliyunSMSValidTimeSeconds          int    `json:"aliyun_sms_valid_time_seconds"`
+	AliyunSMSIntervalSeconds           int    `json:"aliyun_sms_interval_seconds"`
 
 	TurnstileEnabled             bool   `json:"turnstile_enabled"`
 	TurnstileSiteKey             string `json:"turnstile_site_key"`
@@ -265,6 +276,7 @@ type DefaultSubscriptionSetting struct {
 type PublicSettings struct {
 	RegistrationEnabled              bool                     `json:"registration_enabled"`
 	EmailVerifyEnabled               bool                     `json:"email_verify_enabled"`
+	PhoneVerifyEnabled               bool                     `json:"phone_verify_enabled"`
 	ForceEmailOnThirdPartySignup     bool                     `json:"force_email_on_third_party_signup"`
 	RegistrationEmailSuffixWhitelist []string                 `json:"registration_email_suffix_whitelist"`
 	PromoCodeEnabled                 bool                     `json:"promo_code_enabled"`

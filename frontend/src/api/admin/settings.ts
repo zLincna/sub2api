@@ -359,6 +359,7 @@ export interface SystemSettings {
   // Registration settings
   registration_enabled: boolean;
   email_verify_enabled: boolean;
+  phone_verify_enabled: boolean;
   registration_email_suffix_whitelist: string[];
   promo_code_enabled: boolean;
   password_reset_enabled: boolean;
@@ -446,6 +447,15 @@ export interface SystemSettings {
   smtp_from_email: string;
   smtp_from_name: string;
   smtp_use_tls: boolean;
+  aliyun_sms_access_key_id?: string;
+  aliyun_sms_access_key_secret_configured?: boolean;
+  aliyun_sms_sign_name?: string;
+  aliyun_sms_template_code?: string;
+  aliyun_sms_template_param_key?: string;
+  aliyun_sms_template_static_params?: string;
+  aliyun_sms_scheme_name?: string;
+  aliyun_sms_valid_time_seconds?: number;
+  aliyun_sms_interval_seconds?: number;
   // Cloudflare Turnstile settings
   turnstile_enabled: boolean;
   turnstile_site_key: string;
@@ -620,6 +630,7 @@ export interface SystemSettings {
 export interface UpdateSettingsRequest {
   registration_enabled?: boolean;
   email_verify_enabled?: boolean;
+  phone_verify_enabled?: boolean;
   registration_email_suffix_whitelist?: string[];
   promo_code_enabled?: boolean;
   password_reset_enabled?: boolean;
@@ -703,6 +714,15 @@ export interface UpdateSettingsRequest {
   smtp_from_email?: string;
   smtp_from_name?: string;
   smtp_use_tls?: boolean;
+  aliyun_sms_access_key_id?: string;
+  aliyun_sms_access_key_secret?: string;
+  aliyun_sms_sign_name?: string;
+  aliyun_sms_template_code?: string;
+  aliyun_sms_template_param_key?: string;
+  aliyun_sms_template_static_params?: string;
+  aliyun_sms_scheme_name?: string;
+  aliyun_sms_valid_time_seconds?: number;
+  aliyun_sms_interval_seconds?: number;
   turnstile_enabled?: boolean;
   turnstile_site_key?: string;
   turnstile_secret_key?: string;

@@ -72,6 +72,7 @@ func (r *userRepository) Create(ctx context.Context, userIn *service.User) error
 		txClient,
 		txAwareSQLExecutor(txCtx, r.sql, r.client),
 		normalizedEmailUniquenessLockKey(userIn.Email),
+		normalizedPhoneUniquenessLockKey(userIn.Phone),
 	)
 	if err != nil {
 		return err
@@ -79,6 +80,9 @@ func (r *userRepository) Create(ctx context.Context, userIn *service.User) error
 	defer releaseEmailLock()
 
 	if err := ensureNormalizedEmailAvailableWithClient(txCtx, txClient, 0, userIn.Email); err != nil {
+		return err
+	}
+	if err := ensureNormalizedPhoneAvailableWithClient(txCtx, txAwareSQLExecutor(txCtx, r.sql, txClient), 0, userIn.Phone); err != nil {
 		return err
 	}
 
@@ -98,6 +102,9 @@ func (r *userRepository) Create(ctx context.Context, userIn *service.User) error
 		Save(txCtx)
 	if err != nil {
 		return translatePersistenceError(err, nil, service.ErrEmailExists)
+	}
+	if err := updateUserPhoneWithClient(txCtx, txClient, created.ID, userIn.Phone, userIn.PhoneVerifiedAt); err != nil {
+		return translatePersistenceError(err, nil, service.ErrPhoneExists)
 	}
 
 	if err := r.syncUserAllowedGroupsWithClient(txCtx, txClient, created.ID, userIn.AllowedGroups); err != nil {
@@ -124,6 +131,8 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*service.User, 
 	}
 
 	out := userEntityToService(m)
+	r.hydrateUserPhone(ctx, out)
+	r.hydrateUserPhone(ctx, out)
 	groups, err := r.loadAllowedGroups(ctx, []int64{id})
 	if err != nil {
 		return nil, err
@@ -141,6 +150,7 @@ func (r *userRepository) GetByIDIncludeDeleted(ctx context.Context, id int64) (*
 		return nil, translatePersistenceError(err, service.ErrUserNotFound, nil)
 	}
 	out := userEntityToService(m)
+	r.hydrateUserPhone(ctx, out)
 	groups, err := r.loadAllowedGroups(ctx, []int64{id})
 	if err != nil {
 		return nil, err
@@ -168,6 +178,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*service
 	m := matches[0]
 
 	out := userEntityToService(m)
+	r.hydrateUserPhone(ctx, out)
 	groups, err := r.loadAllowedGroups(ctx, []int64{m.ID})
 	if err != nil {
 		return nil, err
@@ -209,6 +220,7 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 		txClient,
 		txAwareSQLExecutor(txCtx, r.sql, r.client),
 		normalizedEmailUniquenessLockKey(userIn.Email),
+		normalizedPhoneUniquenessLockKey(userIn.Phone),
 	)
 	if err != nil {
 		return err
@@ -216,6 +228,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 	defer releaseEmailLock()
 
 	if err := ensureNormalizedEmailAvailableWithClient(txCtx, txClient, userIn.ID, userIn.Email); err != nil {
+		return err
+	}
+	if err := ensureNormalizedPhoneAvailableWithClient(txCtx, txAwareSQLExecutor(txCtx, r.sql, txClient), userIn.ID, userIn.Phone); err != nil {
 		return err
 	}
 
@@ -255,6 +270,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 	updated, err := updateOp.Save(txCtx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrUserNotFound, service.ErrEmailExists)
+	}
+	if err := updateUserPhoneWithClient(txCtx, txClient, updated.ID, userIn.Phone, userIn.PhoneVerifiedAt); err != nil {
+		return translatePersistenceError(err, service.ErrUserNotFound, service.ErrPhoneExists)
 	}
 
 	if err := r.syncUserAllowedGroupsWithClient(txCtx, txClient, updated.ID, userIn.AllowedGroups); err != nil {
@@ -515,6 +533,7 @@ func (r *userRepository) ListWithFilters(ctx context.Context, params pagination.
 	for i := range users {
 		userIDs = append(userIDs, users[i].ID)
 		u := userEntityToService(users[i])
+		r.hydrateUserPhone(userCtx, u)
 		outUsers = append(outUsers, *u)
 		userMap[u.ID] = &outUsers[len(outUsers)-1]
 	}
@@ -816,6 +835,20 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool,
 	return r.client.User.Query().Where(userEmailLookupPredicate(email)).Exist(ctx)
 }
 
+func (r *userRepository) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
+	normalized := normalizePhoneLookupValue(phone)
+	if normalized == "" {
+		return false, nil
+	}
+	exec := txAwareSQLExecutor(ctx, r.sql, r.client)
+	if exec == nil {
+		return false, nil
+	}
+	var exists bool
+	err := scanSingleRow(ctx, exec, "SELECT EXISTS (SELECT 1 FROM users WHERE phone = $1 AND deleted_at IS NULL)", []any{normalized}, &exists)
+	return exists, err
+}
+
 func ensureNormalizedEmailAvailableWithClient(ctx context.Context, client *dbent.Client, userID int64, email string) error {
 	client = clientFromContext(ctx, client)
 	if client == nil {
@@ -861,6 +894,79 @@ func normalizedEmailUniquenessLockKey(email string) string {
 		return ""
 	}
 	return "users:normalized-email:" + normalized
+}
+
+func ensureNormalizedPhoneAvailableWithClient(ctx context.Context, exec sqlQueryExecutor, userID int64, phone string) error {
+	normalized := normalizePhoneLookupValue(phone)
+	if normalized == "" {
+		return nil
+	}
+	if exec == nil {
+		return nil
+	}
+	rows, err := exec.QueryContext(ctx, "SELECT id FROM users WHERE phone = $1 AND deleted_at IS NULL", normalized)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return err
+		}
+		if id != userID {
+			return service.ErrPhoneExists
+		}
+	}
+	return rows.Err()
+}
+
+func normalizePhoneLookupValue(phone string) string {
+	normalized, err := service.NormalizeMainlandPhone(phone)
+	if err != nil {
+		return ""
+	}
+	return normalized
+}
+
+func normalizedPhoneUniquenessLockKey(phone string) string {
+	normalized := normalizePhoneLookupValue(phone)
+	if normalized == "" {
+		return ""
+	}
+	return "users:phone:" + normalized
+}
+
+func updateUserPhoneWithClient(ctx context.Context, client *dbent.Client, userID int64, phone string, verifiedAt *time.Time) error {
+	normalized := normalizePhoneLookupValue(phone)
+	if normalized == "" || userID <= 0 {
+		return nil
+	}
+	exec := txAwareSQLExecutor(ctx, nil, clientFromContext(ctx, client))
+	if exec == nil {
+		return nil
+	}
+	_, err := exec.ExecContext(ctx, "UPDATE users SET phone = $1, phone_verified_at = $2, updated_at = NOW() WHERE id = $3", normalized, verifiedAt, userID)
+	return err
+}
+
+func (r *userRepository) hydrateUserPhone(ctx context.Context, out *service.User) {
+	if r == nil || out == nil || out.ID <= 0 {
+		return
+	}
+	exec := txAwareSQLExecutor(ctx, r.sql, r.client)
+	if exec == nil {
+		return
+	}
+	var phone string
+	var verifiedAt sql.NullTime
+	if err := scanSingleRow(ctx, exec, "SELECT phone, phone_verified_at FROM users WHERE id = $1", []any{out.ID}, &phone, &verifiedAt); err != nil {
+		return
+	}
+	out.Phone = phone
+	if verifiedAt.Valid {
+		out.PhoneVerifiedAt = &verifiedAt.Time
+	}
 }
 
 func (r *userRepository) AddGroupToAllowedGroups(ctx context.Context, userID int64, groupID int64) error {

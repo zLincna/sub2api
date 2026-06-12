@@ -40,6 +40,13 @@ func (User) Fields() []ent.Field {
 		field.String("email").
 			MaxLen(255).
 			NotEmpty(),
+		field.String("phone").
+			MaxLen(32).
+			Default(""),
+		field.Time("phone_verified_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 		field.String("password_hash").
 			MaxLen(255).
 			NotEmpty(),

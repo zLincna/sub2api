@@ -246,6 +246,9 @@ func (r *contentModerationTestUserRepo) BatchAddConcurrency(ctx context.Context,
 func (r *contentModerationTestUserRepo) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	panic("unexpected ExistsByEmail call")
 }
+func (r *contentModerationTestUserRepo) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
+	panic("unexpected ExistsByPhone call")
+}
 
 func (r *contentModerationTestUserRepo) RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error) {
 	panic("unexpected RemoveGroupFromAllowedGroups call")

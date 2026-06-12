@@ -140,6 +140,7 @@ func (s *userRepoStub) ExistsByEmail(ctx context.Context, email string) (bool, e
 	}
 	return s.exists, nil
 }
+func (s *userRepoStub) ExistsByPhone(context.Context, string) (bool, error) { return false, nil }
 
 func (s *userRepoStub) RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error) {
 	panic("unexpected RemoveGroupFromAllowedGroups call")

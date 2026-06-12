@@ -6992,6 +6992,7 @@ type SettingsForm = Omit<
   | "wechat_connect_mobile_enabled"
 > & {
   smtp_password: string;
+  aliyun_sms_access_key_secret: string;
   turnstile_secret_key: string;
   linuxdo_connect_client_secret: string;
   dingtalk_connect_client_secret: string;
@@ -7014,6 +7015,7 @@ type SettingsForm = Omit<
 const form = reactive<SettingsForm>({
   registration_enabled: true,
   email_verify_enabled: false,
+  phone_verify_enabled: false,
   registration_email_suffix_whitelist: [],
   promo_code_enabled: true,
   invitation_code_enabled: false,
@@ -7089,6 +7091,16 @@ const form = reactive<SettingsForm>({
   smtp_from_email: "",
   smtp_from_name: "",
   smtp_use_tls: true,
+  aliyun_sms_access_key_id: "",
+  aliyun_sms_access_key_secret: "",
+  aliyun_sms_access_key_secret_configured: false,
+  aliyun_sms_sign_name: "",
+  aliyun_sms_template_code: "",
+  aliyun_sms_template_param_key: "code",
+  aliyun_sms_template_static_params: "{}",
+  aliyun_sms_scheme_name: "",
+  aliyun_sms_valid_time_seconds: 300,
+  aliyun_sms_interval_seconds: 60,
   // Cloudflare Turnstile
   turnstile_enabled: false,
   turnstile_site_key: "",
@@ -7853,6 +7865,7 @@ async function loadSettings() {
     );
     registrationEmailSuffixWhitelistDraft.value = "";
     form.smtp_password = "";
+    form.aliyun_sms_access_key_secret = "";
     smtpPasswordManuallyEdited.value = false;
     form.turnstile_secret_key = "";
     form.linuxdo_connect_client_secret = "";
@@ -8156,6 +8169,7 @@ async function saveSettings() {
     const payload: UpdateSettingsRequest = {
       registration_enabled: form.registration_enabled,
       email_verify_enabled: form.email_verify_enabled,
+      phone_verify_enabled: form.phone_verify_enabled,
       registration_email_suffix_whitelist:
         registrationEmailSuffixWhitelistTags.value.map((suffix) =>
           suffix.startsWith("*.") ? suffix : `@${suffix}`,
@@ -8201,6 +8215,15 @@ async function saveSettings() {
       smtp_from_email: form.smtp_from_email,
       smtp_from_name: form.smtp_from_name,
       smtp_use_tls: form.smtp_use_tls,
+      aliyun_sms_access_key_id: form.aliyun_sms_access_key_id,
+      aliyun_sms_access_key_secret: form.aliyun_sms_access_key_secret || undefined,
+      aliyun_sms_sign_name: form.aliyun_sms_sign_name,
+      aliyun_sms_template_code: form.aliyun_sms_template_code,
+      aliyun_sms_template_param_key: form.aliyun_sms_template_param_key || "code",
+      aliyun_sms_template_static_params: form.aliyun_sms_template_static_params || "{}",
+      aliyun_sms_scheme_name: form.aliyun_sms_scheme_name,
+      aliyun_sms_valid_time_seconds: form.aliyun_sms_valid_time_seconds,
+      aliyun_sms_interval_seconds: form.aliyun_sms_interval_seconds,
       turnstile_enabled: form.turnstile_enabled,
       turnstile_site_key: form.turnstile_site_key,
       turnstile_secret_key: form.turnstile_secret_key || undefined,
@@ -8416,6 +8439,7 @@ async function saveSettings() {
     );
     registrationEmailSuffixWhitelistDraft.value = "";
     form.smtp_password = "";
+    form.aliyun_sms_access_key_secret = "";
     smtpPasswordManuallyEdited.value = false;
     form.turnstile_secret_key = "";
     form.linuxdo_connect_client_secret = "";

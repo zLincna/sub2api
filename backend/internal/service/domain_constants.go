@@ -124,6 +124,7 @@ const (
 	// 注册设置
 	SettingKeyRegistrationEnabled              = "registration_enabled"                // 是否开放注册
 	SettingKeyEmailVerifyEnabled               = "email_verify_enabled"                // 是否开启邮件验证
+	SettingKeyPhoneVerifyEnabled               = "phone_verify_enabled"                // 是否开启注册手机号短信验证
 	SettingKeyRegistrationEmailSuffixWhitelist = "registration_email_suffix_whitelist" // 注册邮箱后缀白名单（JSON 数组）
 	SettingKeyPromoCodeEnabled                 = "promo_code_enabled"                  // 是否启用优惠码功能
 	SettingKeyPasswordResetEnabled             = "password_reset_enabled"              // 是否启用忘记密码功能（需要先开启邮件验证）
@@ -149,6 +150,17 @@ const (
 	SettingKeySMTPFrom     = "smtp_from"      // 发件人地址
 	SettingKeySMTPFromName = "smtp_from_name" // 发件人名称
 	SettingKeySMTPUseTLS   = "smtp_use_tls"   // 是否使用TLS
+
+	// 阿里云短信验证设置
+	SettingKeyAliyunSMSAccessKeyID        = "aliyun_sms_access_key_id"
+	SettingKeyAliyunSMSAccessKeySecret    = "aliyun_sms_access_key_secret"
+	SettingKeyAliyunSMSSignName           = "aliyun_sms_sign_name"
+	SettingKeyAliyunSMSTemplateCode       = "aliyun_sms_template_code"
+	SettingKeyAliyunSMSTemplateParamKey   = "aliyun_sms_template_param_key"
+	SettingKeyAliyunSMSTemplateStaticJSON = "aliyun_sms_template_static_params"
+	SettingKeyAliyunSMSSchemeName         = "aliyun_sms_scheme_name"
+	SettingKeyAliyunSMSValidTimeSeconds   = "aliyun_sms_valid_time_seconds"
+	SettingKeyAliyunSMSIntervalSeconds    = "aliyun_sms_interval_seconds"
 
 	// Cloudflare Turnstile 设置
 	SettingKeyTurnstileEnabled   = "turnstile_enabled"    // 是否启用 Turnstile 验证

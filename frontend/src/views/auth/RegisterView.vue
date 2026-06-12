@@ -52,6 +52,67 @@
           </div>
         </div>
 
+        <!-- Phone Input -->
+        <div>
+          <label for="phone" class="input-label">
+            {{ t('auth.phoneLabel') }}
+          </label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+              <Icon name="key" size="md" class="text-gray-400 dark:text-dark-500" />
+            </div>
+            <input
+              id="phone"
+              v-model="formData.phone"
+              type="tel"
+              required
+              autocomplete="tel"
+              inputmode="tel"
+              :disabled="registrationActionDisabled"
+              class="input pl-11"
+              :class="{ 'input-error': errors.phone }"
+              :placeholder="t('auth.phonePlaceholder')"
+            />
+          </div>
+        </div>
+
+        <!-- Phone Verification Code -->
+        <div v-if="phoneVerifyEnabled">
+          <label for="phone_verify_code" class="input-label">
+            {{ t('auth.phoneVerificationCode') }}
+          </label>
+          <div class="flex gap-2">
+            <div class="relative min-w-0 flex-1">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Icon name="shield" size="md" class="text-gray-400 dark:text-dark-500" />
+              </div>
+              <input
+                id="phone_verify_code"
+                v-model="formData.phone_verify_code"
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+                :disabled="registrationActionDisabled"
+                class="input pl-11"
+                :class="{ 'input-error': errors.phone_verify_code }"
+                placeholder="000000"
+              />
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary shrink-0 px-3"
+              :disabled="registrationActionDisabled || sendingPhoneCode || phoneCodeCountdown > 0 || (turnstileEnabled && !turnstileToken)"
+              @click="handleSendPhoneCode"
+            >
+              <span v-if="sendingPhoneCode">{{ t('auth.sendingCode') }}</span>
+              <span v-else-if="phoneCodeCountdown > 0">{{ phoneCodeCountdown }}s</span>
+              <span v-else>{{ t('auth.sendCode') }}</span>
+            </button>
+          </div>
+          <p class="input-hint">{{ t('auth.phoneVerificationCodeHint') }}</p>
+        </div>
+
         <!-- Password Input -->
         <div>
           <label for="password" class="input-label">
@@ -208,7 +269,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          :disabled="registrationActionDisabled || (turnstileEnabled && !turnstileToken)"
+          :disabled="registrationSubmitDisabled"
           class="btn btn-primary w-full"
         >
           <svg
@@ -313,6 +374,7 @@ import { useAuthStore, useAppStore } from '@/stores'
 import {
   getPublicSettings,
   isWeChatWebOAuthEnabled,
+  sendPhoneVerifyCode,
   validatePromoCode,
   validateInvitationCode
 } from '@/api/auth'
@@ -349,6 +411,7 @@ const showPassword = ref<boolean>(false)
 // Public settings
 const registrationEnabled = ref<boolean>(true)
 const emailVerifyEnabled = ref<boolean>(false)
+const phoneVerifyEnabled = ref<boolean>(false)
 const promoCodeEnabled = ref<boolean>(true)
 const invitationCodeEnabled = ref<boolean>(false)
 const turnstileEnabled = ref<boolean>(false)
@@ -372,6 +435,9 @@ const showAgreementModal = ref<boolean>(false)
 // Turnstile
 const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const turnstileToken = ref<string>('')
+const sendingPhoneCode = ref<boolean>(false)
+const phoneCodeCountdown = ref<number>(0)
+let phoneCodeCountdownTimer: ReturnType<typeof setInterval> | null = null
 
 // Promo code validation
 const promoValidating = ref<boolean>(false)
@@ -394,6 +460,8 @@ let invitationValidateTimeout: ReturnType<typeof setTimeout> | null = null
 
 const formData = reactive({
   email: '',
+  phone: '',
+  phone_verify_code: '',
   password: '',
   promo_code: '',
   invitation_code: '',
@@ -402,6 +470,8 @@ const formData = reactive({
 
 const errors = reactive({
   email: '',
+  phone: '',
+  phone_verify_code: '',
   password: '',
   turnstile: '',
   invitation_code: ''
@@ -434,6 +504,19 @@ const registrationActionDisabled = computed(
   () => isLoading.value || !settingsLoaded.value || agreementGateActive.value
 )
 
+const registrationSubmitDisabled = computed(() => {
+  if (registrationActionDisabled.value) {
+    return true
+  }
+  if (!turnstileEnabled.value) {
+    return false
+  }
+  if (phoneVerifyEnabled.value && formData.phone_verify_code.trim()) {
+    return false
+  }
+  return !turnstileToken.value
+})
+
 watch(validationToastMessage, (value, previousValue) => {
   if (value && value !== previousValue) {
     appStore.showError(value)
@@ -457,6 +540,7 @@ onMounted(async () => {
     const settings = await getPublicSettings()
     registrationEnabled.value = settings.registration_enabled
     emailVerifyEnabled.value = settings.email_verify_enabled
+    phoneVerifyEnabled.value = settings.phone_verify_enabled
     promoCodeEnabled.value = settings.promo_code_enabled
     invitationCodeEnabled.value = settings.invitation_code_enabled
     turnstileEnabled.value = settings.turnstile_enabled
@@ -505,6 +589,9 @@ onUnmounted(() => {
   }
   if (invitationValidateTimeout) {
     clearTimeout(invitationValidateTimeout)
+  }
+  if (phoneCodeCountdownTimer) {
+    clearInterval(phoneCodeCountdownTimer)
   }
 })
 
@@ -731,6 +818,61 @@ function validateEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  return digits.length === 13 && digits.startsWith('86') ? digits.slice(2) : digits
+}
+
+function validatePhone(phone: string): boolean {
+  return /^1\d{10}$/.test(normalizePhone(phone))
+}
+
+function startPhoneCodeCountdown(seconds: number): void {
+  phoneCodeCountdown.value = seconds
+  if (phoneCodeCountdownTimer) {
+    clearInterval(phoneCodeCountdownTimer)
+  }
+  phoneCodeCountdownTimer = setInterval(() => {
+    if (phoneCodeCountdown.value > 0) {
+      phoneCodeCountdown.value -= 1
+    } else if (phoneCodeCountdownTimer) {
+      clearInterval(phoneCodeCountdownTimer)
+      phoneCodeCountdownTimer = null
+    }
+  }, 1000)
+}
+
+async function handleSendPhoneCode(): Promise<void> {
+  errors.phone = ''
+  errors.phone_verify_code = ''
+  if (!validatePhone(formData.phone)) {
+    errors.phone = t('auth.invalidPhone')
+    return
+  }
+  if (turnstileEnabled.value && !turnstileToken.value) {
+    errors.turnstile = t('auth.completeVerification')
+    return
+  }
+
+  sendingPhoneCode.value = true
+  try {
+    const response = await sendPhoneVerifyCode({
+      phone: normalizePhone(formData.phone),
+      turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined
+    })
+    startPhoneCodeCountdown(response.countdown || 60)
+    if (turnstileRef.value) {
+      turnstileRef.value.reset()
+      turnstileToken.value = ''
+    }
+    appStore.showSuccess(t('auth.phoneCodeSentSuccess'))
+  } catch (error: unknown) {
+    appStore.showError(buildAuthErrorMessage(error, { fallback: t('auth.sendCodeFailed') }))
+  } finally {
+    sendingPhoneCode.value = false
+  }
+}
+
 function buildEmailSuffixNotAllowedMessage(): string {
   const normalizedWhitelist = normalizeRegistrationEmailSuffixWhitelist(
     registrationEmailSuffixWhitelist.value
@@ -750,6 +892,8 @@ function buildEmailSuffixNotAllowedMessage(): string {
 function validateForm(): boolean {
   // Reset errors
   errors.email = ''
+  errors.phone = ''
+  errors.phone_verify_code = ''
   errors.password = ''
   errors.turnstile = ''
   errors.invitation_code = ''
@@ -776,6 +920,24 @@ function validateForm(): boolean {
   ) {
     errors.email = buildEmailSuffixNotAllowedMessage()
     isValid = false
+  }
+
+  if (!formData.phone.trim()) {
+    errors.phone = t('auth.phoneRequired')
+    isValid = false
+  } else if (!validatePhone(formData.phone)) {
+    errors.phone = t('auth.invalidPhone')
+    isValid = false
+  }
+
+  if (phoneVerifyEnabled.value) {
+    if (!formData.phone_verify_code.trim()) {
+      errors.phone_verify_code = t('auth.codeRequired')
+      isValid = false
+    } else if (!/^\d{6}$/.test(formData.phone_verify_code.trim())) {
+      errors.phone_verify_code = t('auth.invalidCode')
+      isValid = false
+    }
   }
 
   // Password validation
@@ -868,6 +1030,8 @@ async function handleRegister(): Promise<void> {
         'register_data',
         JSON.stringify({
           email: formData.email,
+          phone: normalizePhone(formData.phone),
+          phone_verify_code: formData.phone_verify_code.trim() || undefined,
           password: formData.password,
           turnstile_token: turnstileToken.value,
           promo_code: formData.promo_code || undefined,
@@ -884,6 +1048,8 @@ async function handleRegister(): Promise<void> {
     // Otherwise, directly register
     await authStore.register({
       email: formData.email,
+      phone: normalizePhone(formData.phone),
+      phone_verify_code: formData.phone_verify_code.trim() || undefined,
       password: formData.password,
       turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined,
       promo_code: formData.promo_code || undefined,

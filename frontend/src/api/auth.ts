@@ -10,6 +10,7 @@ import type {
   AuthResponse,
   CurrentUserResponse,
   SendVerifyCodeRequest,
+  SendPhoneVerifyCodeRequest,
   SendVerifyCodeResponse,
   PublicSettings,
   TotpLoginResponse,
@@ -455,6 +456,16 @@ export async function sendVerifyCode(
   request: SendVerifyCodeRequest
 ): Promise<SendVerifyCodeResponse> {
   const { data } = await apiClient.post<SendVerifyCodeResponse>('/auth/send-verify-code', request)
+  return data
+}
+
+export async function sendPhoneVerifyCode(
+  request: SendPhoneVerifyCodeRequest
+): Promise<SendVerifyCodeResponse> {
+  const { data } = await apiClient.post<SendVerifyCodeResponse>(
+    '/auth/send-phone-verify-code',
+    request
+  )
   return data
 }
 

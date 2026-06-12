@@ -121,6 +121,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 	payload := dto.SystemSettings{
 		RegistrationEnabled:                    settings.RegistrationEnabled,
 		EmailVerifyEnabled:                     settings.EmailVerifyEnabled,
+		PhoneVerifyEnabled:                     settings.PhoneVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:       settings.RegistrationEmailSuffixWhitelist,
 		PromoCodeEnabled:                       settings.PromoCodeEnabled,
 		PasswordResetEnabled:                   settings.PasswordResetEnabled,
@@ -139,6 +140,15 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		SMTPFrom:                               settings.SMTPFrom,
 		SMTPFromName:                           settings.SMTPFromName,
 		SMTPUseTLS:                             settings.SMTPUseTLS,
+		AliyunSMSAccessKeyID:                   settings.AliyunSMSAccessKeyID,
+		AliyunSMSAccessKeySecretConfigured:     settings.AliyunSMSAccessKeySecretConfigured,
+		AliyunSMSSignName:                      settings.AliyunSMSSignName,
+		AliyunSMSTemplateCode:                  settings.AliyunSMSTemplateCode,
+		AliyunSMSTemplateParamKey:              settings.AliyunSMSTemplateParamKey,
+		AliyunSMSTemplateStaticParams:          settings.AliyunSMSTemplateStaticParams,
+		AliyunSMSSchemeName:                    settings.AliyunSMSSchemeName,
+		AliyunSMSValidTimeSeconds:              settings.AliyunSMSValidTimeSeconds,
+		AliyunSMSIntervalSeconds:               settings.AliyunSMSIntervalSeconds,
 		TurnstileEnabled:                       settings.TurnstileEnabled,
 		TurnstileSiteKey:                       settings.TurnstileSiteKey,
 		TurnstileSecretKeyConfigured:           settings.TurnstileSecretKeyConfigured,
@@ -386,6 +396,7 @@ type UpdateSettingsRequest struct {
 	// 注册设置
 	RegistrationEnabled              bool                         `json:"registration_enabled"`
 	EmailVerifyEnabled               bool                         `json:"email_verify_enabled"`
+	PhoneVerifyEnabled               bool                         `json:"phone_verify_enabled"`
 	RegistrationEmailSuffixWhitelist []string                     `json:"registration_email_suffix_whitelist"`
 	PromoCodeEnabled                 bool                         `json:"promo_code_enabled"`
 	PasswordResetEnabled             bool                         `json:"password_reset_enabled"`
@@ -405,6 +416,16 @@ type UpdateSettingsRequest struct {
 	SMTPFrom     string `json:"smtp_from_email"`
 	SMTPFromName string `json:"smtp_from_name"`
 	SMTPUseTLS   bool   `json:"smtp_use_tls"`
+
+	AliyunSMSAccessKeyID          string `json:"aliyun_sms_access_key_id"`
+	AliyunSMSAccessKeySecret      string `json:"aliyun_sms_access_key_secret"`
+	AliyunSMSSignName             string `json:"aliyun_sms_sign_name"`
+	AliyunSMSTemplateCode         string `json:"aliyun_sms_template_code"`
+	AliyunSMSTemplateParamKey     string `json:"aliyun_sms_template_param_key"`
+	AliyunSMSTemplateStaticParams string `json:"aliyun_sms_template_static_params"`
+	AliyunSMSSchemeName           string `json:"aliyun_sms_scheme_name"`
+	AliyunSMSValidTimeSeconds     int    `json:"aliyun_sms_valid_time_seconds"`
+	AliyunSMSIntervalSeconds      int    `json:"aliyun_sms_interval_seconds"`
 
 	// Cloudflare Turnstile 设置
 	TurnstileEnabled   bool   `json:"turnstile_enabled"`
@@ -1468,6 +1489,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 
 		RegistrationEnabled:              req.RegistrationEnabled,
 		EmailVerifyEnabled:               req.EmailVerifyEnabled,
+		PhoneVerifyEnabled:               req.PhoneVerifyEnabled,
 		RegistrationEmailSuffixWhitelist: req.RegistrationEmailSuffixWhitelist,
 		PromoCodeEnabled:                 req.PromoCodeEnabled,
 		PasswordResetEnabled:             req.PasswordResetEnabled,
@@ -1485,6 +1507,15 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		SMTPFrom:                         req.SMTPFrom,
 		SMTPFromName:                     req.SMTPFromName,
 		SMTPUseTLS:                       req.SMTPUseTLS,
+		AliyunSMSAccessKeyID:             req.AliyunSMSAccessKeyID,
+		AliyunSMSAccessKeySecret:         req.AliyunSMSAccessKeySecret,
+		AliyunSMSSignName:                req.AliyunSMSSignName,
+		AliyunSMSTemplateCode:            req.AliyunSMSTemplateCode,
+		AliyunSMSTemplateParamKey:        req.AliyunSMSTemplateParamKey,
+		AliyunSMSTemplateStaticParams:    req.AliyunSMSTemplateStaticParams,
+		AliyunSMSSchemeName:              req.AliyunSMSSchemeName,
+		AliyunSMSValidTimeSeconds:        req.AliyunSMSValidTimeSeconds,
+		AliyunSMSIntervalSeconds:         req.AliyunSMSIntervalSeconds,
 		TurnstileEnabled:                 req.TurnstileEnabled,
 		TurnstileSiteKey:                 req.TurnstileSiteKey,
 		TurnstileSecretKey:               req.TurnstileSecretKey,
@@ -1915,6 +1946,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	payload := dto.SystemSettings{
 		RegistrationEnabled:                    updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                     updatedSettings.EmailVerifyEnabled,
+		PhoneVerifyEnabled:                     updatedSettings.PhoneVerifyEnabled,
 		RegistrationEmailSuffixWhitelist:       updatedSettings.RegistrationEmailSuffixWhitelist,
 		PromoCodeEnabled:                       updatedSettings.PromoCodeEnabled,
 		PasswordResetEnabled:                   updatedSettings.PasswordResetEnabled,
@@ -1933,6 +1965,15 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		SMTPFrom:                               updatedSettings.SMTPFrom,
 		SMTPFromName:                           updatedSettings.SMTPFromName,
 		SMTPUseTLS:                             updatedSettings.SMTPUseTLS,
+		AliyunSMSAccessKeyID:                   updatedSettings.AliyunSMSAccessKeyID,
+		AliyunSMSAccessKeySecretConfigured:     updatedSettings.AliyunSMSAccessKeySecretConfigured,
+		AliyunSMSSignName:                      updatedSettings.AliyunSMSSignName,
+		AliyunSMSTemplateCode:                  updatedSettings.AliyunSMSTemplateCode,
+		AliyunSMSTemplateParamKey:              updatedSettings.AliyunSMSTemplateParamKey,
+		AliyunSMSTemplateStaticParams:          updatedSettings.AliyunSMSTemplateStaticParams,
+		AliyunSMSSchemeName:                    updatedSettings.AliyunSMSSchemeName,
+		AliyunSMSValidTimeSeconds:              updatedSettings.AliyunSMSValidTimeSeconds,
+		AliyunSMSIntervalSeconds:               updatedSettings.AliyunSMSIntervalSeconds,
 		TurnstileEnabled:                       updatedSettings.TurnstileEnabled,
 		TurnstileSiteKey:                       updatedSettings.TurnstileSiteKey,
 		TurnstileSecretKeyConfigured:           updatedSettings.TurnstileSecretKeyConfigured,

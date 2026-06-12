@@ -211,6 +211,8 @@ type PendingOAuthCreateAccountResponse = {
 }
 
 const email = ref<string>('')
+const phone = ref<string>('')
+const phoneVerifyCode = ref<string>('')
 const password = ref<string>('')
 const initialTurnstileToken = ref<string>('')
 const promoCode = ref<string>('')
@@ -263,6 +265,8 @@ onMounted(async () => {
     try {
       const registerData = JSON.parse(registerDataStr)
       email.value = registerData.email || ''
+      phone.value = registerData.phone || ''
+      phoneVerifyCode.value = registerData.phone_verify_code || ''
       password.value = registerData.password || ''
       initialTurnstileToken.value = registerData.turnstile_token || ''
       promoCode.value = registerData.promo_code || ''
@@ -529,6 +533,8 @@ async function handleVerify(): Promise<void> {
       // Register with verification code
       await authStore.register({
         email: email.value,
+        phone: phone.value,
+        phone_verify_code: phoneVerifyCode.value || undefined,
         password: password.value,
         verify_code: verifyCode.value.trim(),
         turnstile_token: initialTurnstileToken.value || undefined,

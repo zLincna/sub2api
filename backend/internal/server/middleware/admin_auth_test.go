@@ -204,6 +204,9 @@ func (s *stubUserRepo) BatchAddConcurrency(context.Context, []int64, int) (int, 
 func (s *stubUserRepo) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	panic("unexpected ExistsByEmail call")
 }
+func (s *stubUserRepo) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
+	panic("unexpected ExistsByPhone call")
+}
 
 func (s *stubUserRepo) RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error) {
 	panic("unexpected RemoveGroupFromAllowedGroups call")
