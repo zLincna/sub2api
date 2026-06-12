@@ -2,22 +2,18 @@ package service
 
 import (
 	"context"
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	openapiutil "github.com/alibabacloud-go/darabonba-openapi/v2/utils"
+	dypnsapi "github.com/alibabacloud-go/dypnsapi-20170525/v3/client"
+	"github.com/alibabacloud-go/tea/dara"
 )
 
 var ErrAliyunSMSNotConfigured = infraerrors.ServiceUnavailable("ALIYUN_SMS_NOT_CONFIGURED", "aliyun sms service not configured")
@@ -224,154 +220,120 @@ func parseSMSStaticParams(raw string) (map[string]string, error) {
 }
 
 func sendAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, outID string) (string, error) {
-	params := aliyunSMSBaseParams(cfg, "SendSmsVerifyCode")
 	templateParams := make(map[string]string, len(cfg.TemplateStaticParams)+1)
 	for k, v := range cfg.TemplateStaticParams {
 		templateParams[k] = v
 	}
 	templateParams[cfg.TemplateParamKey] = "##code##"
 	templateJSON, _ := json.Marshal(templateParams)
-	params.Set("PhoneNumber", phone)
-	params.Set("CountryCode", "86")
-	params.Set("SignName", cfg.SignName)
-	params.Set("TemplateCode", cfg.TemplateCode)
-	params.Set("TemplateParam", string(templateJSON))
-	params.Set("ValidTime", strconv.Itoa(cfg.ValidTimeSeconds))
-	params.Set("Interval", strconv.Itoa(cfg.IntervalSeconds))
-	params.Set("OutId", outID)
-	params.Set("CodeLength", "6")
-	params.Set("CodeType", "1")
-	params.Set("DuplicatePolicy", "1")
-	params.Set("ReturnVerifyCode", "false")
-	if cfg.SchemeName != "" {
-		params.Set("SchemeName", cfg.SchemeName)
-	}
-	var resp aliyunSMSResponse
-	if err := aliyunSMSRPC(ctx, cfg, params, &resp); err != nil {
+
+	client, err := newAliyunSMSClient(cfg)
+	if err != nil {
 		return "", err
 	}
-	if !resp.ok() || !strings.EqualFold(resp.responseCode(), "OK") {
-		return "", fmt.Errorf("%s: %s", resp.responseCode(), resp.responseMessage())
+	request := &dypnsapi.SendSmsVerifyCodeRequest{
+		PhoneNumber:      dara.String(phone),
+		CountryCode:      dara.String("86"),
+		SignName:         dara.String(cfg.SignName),
+		TemplateCode:     dara.String(cfg.TemplateCode),
+		TemplateParam:    dara.String(string(templateJSON)),
+		ValidTime:        dara.Int64(int64(cfg.ValidTimeSeconds)),
+		Interval:         dara.Int64(int64(cfg.IntervalSeconds)),
+		OutId:            dara.String(outID),
+		CodeLength:       dara.Int64(6),
+		CodeType:         dara.Int64(1),
+		DuplicatePolicy:  dara.Int64(1),
+		ReturnVerifyCode: dara.Bool(false),
 	}
-	return firstNonEmpty(resp.Model.OutID, resp.LowerModel.OutID), nil
+	if cfg.SchemeName != "" {
+		request.SchemeName = dara.String(cfg.SchemeName)
+	}
+
+	resp, err := client.SendSmsVerifyCodeWithOptions(request, &dara.RuntimeOptions{
+		Autoretry:      dara.Bool(false),
+		ConnectTimeout: dara.Int(10000),
+		ReadTimeout:    dara.Int(10000),
+	})
+	if err != nil {
+		return "", err
+	}
+	if resp == nil || resp.Body == nil {
+		return "", fmt.Errorf("empty aliyun sms response")
+	}
+	body := resp.Body
+	if body.Success == nil || !dara.BoolValue(body.Success) || !strings.EqualFold(dara.StringValue(body.Code), "OK") {
+		return "", aliyunSMSError(dara.StringValue(body.Code), dara.StringValue(body.Message), dara.StringValue(body.AccessDeniedDetail))
+	}
+	if body.Model == nil {
+		return outID, nil
+	}
+	return firstNonEmpty(dara.StringValue(body.Model.OutId), outID), nil
 }
 
 func checkAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, code, outID string) (bool, error) {
-	params := aliyunSMSBaseParams(cfg, "CheckSmsVerifyCode")
-	params.Set("PhoneNumber", phone)
-	params.Set("CountryCode", "86")
-	params.Set("VerifyCode", code)
-	params.Set("OutId", outID)
-	params.Set("CaseAuthPolicy", "1")
-	if cfg.SchemeName != "" {
-		params.Set("SchemeName", cfg.SchemeName)
-	}
-	var resp aliyunSMSResponse
-	if err := aliyunSMSRPC(ctx, cfg, params, &resp); err != nil {
+	client, err := newAliyunSMSClient(cfg)
+	if err != nil {
 		return false, err
 	}
-	if !resp.ok() || !strings.EqualFold(resp.responseCode(), "OK") {
-		return false, fmt.Errorf("%s: %s", resp.responseCode(), resp.responseMessage())
+	request := &dypnsapi.CheckSmsVerifyCodeRequest{
+		PhoneNumber:    dara.String(phone),
+		CountryCode:    dara.String("86"),
+		VerifyCode:     dara.String(code),
+		OutId:          dara.String(outID),
+		CaseAuthPolicy: dara.Int64(1),
 	}
-	return strings.EqualFold(resp.verifyResult(), "PASS"), nil
-}
+	if cfg.SchemeName != "" {
+		request.SchemeName = dara.String(cfg.SchemeName)
+	}
 
-type aliyunSMSResponse struct {
-	Success bool   `json:"Success"`
-	Code    string `json:"Code"`
-	Message string `json:"Message"`
-	Model   struct {
-		BizID        string `json:"BizId"`
-		OutID        string `json:"OutId"`
-		VerifyResult string `json:"VerifyResult"`
-	} `json:"Model"`
-	LowerSuccess bool   `json:"success"`
-	LowerCode    string `json:"code"`
-	LowerMessage string `json:"message"`
-	LowerModel   struct {
-		BizID        string `json:"bizId"`
-		OutID        string `json:"outId"`
-		VerifyResult string `json:"verifyResult"`
-	} `json:"model"`
-}
-
-func (r aliyunSMSResponse) ok() bool {
-	return r.Success || r.LowerSuccess
-}
-
-func (r aliyunSMSResponse) responseCode() string {
-	return firstNonEmpty(r.Code, r.LowerCode)
-}
-
-func (r aliyunSMSResponse) responseMessage() string {
-	return firstNonEmpty(r.Message, r.LowerMessage)
-}
-
-func (r aliyunSMSResponse) verifyResult() string {
-	return firstNonEmpty(r.Model.VerifyResult, r.LowerModel.VerifyResult)
-}
-
-func aliyunSMSBaseParams(cfg *AliyunSMSConfig, action string) url.Values {
-	params := url.Values{}
-	params.Set("Format", "JSON")
-	params.Set("Version", "2017-05-25")
-	params.Set("Action", action)
-	params.Set("AccessKeyId", cfg.AccessKeyID)
-	params.Set("SignatureMethod", "HMAC-SHA1")
-	params.Set("Timestamp", time.Now().UTC().Format("2006-01-02T15:04:05Z"))
-	params.Set("SignatureVersion", "1.0")
-	params.Set("SignatureNonce", randomPhoneVerificationHex(16))
-	return params
-}
-
-func aliyunSMSRPC(ctx context.Context, cfg *AliyunSMSConfig, params url.Values, out any) error {
-	params.Set("Signature", aliyunSignature("POST", params, cfg.AccessKeySecret+"&"))
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://dypnsapi.aliyuncs.com/", strings.NewReader(params.Encode()))
+	resp, err := client.CheckSmsVerifyCodeWithOptions(request, &dara.RuntimeOptions{
+		Autoretry:      dara.Bool(false),
+		ConnectTimeout: dara.Int(10000),
+		ReadTimeout:    dara.Int(10000),
+	})
 	if err != nil {
-		return err
+		return false, err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+	if resp == nil || resp.Body == nil {
+		return false, fmt.Errorf("empty aliyun sms response")
 	}
-	defer func() { _ = resp.Body.Close() }()
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
-		return err
+	body := resp.Body
+	if body.Success == nil || !dara.BoolValue(body.Success) || !strings.EqualFold(dara.StringValue(body.Code), "OK") {
+		return false, aliyunSMSError(dara.StringValue(body.Code), dara.StringValue(body.Message), dara.StringValue(body.AccessDeniedDetail))
 	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("aliyun sms http %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+	if body.Model == nil {
+		return false, nil
 	}
-	if err := json.Unmarshal(body, out); err != nil {
-		return err
-	}
-	return nil
+	return strings.EqualFold(dara.StringValue(body.Model.VerifyResult), "PASS"), nil
 }
 
-func aliyunSignature(method string, params url.Values, secret string) string {
-	keys := make([]string, 0, len(params))
-	for key := range params {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	pairs := make([]string, 0, len(keys))
-	for _, key := range keys {
-		pairs = append(pairs, percentEncode(key)+"="+percentEncode(params.Get(key)))
-	}
-	stringToSign := method + "&%2F&" + percentEncode(strings.Join(pairs, "&"))
-	mac := hmac.New(sha1.New, []byte(secret))
-	_, _ = mac.Write([]byte(stringToSign))
-	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
+func newAliyunSMSClient(cfg *AliyunSMSConfig) (*dypnsapi.Client, error) {
+	return dypnsapi.NewClient(&openapiutil.Config{
+		AccessKeyId:     dara.String(cfg.AccessKeyID),
+		AccessKeySecret: dara.String(cfg.AccessKeySecret),
+		Endpoint:        dara.String("dypnsapi.aliyuncs.com"),
+	})
 }
 
-func percentEncode(value string) string {
-	encoded := url.QueryEscape(value)
-	encoded = strings.ReplaceAll(encoded, "+", "%20")
-	encoded = strings.ReplaceAll(encoded, "*", "%2A")
-	encoded = strings.ReplaceAll(encoded, "%7E", "~")
-	return encoded
+func aliyunSMSError(code, message, detail string) error {
+	code = strings.TrimSpace(code)
+	message = strings.TrimSpace(message)
+	detail = strings.TrimSpace(detail)
+	switch {
+	case code != "" && message != "":
+		if detail != "" {
+			return fmt.Errorf("%s: %s (%s)", code, message, detail)
+		}
+		return fmt.Errorf("%s: %s", code, message)
+	case message != "":
+		return fmt.Errorf("%s", message)
+	case code != "":
+		return fmt.Errorf("%s", code)
+	case detail != "":
+		return fmt.Errorf("%s", detail)
+	default:
+		return fmt.Errorf("aliyun sms request failed")
+	}
 }
 
 func randomPhoneVerificationHex(size int) string {
