@@ -23,6 +23,10 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
+	// FieldPhone holds the string denoting the phone field in the database.
+	FieldPhone = "phone"
+	// FieldPhoneVerifiedAt holds the string denoting the phone_verified_at field in the database.
+	FieldPhoneVerifiedAt = "phone_verified_at"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
 	FieldPasswordHash = "password_hash"
 	// FieldRole holds the string denoting the role field in the database.
@@ -196,6 +200,8 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldDeletedAt,
 	FieldEmail,
+	FieldPhone,
+	FieldPhoneVerifiedAt,
 	FieldPasswordHash,
 	FieldRole,
 	FieldBalance,
@@ -249,6 +255,10 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
+	// DefaultPhone holds the default value on creation for the "phone" field.
+	DefaultPhone string
+	// PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
+	PhoneValidator func(string) error
 	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
 	PasswordHashValidator func(string) error
 	// DefaultRole holds the default value on creation for the "role" field.
@@ -313,6 +323,16 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByEmail orders the results by the email field.
 func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
+}
+
+// ByPhone orders the results by the phone field.
+func ByPhone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPhone, opts...).ToFunc()
+}
+
+// ByPhoneVerifiedAt orders the results by the phone_verified_at field.
+func ByPhoneVerifiedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPhoneVerifiedAt, opts...).ToFunc()
 }
 
 // ByPasswordHash orders the results by the password_hash field.

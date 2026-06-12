@@ -161,6 +161,31 @@ vi.mock("vue-i18n", async () => {
     "admin.settings.payment.findProvider": "查看支持的支付方式",
     "admin.settings.openaiExperimentalScheduler.title": "OpenAI 实验调度策略",
     "admin.settings.openaiExperimentalScheduler.description": "默认关闭。开启后仅影响本网关在 OpenAI 账号间的实验性调度选择逻辑，不代表上游 OpenAI 官方能力。",
+    "admin.settings.registration.title": "注册设置",
+    "admin.settings.registration.description": "控制用户注册和验证",
+    "admin.settings.registration.enableRegistration": "开放注册",
+    "admin.settings.registration.enableRegistrationHint": "允许新用户注册",
+    "admin.settings.registration.emailVerification": "邮箱验证",
+    "admin.settings.registration.emailVerificationHint": "新用户注册时需要验证邮箱",
+    "admin.settings.registration.phoneVerification": "手机验证",
+    "admin.settings.registration.phoneVerificationHint": "新用户注册时需要验证手机号",
+    "admin.settings.registration.noVerification": "不验证",
+    "admin.settings.registration.noVerificationHint": "注册时不要求验证码",
+    "admin.settings.registration.aliyunSmsSettings": "阿里云短信配置",
+    "admin.settings.registration.configureAliyunSms": "配置短信",
+    "admin.settings.registration.smsNotConfigured": "短信服务未配置完整，发送手机验证码会失败。",
+    "admin.settings.registration.smsConfigured": "短信基础配置已填写。",
+    "admin.settings.registration.aliyunSmsAccessKeyId": "AccessKey ID",
+    "admin.settings.registration.aliyunSmsAccessKeySecret": "AccessKey Secret",
+    "admin.settings.registration.aliyunSmsSecretConfigured": "密钥已配置，留空以保留当前值。",
+    "admin.settings.registration.aliyunSmsSignName": "短信签名",
+    "admin.settings.registration.aliyunSmsTemplateCode": "模板 Code",
+    "admin.settings.registration.aliyunSmsTemplateParamKey": "验证码变量名",
+    "admin.settings.registration.aliyunSmsTemplateStaticParams": "模板固定参数 JSON",
+    "admin.settings.registration.aliyunSmsSchemeName": "SchemeName",
+    "admin.settings.registration.aliyunSmsValidTimeSeconds": "验证码有效期（秒）",
+    "admin.settings.registration.aliyunSmsIntervalSeconds": "重发间隔（秒）",
+    "admin.settings.registration.closeAliyunSmsSettings": "关闭",
     "admin.settings.site.uploadImage": "上传图片",
     "admin.settings.site.remove": "移除",
     "admin.settings.platformQuota.platform": "平台",
@@ -431,6 +456,7 @@ function mountView() {
         Toggle: ToggleStub,
         Icon: true,
         ConfirmDialog: true,
+        BaseDialog: false,
         PaymentProviderList: true,
         PaymentProviderDialog: true,
         GroupBadge: true,
@@ -472,6 +498,157 @@ async function openUsersTab(wrapper: ReturnType<typeof mountView>) {
   await usersTabButton?.trigger("click");
   await flushPromises();
 }
+
+describe("admin SettingsView registration verification controls", () => {
+  beforeEach(() => {
+    getSettings.mockReset();
+    updateSettings.mockReset();
+    getWebSearchEmulationConfig.mockReset();
+    updateWebSearchEmulationConfig.mockReset();
+    getAdminApiKey.mockReset();
+    getOverloadCooldownSettings.mockReset();
+    getRateLimit429CooldownSettings.mockReset();
+    updateRateLimit429CooldownSettings.mockReset();
+    getStreamTimeoutSettings.mockReset();
+    getRectifierSettings.mockReset();
+    getBetaPolicySettings.mockReset();
+    getGroups.mockReset();
+    listProxies.mockReset();
+    getProviders.mockReset();
+    updateProvider.mockReset();
+    createProvider.mockReset();
+    deleteProvider.mockReset();
+    fetchPublicSettings.mockReset();
+    adminSettingsFetch.mockReset();
+    showError.mockReset();
+    showSuccess.mockReset();
+    localeRef.value = "zh-CN";
+
+    getSettings.mockResolvedValue({
+      ...baseSettingsResponse,
+      email_verify_enabled: true,
+      phone_verify_enabled: false,
+      aliyun_sms_access_key_id: "ak-id",
+      aliyun_sms_access_key_secret_configured: true,
+      aliyun_sms_sign_name: "Sub2API",
+      aliyun_sms_template_code: "SMS_123",
+      aliyun_sms_template_param_key: "code",
+      aliyun_sms_template_static_params: "{}",
+      aliyun_sms_scheme_name: "sub2api-login",
+      aliyun_sms_valid_time_seconds: 300,
+      aliyun_sms_interval_seconds: 60,
+    });
+    updateSettings.mockImplementation(async (payload) => ({
+      ...baseSettingsResponse,
+      ...payload,
+      aliyun_sms_access_key_secret_configured: Boolean(
+        payload.aliyun_sms_access_key_secret,
+      ),
+    }));
+    getWebSearchEmulationConfig.mockResolvedValue({ enabled: false, providers: [] });
+    updateWebSearchEmulationConfig.mockResolvedValue({ enabled: false, providers: [] });
+    getAdminApiKey.mockResolvedValue({ exists: false, masked_key: "" });
+    getOverloadCooldownSettings.mockResolvedValue({ enabled: true, cooldown_minutes: 10 });
+    getRateLimit429CooldownSettings.mockResolvedValue({ enabled: true, cooldown_seconds: 5 });
+    updateRateLimit429CooldownSettings.mockResolvedValue({});
+    getStreamTimeoutSettings.mockResolvedValue({
+      enabled: true,
+      action: "temp_unsched",
+      temp_unsched_minutes: 5,
+      threshold_count: 3,
+      threshold_window_minutes: 10,
+    });
+    getRectifierSettings.mockResolvedValue({
+      enabled: true,
+      thinking_signature_enabled: true,
+      thinking_budget_enabled: true,
+      apikey_signature_enabled: false,
+      apikey_signature_patterns: [],
+    });
+    getBetaPolicySettings.mockResolvedValue({ rules: [] });
+    getGroups.mockResolvedValue([]);
+    listProxies.mockResolvedValue({ items: [] });
+    getProviders.mockResolvedValue({ data: [] });
+    fetchPublicSettings.mockResolvedValue(undefined);
+    adminSettingsFetch.mockResolvedValue(undefined);
+  });
+
+  it("renders email and phone registration verification as an exclusive choice", async () => {
+    const wrapper = mountView();
+
+    await flushPromises();
+    await openSecurityTab(wrapper);
+
+    const emailRadio = wrapper.get<HTMLInputElement>(
+      '[data-testid="registration-verification-email"]',
+    );
+    const phoneRadio = wrapper.get<HTMLInputElement>(
+      '[data-testid="registration-verification-phone"]',
+    );
+
+    expect(emailRadio.element.checked).toBe(true);
+    expect(phoneRadio.element.checked).toBe(false);
+
+    await phoneRadio.setValue(true);
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email_verify_enabled: false,
+        phone_verify_enabled: true,
+      }),
+    );
+  });
+
+  it("opens an Aliyun SMS settings dialog from the phone verification option", async () => {
+    getSettings.mockResolvedValueOnce({
+      ...baseSettingsResponse,
+      email_verify_enabled: false,
+      phone_verify_enabled: true,
+      aliyun_sms_access_key_id: "old-ak",
+      aliyun_sms_access_key_secret_configured: true,
+      aliyun_sms_sign_name: "旧签名",
+      aliyun_sms_template_code: "SMS_OLD",
+      aliyun_sms_template_param_key: "code",
+      aliyun_sms_template_static_params: "{}",
+      aliyun_sms_scheme_name: "old-scheme",
+      aliyun_sms_valid_time_seconds: 300,
+      aliyun_sms_interval_seconds: 60,
+    });
+    const wrapper = mountView();
+
+    await flushPromises();
+    await openSecurityTab(wrapper);
+    await wrapper.get('[data-testid="open-aliyun-sms-settings"]').trigger("click");
+    await flushPromises();
+
+    expect(document.body.textContent).toContain("阿里云短信配置");
+    const accessKeyInput = document.body.querySelector<HTMLInputElement>(
+      '[data-testid="aliyun-sms-access-key-id"]',
+    );
+    const secretInput = document.body.querySelector<HTMLInputElement>(
+      '[data-testid="aliyun-sms-access-key-secret"]',
+    );
+    expect(accessKeyInput?.value).toBe("old-ak");
+    expect(secretInput?.placeholder).toContain("密钥已配置");
+
+    accessKeyInput!.value = "new-ak";
+    accessKeyInput!.dispatchEvent(new Event("input"));
+    secretInput!.value = "new-secret";
+    secretInput!.dispatchEvent(new Event("input"));
+    await flushPromises();
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({
+        aliyun_sms_access_key_id: "new-ak",
+        aliyun_sms_access_key_secret: "new-secret",
+      }),
+    );
+  });
+});
 
 describe("admin SettingsView payment visible method controls", () => {
   beforeEach(() => {

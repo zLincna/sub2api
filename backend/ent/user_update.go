@@ -80,6 +80,40 @@ func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
 	return _u
 }
 
+// SetPhone sets the "phone" field.
+func (_u *UserUpdate) SetPhone(v string) *UserUpdate {
+	_u.mutation.SetPhone(v)
+	return _u
+}
+
+// SetNillablePhone sets the "phone" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePhone(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetPhone(*v)
+	}
+	return _u
+}
+
+// SetPhoneVerifiedAt sets the "phone_verified_at" field.
+func (_u *UserUpdate) SetPhoneVerifiedAt(v time.Time) *UserUpdate {
+	_u.mutation.SetPhoneVerifiedAt(v)
+	return _u
+}
+
+// SetNillablePhoneVerifiedAt sets the "phone_verified_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePhoneVerifiedAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetPhoneVerifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearPhoneVerifiedAt clears the value of the "phone_verified_at" field.
+func (_u *UserUpdate) ClearPhoneVerifiedAt() *UserUpdate {
+	_u.mutation.ClearPhoneVerifiedAt()
+	return _u
+}
+
 // SetPasswordHash sets the "password_hash" field.
 func (_u *UserUpdate) SetPasswordHash(v string) *UserUpdate {
 	_u.mutation.SetPasswordHash(v)
@@ -933,6 +967,11 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Phone(); ok {
+		if err := user.PhoneValidator(v); err != nil {
+			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.PasswordHash(); ok {
 		if err := user.PasswordHashValidator(v); err != nil {
 			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
@@ -984,6 +1023,15 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Phone(); ok {
+		_spec.SetField(user.FieldPhone, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PhoneVerifiedAt(); ok {
+		_spec.SetField(user.FieldPhoneVerifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.PhoneVerifiedAtCleared() {
+		_spec.ClearField(user.FieldPhoneVerifiedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
@@ -1726,6 +1774,40 @@ func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
 	if v != nil {
 		_u.SetEmail(*v)
 	}
+	return _u
+}
+
+// SetPhone sets the "phone" field.
+func (_u *UserUpdateOne) SetPhone(v string) *UserUpdateOne {
+	_u.mutation.SetPhone(v)
+	return _u
+}
+
+// SetNillablePhone sets the "phone" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePhone(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetPhone(*v)
+	}
+	return _u
+}
+
+// SetPhoneVerifiedAt sets the "phone_verified_at" field.
+func (_u *UserUpdateOne) SetPhoneVerifiedAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetPhoneVerifiedAt(v)
+	return _u
+}
+
+// SetNillablePhoneVerifiedAt sets the "phone_verified_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePhoneVerifiedAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetPhoneVerifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearPhoneVerifiedAt clears the value of the "phone_verified_at" field.
+func (_u *UserUpdateOne) ClearPhoneVerifiedAt() *UserUpdateOne {
+	_u.mutation.ClearPhoneVerifiedAt()
 	return _u
 }
 
@@ -2595,6 +2677,11 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Phone(); ok {
+		if err := user.PhoneValidator(v); err != nil {
+			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.PasswordHash(); ok {
 		if err := user.PasswordHashValidator(v); err != nil {
 			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
@@ -2663,6 +2750,15 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Phone(); ok {
+		_spec.SetField(user.FieldPhone, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PhoneVerifiedAt(); ok {
+		_spec.SetField(user.FieldPhoneVerifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.PhoneVerifiedAtCleared() {
+		_spec.ClearField(user.FieldPhoneVerifiedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)

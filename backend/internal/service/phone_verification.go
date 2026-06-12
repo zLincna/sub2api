@@ -83,7 +83,7 @@ func (s *AuthService) SendPhoneVerifyCode(ctx context.Context, phone string) (*S
 		return nil, err
 	}
 
-	outID := "sub2api-register-" + randomHex(16)
+	outID := "sub2api-register-" + randomPhoneVerificationHex(16)
 	if err := sendAliyunSMSVerifyCode(ctx, cfg, normalizedPhone, outID); err != nil {
 		return nil, fmt.Errorf("send phone verify code: %w", err)
 	}
@@ -294,7 +294,7 @@ func aliyunSMSBaseParams(cfg *AliyunSMSConfig, action string) url.Values {
 	params.Set("SignatureMethod", "HMAC-SHA1")
 	params.Set("Timestamp", time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 	params.Set("SignatureVersion", "1.0")
-	params.Set("SignatureNonce", randomHex(16))
+	params.Set("SignatureNonce", randomPhoneVerificationHex(16))
 	return params
 }
 
@@ -348,7 +348,7 @@ func percentEncode(value string) string {
 	return encoded
 }
 
-func randomHex(size int) string {
+func randomPhoneVerificationHex(size int) string {
 	buf := make([]byte, size)
 	if _, err := rand.Read(buf); err != nil {
 		return strconv.FormatInt(time.Now().UnixNano(), 16)

@@ -1381,19 +1381,129 @@
                 <Toggle v-model="form.registration_enabled" />
               </div>
 
-              <!-- Email Verification -->
-              <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
-              >
-                <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
-                    t("admin.settings.registration.emailVerification")
-                  }}</label>
+              <!-- Registration Verification -->
+              <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
+                <div class="mb-3">
+                  <label class="font-medium text-gray-900 dark:text-white">
+                    {{ localText("注册验证方式", "Registration verification") }}
+                  </label>
                   <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ t("admin.settings.registration.emailVerificationHint") }}
+                    {{
+                      localText(
+                        "邮箱验证和手机验证互斥，只能选择一种注册验证方式。",
+                        "Email and phone verification are mutually exclusive.",
+                      )
+                    }}
                   </p>
                 </div>
-                <Toggle v-model="form.email_verify_enabled" />
+                <div class="grid gap-3 md:grid-cols-3">
+                  <label
+                    class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors"
+                    :class="
+                      registrationVerificationMode === 'none'
+                        ? 'border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500'
+                    "
+                  >
+                    <input
+                      data-testid="registration-verification-none"
+                      type="radio"
+                      name="registration-verification-mode"
+                      value="none"
+                      class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                      :checked="registrationVerificationMode === 'none'"
+                      @change="setRegistrationVerificationMode('none')"
+                    />
+                    <span>
+                      <span class="block text-sm font-medium text-gray-900 dark:text-white">
+                        {{ localText("不验证", "No verification") }}
+                      </span>
+                      <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+                        {{ localText("注册时不要求验证码。", "No code is required during registration.") }}
+                      </span>
+                    </span>
+                  </label>
+
+                  <label
+                    class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors"
+                    :class="
+                      registrationVerificationMode === 'email'
+                        ? 'border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500'
+                    "
+                  >
+                    <input
+                      data-testid="registration-verification-email"
+                      type="radio"
+                      name="registration-verification-mode"
+                      value="email"
+                      class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                      :checked="registrationVerificationMode === 'email'"
+                      @change="setRegistrationVerificationMode('email')"
+                    />
+                    <span>
+                      <span class="block text-sm font-medium text-gray-900 dark:text-white">
+                        {{ t("admin.settings.registration.emailVerification") }}
+                      </span>
+                      <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+                        {{ t("admin.settings.registration.emailVerificationHint") }}
+                      </span>
+                    </span>
+                  </label>
+
+                  <div
+                    class="rounded-lg border p-4 transition-colors"
+                    :class="
+                      registrationVerificationMode === 'phone'
+                        ? 'border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/20'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500'
+                    "
+                  >
+                    <label class="flex cursor-pointer items-start gap-3">
+                      <input
+                        data-testid="registration-verification-phone"
+                        type="radio"
+                        name="registration-verification-mode"
+                        value="phone"
+                        class="mt-1 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                        :checked="registrationVerificationMode === 'phone'"
+                        @change="setRegistrationVerificationMode('phone')"
+                      />
+                      <span>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">
+                          {{ localText("手机验证", "Phone verification") }}
+                        </span>
+                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+                          {{ localText("注册时通过阿里云短信验证手机号。", "Verify the phone number through Aliyun SMS.") }}
+                        </span>
+                      </span>
+                    </label>
+                    <div v-if="registrationVerificationMode === 'phone'" class="mt-3 pl-7">
+                      <button
+                        data-testid="open-aliyun-sms-settings"
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        @click="showAliyunSmsDialog = true"
+                      >
+                        {{ localText("配置短信", "Configure SMS") }}
+                      </button>
+                      <p
+                        class="mt-2 text-xs"
+                        :class="
+                          aliyunSmsConfigured
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-amber-600 dark:text-amber-400'
+                        "
+                      >
+                        {{
+                          aliyunSmsConfigured
+                            ? localText("短信基础配置已填写。", "SMS basics are configured.")
+                            : localText("短信服务未配置完整，发送手机验证码会失败。", "SMS is incomplete; sending codes will fail.")
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Email Suffix Whitelist -->
@@ -6688,6 +6798,132 @@
         @confirm="handleAffiliateConfirm"
         @cancel="cancelAffiliateConfirm"
       />
+      <BaseDialog
+        :show="showAliyunSmsDialog"
+        :title="localText('阿里云短信配置', 'Aliyun SMS settings')"
+        width="wide"
+        @close="showAliyunSmsDialog = false"
+      >
+        <div class="space-y-5">
+          <div
+            class="rounded-lg border p-4 text-sm"
+            :class="
+              aliyunSmsConfigured
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300'
+                : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300'
+            "
+          >
+            {{
+              aliyunSmsConfigured
+                ? localText("短信基础配置已填写。", "SMS basics are configured.")
+                : localText("短信服务未配置完整，发送手机验证码会失败。", "SMS is incomplete; sending codes will fail.")
+            }}
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="input-label">{{ localText("AccessKey ID", "AccessKey ID") }}</label>
+              <input
+                data-testid="aliyun-sms-access-key-id"
+                v-model="form.aliyun_sms_access_key_id"
+                type="text"
+                class="input"
+                placeholder="LTAI..."
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("AccessKey Secret", "AccessKey Secret") }}</label>
+              <input
+                data-testid="aliyun-sms-access-key-secret"
+                v-model="form.aliyun_sms_access_key_secret"
+                type="password"
+                class="input"
+                :placeholder="
+                  form.aliyun_sms_access_key_secret_configured
+                    ? localText('密钥已配置，留空以保留当前值。', 'Secret configured. Leave blank to keep it.')
+                    : 'AccessKey Secret'
+                "
+                autocomplete="new-password"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("短信签名", "SMS sign name") }}</label>
+              <input
+                data-testid="aliyun-sms-sign-name"
+                v-model="form.aliyun_sms_sign_name"
+                type="text"
+                class="input"
+                :placeholder="localText('阿里云短信签名', 'Aliyun SMS sign name')"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("模板 Code", "Template code") }}</label>
+              <input
+                data-testid="aliyun-sms-template-code"
+                v-model="form.aliyun_sms_template_code"
+                type="text"
+                class="input"
+                placeholder="SMS_123456789"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("验证码变量名", "Code parameter key") }}</label>
+              <input
+                data-testid="aliyun-sms-template-param-key"
+                v-model="form.aliyun_sms_template_param_key"
+                type="text"
+                class="input"
+                placeholder="code"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("SchemeName", "SchemeName") }}</label>
+              <input
+                data-testid="aliyun-sms-scheme-name"
+                v-model="form.aliyun_sms_scheme_name"
+                type="text"
+                class="input"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("验证码有效期（秒）", "Code validity seconds") }}</label>
+              <input
+                data-testid="aliyun-sms-valid-time-seconds"
+                v-model.number="form.aliyun_sms_valid_time_seconds"
+                type="number"
+                min="60"
+                class="input"
+              />
+            </div>
+            <div>
+              <label class="input-label">{{ localText("重发间隔（秒）", "Resend interval seconds") }}</label>
+              <input
+                data-testid="aliyun-sms-interval-seconds"
+                v-model.number="form.aliyun_sms_interval_seconds"
+                type="number"
+                min="30"
+                class="input"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="input-label">{{ localText("模板固定参数 JSON", "Template static params JSON") }}</label>
+            <textarea
+              data-testid="aliyun-sms-template-static-params"
+              v-model="form.aliyun_sms_template_static_params"
+              rows="3"
+              class="input font-mono text-sm"
+              placeholder="{}"
+            />
+          </div>
+        </div>
+
+        <template #footer>
+          <button type="button" class="btn btn-secondary" @click="showAliyunSmsDialog = false">
+            {{ localText("关闭", "Close") }}
+          </button>
+        </template>
+      </BaseDialog>
     </div>
   </AppLayout>
 </template>
@@ -6729,6 +6965,7 @@ import type { ProviderInstance } from "@/types/payment";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import Icon from "@/components/icons/Icon.vue";
 import Select from "@/components/common/Select.vue";
+import BaseDialog from "@/components/common/BaseDialog.vue";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import PaymentProviderList from "@/components/payment/PaymentProviderList.vue";
 import PaymentProviderDialog from "@/components/payment/PaymentProviderDialog.vue";
@@ -6854,6 +7091,7 @@ const saving = ref(false);
 const testingSmtp = ref(false);
 const sendingTestEmail = ref(false);
 const smtpPasswordManuallyEdited = ref(false);
+const showAliyunSmsDialog = ref(false);
 const testEmailAddress = ref("");
 const registrationEmailSuffixWhitelistTags = ref<string[]>([]);
 const registrationEmailSuffixWhitelistDraft = ref("");
@@ -7234,6 +7472,45 @@ const form = reactive<SettingsForm>({
   // Allow user view error requests
   allow_user_view_error_requests: false,
 });
+
+type RegistrationVerificationMode = "none" | "email" | "phone";
+
+const registrationVerificationMode = computed<RegistrationVerificationMode>(() => {
+  if (form.phone_verify_enabled) {
+    return "phone";
+  }
+  if (form.email_verify_enabled) {
+    return "email";
+  }
+  return "none";
+});
+
+const aliyunSmsConfigured = computed(() => {
+  const hasSecret =
+    form.aliyun_sms_access_key_secret.trim() !== "" ||
+    form.aliyun_sms_access_key_secret_configured;
+  return Boolean(
+    (form.aliyun_sms_access_key_id || "").trim() &&
+      hasSecret &&
+      (form.aliyun_sms_sign_name || "").trim() &&
+      (form.aliyun_sms_template_code || "").trim(),
+  );
+});
+
+function setRegistrationVerificationMode(mode: RegistrationVerificationMode): void {
+  form.email_verify_enabled = mode === "email";
+  form.phone_verify_enabled = mode === "phone";
+  if (mode !== "email") {
+    form.password_reset_enabled = false;
+  }
+}
+
+function normalizeRegistrationVerificationFlags(): void {
+  if (form.phone_verify_enabled) {
+    form.email_verify_enabled = false;
+    form.password_reset_enabled = false;
+  }
+}
 
 const authSourceDefaults = reactive<AuthSourceDefaultsState>(
   buildAuthSourceDefaultsState({}),
@@ -7835,6 +8112,7 @@ async function loadSettings() {
         (form as Record<string, unknown>)[key] = value;
       }
     }
+    normalizeRegistrationVerificationFlags();
     form.login_agreement_mode =
       settings.login_agreement_mode === "checkbox" ? "checkbox" : "modal";
     form.login_agreement_updated_at =
@@ -8029,6 +8307,7 @@ function findDuplicateDefaultSubscription(
 async function saveSettings() {
   saving.value = true;
   try {
+    normalizeRegistrationVerificationFlags();
     const normalizedTableDefaultPageSize = Math.floor(
       Number(form.table_default_page_size),
     );

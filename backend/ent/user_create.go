@@ -82,6 +82,34 @@ func (_c *UserCreate) SetEmail(v string) *UserCreate {
 	return _c
 }
 
+// SetPhone sets the "phone" field.
+func (_c *UserCreate) SetPhone(v string) *UserCreate {
+	_c.mutation.SetPhone(v)
+	return _c
+}
+
+// SetNillablePhone sets the "phone" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePhone(v *string) *UserCreate {
+	if v != nil {
+		_c.SetPhone(*v)
+	}
+	return _c
+}
+
+// SetPhoneVerifiedAt sets the "phone_verified_at" field.
+func (_c *UserCreate) SetPhoneVerifiedAt(v time.Time) *UserCreate {
+	_c.mutation.SetPhoneVerifiedAt(v)
+	return _c
+}
+
+// SetNillablePhoneVerifiedAt sets the "phone_verified_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePhoneVerifiedAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetPhoneVerifiedAt(*v)
+	}
+	return _c
+}
+
 // SetPasswordHash sets the "password_hash" field.
 func (_c *UserCreate) SetPasswordHash(v string) *UserCreate {
 	_c.mutation.SetPasswordHash(v)
@@ -586,6 +614,10 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Phone(); !ok {
+		v := user.DefaultPhone
+		_c.mutation.SetPhone(v)
+	}
 	if _, ok := _c.mutation.Role(); !ok {
 		v := user.DefaultRole
 		_c.mutation.SetRole(v)
@@ -655,6 +687,14 @@ func (_c *UserCreate) check() error {
 	if v, ok := _c.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Phone(); !ok {
+		return &ValidationError{Name: "phone", err: errors.New(`ent: missing required field "User.phone"`)}
+	}
+	if v, ok := _c.mutation.Phone(); ok {
+		if err := user.PhoneValidator(v); err != nil {
+			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.PasswordHash(); !ok {
@@ -766,6 +806,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
+	}
+	if value, ok := _c.mutation.Phone(); ok {
+		_spec.SetField(user.FieldPhone, field.TypeString, value)
+		_node.Phone = value
+	}
+	if value, ok := _c.mutation.PhoneVerifiedAt(); ok {
+		_spec.SetField(user.FieldPhoneVerifiedAt, field.TypeTime, value)
+		_node.PhoneVerifiedAt = &value
 	}
 	if value, ok := _c.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
@@ -1149,6 +1197,36 @@ func (u *UserUpsert) UpdateEmail() *UserUpsert {
 	return u
 }
 
+// SetPhone sets the "phone" field.
+func (u *UserUpsert) SetPhone(v string) *UserUpsert {
+	u.Set(user.FieldPhone, v)
+	return u
+}
+
+// UpdatePhone sets the "phone" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePhone() *UserUpsert {
+	u.SetExcluded(user.FieldPhone)
+	return u
+}
+
+// SetPhoneVerifiedAt sets the "phone_verified_at" field.
+func (u *UserUpsert) SetPhoneVerifiedAt(v time.Time) *UserUpsert {
+	u.Set(user.FieldPhoneVerifiedAt, v)
+	return u
+}
+
+// UpdatePhoneVerifiedAt sets the "phone_verified_at" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePhoneVerifiedAt() *UserUpsert {
+	u.SetExcluded(user.FieldPhoneVerifiedAt)
+	return u
+}
+
+// ClearPhoneVerifiedAt clears the value of the "phone_verified_at" field.
+func (u *UserUpsert) ClearPhoneVerifiedAt() *UserUpsert {
+	u.SetNull(user.FieldPhoneVerifiedAt)
+	return u
+}
+
 // SetPasswordHash sets the "password_hash" field.
 func (u *UserUpsert) SetPasswordHash(v string) *UserUpsert {
 	u.Set(user.FieldPasswordHash, v)
@@ -1528,6 +1606,41 @@ func (u *UserUpsertOne) SetEmail(v string) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateEmail() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateEmail()
+	})
+}
+
+// SetPhone sets the "phone" field.
+func (u *UserUpsertOne) SetPhone(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPhone(v)
+	})
+}
+
+// UpdatePhone sets the "phone" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePhone() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePhone()
+	})
+}
+
+// SetPhoneVerifiedAt sets the "phone_verified_at" field.
+func (u *UserUpsertOne) SetPhoneVerifiedAt(v time.Time) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPhoneVerifiedAt(v)
+	})
+}
+
+// UpdatePhoneVerifiedAt sets the "phone_verified_at" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePhoneVerifiedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePhoneVerifiedAt()
+	})
+}
+
+// ClearPhoneVerifiedAt clears the value of the "phone_verified_at" field.
+func (u *UserUpsertOne) ClearPhoneVerifiedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPhoneVerifiedAt()
 	})
 }
 
@@ -2124,6 +2237,41 @@ func (u *UserUpsertBulk) SetEmail(v string) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateEmail() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateEmail()
+	})
+}
+
+// SetPhone sets the "phone" field.
+func (u *UserUpsertBulk) SetPhone(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPhone(v)
+	})
+}
+
+// UpdatePhone sets the "phone" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePhone() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePhone()
+	})
+}
+
+// SetPhoneVerifiedAt sets the "phone_verified_at" field.
+func (u *UserUpsertBulk) SetPhoneVerifiedAt(v time.Time) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPhoneVerifiedAt(v)
+	})
+}
+
+// UpdatePhoneVerifiedAt sets the "phone_verified_at" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePhoneVerifiedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePhoneVerifiedAt()
+	})
+}
+
+// ClearPhoneVerifiedAt clears the value of the "phone_verified_at" field.
+func (u *UserUpsertBulk) ClearPhoneVerifiedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPhoneVerifiedAt()
 	})
 }
 
