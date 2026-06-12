@@ -378,7 +378,7 @@ import {
   validatePromoCode,
   validateInvitationCode
 } from '@/api/auth'
-import { buildAuthErrorMessage } from '@/utils/authError'
+import { extractI18nErrorMessage } from '@/utils/apiError'
 import {
   formatRegistrationEmailSuffixWhitelistForMessage,
   isRegistrationEmailSuffixAllowed,
@@ -867,7 +867,7 @@ async function handleSendPhoneCode(): Promise<void> {
     }
     appStore.showSuccess(t('auth.phoneCodeSentSuccess'))
   } catch (error: unknown) {
-    appStore.showError(buildAuthErrorMessage(error, { fallback: t('auth.sendCodeFailed') }))
+    appStore.showError(extractI18nErrorMessage(error, t, 'auth.errors', t('auth.sendCodeFailed')))
   } finally {
     sendingPhoneCode.value = false
   }
@@ -1071,9 +1071,12 @@ async function handleRegister(): Promise<void> {
     }
 
     // Handle registration error
-    errorMessage.value = buildAuthErrorMessage(error, {
-      fallback: t('auth.registrationFailed')
-    })
+    errorMessage.value = extractI18nErrorMessage(
+      error,
+      t,
+      'auth.errors',
+      t('auth.registrationFailed')
+    )
 
     // Also show error toast
     appStore.showError(errorMessage.value)

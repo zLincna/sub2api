@@ -17,6 +17,7 @@ interface ApiErrorLike {
       detail?: string
       message?: string
       code?: number | string
+      reason?: string
     }
   }
 }
@@ -31,7 +32,7 @@ interface ApiErrorLike {
 export function extractApiErrorCode(err: unknown): string | undefined {
   if (!err || typeof err !== 'object') return undefined
   const e = err as ApiErrorLike
-  const code = e.reason ?? e.code ?? e.response?.data?.code
+  const code = e.reason ?? e.response?.data?.reason ?? e.code ?? e.response?.data?.code
   return code != null ? String(code) : undefined
 }
 

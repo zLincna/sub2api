@@ -453,6 +453,12 @@ export default {
     loginFailed: 'Login failed. Please check your credentials and try again.',
     errors: {
       USER_NOT_ACTIVE: 'Account has been disabled.',
+      PHONE_VERIFY_INVALID: 'The SMS code is incorrect or expired. Please request a new code and try again.',
+      PHONE_VERIFY_REQUIRED: 'Please enter the SMS code.',
+      PHONE_VERIFY_COOLDOWN: 'SMS codes are being sent too frequently. Please try again later.',
+      PHONE_EXISTS: 'This phone number has already been registered.',
+      PHONE_REQUIRED: 'Phone number is required.',
+      INVALID_PHONE: 'Please enter a valid mainland China phone number.',
     },
     registrationFailed: 'Registration failed. Please try again.',
     emailSuffixNotAllowed: 'This email domain is not allowed for registration.',

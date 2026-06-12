@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	openapiutil "github.com/alibabacloud-go/darabonba-openapi/v2/utils"
 	dypnsapi "github.com/alibabacloud-go/dypnsapi-20170525/v3/client"
 	"github.com/alibabacloud-go/tea/dara"
+	teautil "github.com/alibabacloud-go/tea/tea"
 )
 
 var ErrAliyunSMSNotConfigured = infraerrors.ServiceUnavailable("ALIYUN_SMS_NOT_CONFIGURED", "aliyun sms service not configured")
@@ -292,12 +294,52 @@ func checkAliyunSMSVerifyCode(ctx context.Context, cfg *AliyunSMSConfig, phone, 
 		ReadTimeout:    dara.Int(10000),
 	})
 	if err != nil {
+		if isAliyunSMSInvalidVerifyError(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	if resp == nil || resp.Body == nil {
 		return false, fmt.Errorf("empty aliyun sms response")
 	}
 	return parseAliyunSMSVerifyResult(resp.Body)
+}
+
+func isAliyunSMSInvalidVerifyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var sdkErr *teautil.SDKError
+	if errors.As(err, &sdkErr) && isAliyunSMSInvalidVerifyText(
+		dara.StringValue(sdkErr.Code),
+		dara.StringValue(sdkErr.Message),
+		dara.StringValue(sdkErr.Data),
+	) {
+		return true
+	}
+	var daraErr *dara.SDKError
+	if errors.As(err, &daraErr) && isAliyunSMSInvalidVerifyText(
+		dara.StringValue(daraErr.Code),
+		dara.StringValue(daraErr.Message),
+		dara.StringValue(daraErr.Data),
+	) {
+		return true
+	}
+	return isAliyunSMSInvalidVerifyText(err.Error())
+}
+
+func isAliyunSMSInvalidVerifyText(parts ...string) bool {
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		lower := strings.ToLower(part)
+		if strings.Contains(lower, "validatefail") || strings.Contains(part, "验证失败") {
+			return true
+		}
+	}
+	return false
 }
 
 func newAliyunSMSClient(cfg *AliyunSMSConfig) (*dypnsapi.Client, error) {

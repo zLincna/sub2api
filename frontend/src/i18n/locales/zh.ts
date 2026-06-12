@@ -453,6 +453,12 @@ export default {
     loginFailed: '登录失败，请检查您的凭据后重试。',
     errors: {
       USER_NOT_ACTIVE: '账号已被禁用',
+      PHONE_VERIFY_INVALID: '手机验证码错误或已过期，请重新获取后再试。',
+      PHONE_VERIFY_REQUIRED: '请输入手机验证码。',
+      PHONE_VERIFY_COOLDOWN: '短信验证码发送过于频繁，请稍后再试。',
+      PHONE_EXISTS: '该手机号已被注册。',
+      PHONE_REQUIRED: '请输入手机号。',
+      INVALID_PHONE: '请输入有效的中国大陆手机号。',
     },
     registrationFailed: '注册失败，请重试。',
     emailSuffixNotAllowed: '该邮箱域名不在允许注册范围内。',

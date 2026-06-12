@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"testing"
 
 	dypnsapi "github.com/alibabacloud-go/dypnsapi-20170525/v3/client"
 	"github.com/alibabacloud-go/tea/dara"
+	teautil "github.com/alibabacloud-go/tea/tea"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,5 +54,47 @@ func TestParseAliyunSMSVerifyResult(t *testing.T) {
 		require.Error(t, err)
 		require.False(t, pass)
 		require.Contains(t, err.Error(), "InvalidAccessKeyId.NotFound")
+	})
+}
+
+func TestIsAliyunSMSInvalidVerifyError(t *testing.T) {
+	t.Run("tea sdk validate fail", func(t *testing.T) {
+		err := teautil.NewSDKError(map[string]interface{}{
+			"statusCode": 400,
+			"code":       "isv.ValidateFail",
+			"message":    "验证失败",
+			"data": map[string]interface{}{
+				"Code":    "isv.ValidateFail",
+				"Message": "验证失败",
+			},
+		})
+		require.True(t, isAliyunSMSInvalidVerifyError(err))
+	})
+
+	t.Run("dara sdk validate fail", func(t *testing.T) {
+		err := dara.NewSDKError(map[string]interface{}{
+			"statusCode": 400,
+			"code":       "isv.ValidateFail",
+			"message":    "验证失败",
+		})
+		require.True(t, isAliyunSMSInvalidVerifyError(err))
+	})
+
+	t.Run("wrapped validate fail", func(t *testing.T) {
+		err := fmt.Errorf("check failed: %w", teautil.NewSDKError(map[string]interface{}{
+			"statusCode": 400,
+			"code":       "isv.ValidateFail",
+			"message":    "验证失败",
+		}))
+		require.True(t, isAliyunSMSInvalidVerifyError(err))
+	})
+
+	t.Run("provider configuration error remains system error", func(t *testing.T) {
+		err := teautil.NewSDKError(map[string]interface{}{
+			"statusCode": 400,
+			"code":       "InvalidAccessKeyId.NotFound",
+			"message":    "access key not found",
+		})
+		require.False(t, isAliyunSMSInvalidVerifyError(err))
 	})
 }
