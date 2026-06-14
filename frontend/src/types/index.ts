@@ -67,6 +67,8 @@ export interface User {
   id: number
   username: string
   email: string
+  phone?: string
+  phone_verified_at?: string | null
   avatar_url?: string | null
   avatar_source?: string | UserProfileSourceContext | null
   username_source?: string | UserProfileSourceContext | null

@@ -281,6 +281,12 @@
             <span class="text-sm text-gray-700 dark:text-gray-300">{{ value || '-' }}</span>
           </template>
 
+          <template #cell-phone="{ value }">
+            <span class="whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+              {{ value || '-' }}
+            </span>
+          </template>
+
           <template #cell-notes="{ value }">
             <div class="max-w-xs">
               <span
@@ -839,6 +845,7 @@ const allColumns = computed<Column[]>(() => [
   { key: 'email', label: t('admin.users.columns.user'), sortable: true },
   { key: 'id', label: t('admin.users.columns.id'), sortable: true },
   { key: 'username', label: t('admin.users.columns.username'), sortable: true },
+  { key: 'phone', label: t('admin.users.columns.phone'), sortable: false },
   { key: 'notes', label: t('admin.users.columns.notes'), sortable: false },
   // Dynamic attribute columns
   ...attributeColumns.value,

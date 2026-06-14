@@ -59,6 +59,7 @@ const createAdminUser = (): AdminUser => ({
   id: 42,
   username: 'scoped-user',
   email: 'scoped@example.com',
+  phone: '13800138000',
   role: 'user',
   balance: 0,
   concurrency: 1,
@@ -83,6 +84,7 @@ const DataTableStub = {
       <div data-test="columns">{{ columns.map(col => col.key).join(',') }}</div>
       <button data-test="sort-last-used" @click="$emit('sort', 'last_used_at', 'desc')">sort</button>
       <div v-for="row in data" :key="row.id">
+        <slot name="cell-phone" :value="row.phone" :row="row" />
         <slot name="cell-last_used_at" :value="row.last_used_at" :row="row" />
       </div>
     </div>
@@ -145,8 +147,10 @@ describe('admin UsersView', () => {
 
     const columns = wrapper.get('[data-test="columns"]').text()
     const visibleColumns = columns.split(',')
+    expect(visibleColumns).toContain('phone')
     expect(visibleColumns.slice(-4, -1)).toEqual(['last_active_at', 'last_used_at', 'created_at'])
     expect(visibleColumns).not.toContain('last_login_at')
+    expect(wrapper.text()).toContain('13800138000')
 
     await wrapper.get('[data-test="sort-last-used"]').trigger('click')
     await flushPromises()

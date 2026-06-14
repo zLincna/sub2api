@@ -1875,6 +1875,7 @@ export default {
         id: 'ID',
         email: 'Email',
         username: 'Username',
+        phone: 'Phone',
         notes: 'Notes',
         role: 'Role',
         groups: 'Groups',
