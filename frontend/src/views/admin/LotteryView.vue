@@ -1,35 +1,61 @@
 <template>
   <div class="space-y-6">
-    <section class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-      <div class="mb-5 flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.configTitle') }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('admin.lottery.configDesc') }}</p>
+    <section class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-900">
+      <div class="flex flex-col gap-4 border-b border-gray-100 px-5 py-4 dark:border-dark-700 lg:flex-row lg:items-start lg:justify-between">
+        <div class="flex min-w-0 items-start gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+            <Icon name="gift" size="md" />
+          </div>
+          <div class="min-w-0">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.configTitle') }}</h2>
+            <p class="mt-1 max-w-3xl text-sm text-gray-500 dark:text-dark-400">{{ t('admin.lottery.configDesc') }}</p>
+          </div>
         </div>
-        <button class="btn btn-primary" :disabled="savingConfig" @click="saveConfig">
+        <button type="button" class="btn btn-primary shrink-0" :disabled="savingConfig" @click="saveConfig">
           {{ savingConfig ? t('common.saving') : t('common.save') }}
         </button>
       </div>
 
-      <div v-if="config" class="space-y-6">
-        <div class="grid gap-4 md:grid-cols-3">
-          <label class="flex items-center justify-between rounded-md border border-gray-200 px-4 py-3 dark:border-dark-700">
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ t('admin.lottery.enabled') }}</span>
+      <div v-if="config" class="space-y-6 p-5">
+        <div class="grid gap-3 lg:grid-cols-[1.1fr_1.1fr_0.8fr]">
+          <label class="flex min-h-20 items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-4 py-3 dark:border-dark-700 dark:bg-dark-800/70">
+            <span>
+              <span class="block text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.enabled') }}</span>
+              <span class="mt-1 block text-xs text-gray-500 dark:text-dark-400">{{ t('admin.lottery.enabledHint') }}</span>
+            </span>
             <input v-model="config.enabled" type="checkbox" class="toggle" />
           </label>
-          <label class="flex items-center justify-between rounded-md border border-gray-200 px-4 py-3 dark:border-dark-700">
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ t('admin.lottery.buttonEnabled') }}</span>
+          <label class="flex min-h-20 items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-4 py-3 dark:border-dark-700 dark:bg-dark-800/70">
+            <span>
+              <span class="block text-sm font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.buttonEnabled') }}</span>
+              <span class="mt-1 block text-xs text-gray-500 dark:text-dark-400">{{ t('admin.lottery.buttonEnabledHint') }}</span>
+            </span>
             <input v-model="config.button_enabled" type="checkbox" class="toggle" />
           </label>
-          <div>
+          <div class="min-h-20 rounded-md border border-gray-200 bg-gray-50 px-4 py-3 dark:border-dark-700 dark:bg-dark-800/70">
             <label class="input-label">{{ t('admin.lottery.timezone') }}</label>
             <input v-model="config.timezone" class="input" placeholder="Asia/Shanghai" />
           </div>
         </div>
 
-        <div>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div class="rounded-md border border-gray-200 px-4 py-3 dark:border-dark-700">
+            <div class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('admin.lottery.enabledPrizes') }}</div>
+            <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ enabledPrizeCount }}/{{ prizes.length }}</div>
+          </div>
+          <div class="rounded-md border border-gray-200 px-4 py-3 dark:border-dark-700">
+            <div class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('admin.lottery.totalWeight') }}</div>
+            <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ totalProbabilityWeight }}</div>
+          </div>
+          <div class="rounded-md border border-gray-200 px-4 py-3 dark:border-dark-700">
+            <div class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('admin.lottery.latestRecords') }}</div>
+            <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ records.length }}</div>
+          </div>
+        </div>
+
+        <div class="rounded-md border border-gray-200 p-4 dark:border-dark-700">
           <label class="input-label">{{ t('admin.lottery.ruleText') }}</label>
-          <textarea v-model="config.rule_text" rows="4" class="input"></textarea>
+          <textarea v-model="config.rule_text" rows="3" class="input resize-y"></textarea>
         </div>
 
         <div class="grid gap-4 xl:grid-cols-3">
@@ -56,12 +82,17 @@
     </section>
 
     <section class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-      <div class="mb-5 flex items-center justify-between">
+      <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.prizesTitle') }}</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('admin.lottery.prizesDesc') }}</p>
+          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">
+            {{ t('admin.lottery.prizesDesc') }}
+            <span class="ml-2 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-dark-800 dark:text-dark-300">
+              {{ t('admin.lottery.totalWeight') }}: {{ totalProbabilityWeight }}
+            </span>
+          </p>
         </div>
-        <button class="btn btn-primary" @click="addPrize">{{ t('admin.lottery.addPrize') }}</button>
+        <button type="button" class="btn btn-primary shrink-0" @click="addPrize">{{ t('admin.lottery.addPrize') }}</button>
       </div>
 
       <div class="overflow-x-auto">
@@ -94,8 +125,15 @@
                 <span class="badge" :class="prize.enabled ? 'badge-success' : 'badge-gray'">{{ prize.enabled ? t('common.enabled') : t('common.disabled') }}</span>
               </td>
               <td class="px-3 py-2">
-                <button class="btn btn-secondary btn-sm mr-2" @click="editPrize(prize)">{{ t('common.edit') }}</button>
-                <button class="btn btn-danger btn-sm" @click="deletePrize(prize.id)">{{ t('common.delete') }}</button>
+                <div class="flex gap-2">
+                  <button type="button" class="btn btn-secondary btn-sm" @click="editPrize(prize)">{{ t('common.edit') }}</button>
+                  <button type="button" class="btn btn-danger btn-sm" @click="deletePrize(prize.id)">{{ t('common.delete') }}</button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="prizes.length === 0">
+              <td colspan="6" class="px-3 py-10 text-center text-sm text-gray-500 dark:text-dark-400">
+                {{ t('admin.lottery.emptyPrizes') }}
               </td>
             </tr>
           </tbody>
@@ -106,7 +144,7 @@
     <section class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.recordsTitle') }}</h2>
-        <button class="btn btn-secondary btn-sm" @click="loadRecords">{{ t('common.refresh') }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" @click="loadRecords">{{ t('common.refresh') }}</button>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -126,6 +164,11 @@
               <td class="px-3 py-2 text-emerald-600 dark:text-emerald-400">${{ record.amount.toFixed(2) }}</td>
               <td class="px-3 py-2">{{ t(`lottery.sourceTypes.${record.source_type}`, record.source_type) }}</td>
               <td class="px-3 py-2 text-gray-500 dark:text-dark-400">{{ new Date(record.created_at).toLocaleString() }}</td>
+            </tr>
+            <tr v-if="records.length === 0">
+              <td colspan="5" class="px-3 py-10 text-center text-sm text-gray-500 dark:text-dark-400">
+                {{ t('admin.lottery.emptyRecords') }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -152,7 +195,7 @@
         </label>
       </form>
       <template #footer>
-        <button class="btn btn-secondary" @click="showPrizeDialog = false">{{ t('common.cancel') }}</button>
+        <button type="button" class="btn btn-secondary" @click="showPrizeDialog = false">{{ t('common.cancel') }}</button>
         <button type="submit" form="lottery-prize-form" class="btn btn-primary">{{ t('common.save') }}</button>
       </template>
     </BaseDialog>
@@ -163,6 +206,7 @@
 import { computed, defineComponent, h, onMounted, reactive, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
+import Icon from '@/components/icons/Icon.vue'
 import { adminLotteryAPI, type LotteryPrizeInput } from '@/api/admin/lottery'
 import type { LotteryConfig, LotteryDrawRecord, LotteryLoginGrantConfig, LotteryPrize, LotteryThresholdGrantConfig } from '@/api/lottery'
 import { useAppStore } from '@/stores'
@@ -188,6 +232,12 @@ const prizeForm = reactive<LotteryPrizeInput>({
   sort_order: 0
 })
 
+const enabledPrizeCount = computed(() => prizes.value.filter(prize => prize.enabled).length)
+const totalProbabilityWeight = computed(() => Number(prizes.value
+  .filter(prize => prize.enabled)
+  .reduce((sum, prize) => sum + Number(prize.probability || 0), 0)
+  .toFixed(6)))
+
 const RuleCard = defineComponent({
   props: {
     modelValue: { type: Object as PropType<LotteryLoginGrantConfig | LotteryThresholdGrantConfig>, required: true },
@@ -199,7 +249,7 @@ const RuleCard = defineComponent({
   setup(props, { emit }) {
     const update = (patch: Record<string, unknown>) => emit('update:modelValue', { ...props.modelValue, ...patch })
     const thresholds = computed(() => (props.modelValue as LotteryThresholdGrantConfig).thresholds ?? [])
-    return () => h('div', { class: 'rounded-md border border-gray-200 p-4 dark:border-dark-700' }, [
+    return () => h('div', { class: 'flex min-h-full flex-col rounded-md border border-gray-200 bg-gray-50/70 p-4 dark:border-dark-700 dark:bg-dark-800/50' }, [
       h('div', { class: 'mb-4 flex items-center justify-between' }, [
         h('h3', { class: 'text-sm font-semibold text-gray-900 dark:text-white' }, props.title),
         h('input', {
@@ -210,7 +260,7 @@ const RuleCard = defineComponent({
         })
       ]),
       props.type === 'login'
-        ? h('div', [
+        ? h('div', { class: 'rounded-md border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900' }, [
           h('label', { class: 'input-label' }, t('admin.lottery.dailyChances')),
           h('input', {
             class: 'input',
@@ -220,20 +270,27 @@ const RuleCard = defineComponent({
             onInput: (e: Event) => update({ daily_chances: Number((e.target as HTMLInputElement).value) })
           })
         ])
-        : h('div', { class: 'space-y-2' }, [
-          ...thresholds.value.map((rule, idx) => h('div', { class: 'grid grid-cols-[1fr_1fr_auto] gap-2' }, [
-            h('input', { class: 'input', type: 'number', step: '0.01', min: '0', value: rule.amount, onInput: (e: Event) => {
+        : h('div', { class: 'space-y-2 rounded-md border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900' }, [
+          h('div', { class: 'grid grid-cols-[1fr_1fr_auto] gap-2 text-xs font-medium text-gray-500 dark:text-dark-400' }, [
+            h('span', t('admin.lottery.thresholdAmount')),
+            h('span', t('admin.lottery.thresholdChances')),
+            h('span', { class: 'w-14 text-right' }, t('common.actions'))
+          ]),
+          thresholds.value.length === 0
+            ? h('div', { class: 'rounded-md border border-dashed border-gray-200 py-5 text-center text-xs text-gray-500 dark:border-dark-700 dark:text-dark-400' }, t('admin.lottery.emptyTiers'))
+            : thresholds.value.map((rule, idx) => h('div', { class: 'grid grid-cols-[1fr_1fr_auto] gap-2' }, [
+              h('input', { class: 'input', type: 'number', step: '0.01', min: '0', value: rule.amount, onInput: (e: Event) => {
               const next = [...thresholds.value]
               next[idx] = { ...next[idx], amount: Number((e.target as HTMLInputElement).value) }
               update({ thresholds: next })
-            } }),
-            h('input', { class: 'input', type: 'number', min: '0', value: rule.chances, onInput: (e: Event) => {
+              } }),
+              h('input', { class: 'input', type: 'number', min: '0', value: rule.chances, onInput: (e: Event) => {
               const next = [...thresholds.value]
               next[idx] = { ...next[idx], chances: Number((e.target as HTMLInputElement).value) }
               update({ thresholds: next })
-            } }),
-            h('button', { class: 'btn btn-danger btn-sm', type: 'button', onClick: () => update({ thresholds: thresholds.value.filter((_, i) => i !== idx) }) }, t('common.delete'))
-          ])),
+              } }),
+              h('button', { class: 'btn btn-danger btn-sm', type: 'button', onClick: () => update({ thresholds: thresholds.value.filter((_, i) => i !== idx) }) }, t('common.delete'))
+            ])),
           h('button', { class: 'btn btn-secondary btn-sm', type: 'button', onClick: () => update({ thresholds: [...thresholds.value, { amount: 0, chances: 1 }] }) }, t('admin.lottery.addTier'))
         ]),
       h('div', { class: 'mt-4 grid grid-cols-2 gap-2' }, [

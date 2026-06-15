@@ -552,14 +552,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin/lottery',
     name: 'AdminLottery',
-    component: () => import('@/views/admin/LotteryView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: true,
-      title: 'Lottery Center',
-      titleKey: 'admin.lottery.title',
-      descriptionKey: 'admin.lottery.description'
-    }
+    redirect: { path: '/admin/settings', query: { tab: 'lottery' } }
   },
   {
     path: '/admin/settings',

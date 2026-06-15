@@ -6741,9 +6741,19 @@
         <div v-show="activeTab === 'backup'">
           <BackupSettings />
         </div>
+        <!-- /Tab: Backup -->
+
+        <!-- Tab: Lottery -->
+        <div v-show="activeTab === 'lottery'">
+          <LotterySettings />
+        </div>
+        <!-- /Tab: Lottery -->
 
         <!-- Save Button -->
-        <div v-show="activeTab !== 'backup'" class="flex justify-end">
+        <div
+          v-show="activeTab !== 'backup' && activeTab !== 'lottery'"
+          class="flex justify-end"
+        >
           <button
             type="submit"
             :disabled="saving || loadFailed"
@@ -6942,6 +6952,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute, useRouter } from "vue-router";
 import { adminAPI } from "@/api";
 import {
   appendAuthSourceDefaultsToUpdateRequest,
@@ -6986,6 +6997,7 @@ import Toggle from "@/components/common/Toggle.vue";
 import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
+import LotterySettings from "@/views/admin/LotteryView.vue";
 import EmailTemplateEditor from "@/views/admin/settings/EmailTemplateEditor.vue";
 import { useClipboard } from "@/composables/useClipboard";
 import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
@@ -7003,6 +7015,8 @@ import {
 const { t, locale } = useI18n();
 const appStore = useAppStore();
 const adminSettingsStore = useAdminSettingsStore();
+const route = useRoute();
+const router = useRouter();
 const isZhLocale = computed(() => locale.value.startsWith("zh"));
 
 function localText(zh: string, en: string): string {
@@ -7030,8 +7044,8 @@ type SettingsTab =
   | "gateway"
   | "payment"
   | "email"
-  | "backup";
-const activeTab = ref<SettingsTab>("general");
+  | "backup"
+  | "lottery";
 const settingsTabs = [
   { key: "general" as SettingsTab, icon: "home" as const },
   { key: "agreement" as SettingsTab, icon: "document" as const },
@@ -7042,7 +7056,21 @@ const settingsTabs = [
   { key: "payment" as SettingsTab, icon: "creditCard" as const },
   { key: "email" as SettingsTab, icon: "mail" as const },
   { key: "backup" as SettingsTab, icon: "database" as const },
+  { key: "lottery" as SettingsTab, icon: "gift" as const },
 ];
+
+function isSettingsTab(value: unknown): value is SettingsTab {
+  return (
+    typeof value === "string" &&
+    settingsTabs.some((item) => item.key === value)
+  );
+}
+
+function resolveSettingsTab(value: unknown): SettingsTab {
+  return isSettingsTab(value) ? value : "general";
+}
+
+const activeTab = ref<SettingsTab>(resolveSettingsTab(route.query.tab));
 
 const settingsTabKeyboardActions = {
   ArrowLeft: -1,
@@ -7055,6 +7083,13 @@ const settingsTabKeyboardActions = {
 
 function selectSettingsTab(tab: SettingsTab): void {
   activeTab.value = tab;
+  const nextQuery = { ...route.query };
+  if (tab === "general") {
+    delete nextQuery.tab;
+  } else {
+    nextQuery.tab = tab;
+  }
+  router.replace({ query: nextQuery }).catch(() => undefined);
 }
 
 function focusSettingsTab(tab: SettingsTab): void {
@@ -7095,6 +7130,13 @@ function handleSettingsTabKeydown(event: KeyboardEvent, tab: SettingsTab): void 
 }
 
 const { copyToClipboard } = useClipboard();
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    activeTab.value = resolveSettingsTab(tab);
+  },
+);
 
 const loading = ref(true);
 const loadFailed = ref(false);
