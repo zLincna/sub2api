@@ -71,12 +71,21 @@
                   <span class="font-medium text-gray-700 dark:text-gray-300">{{ t('payment.actualPay') }}</span>
                   <span class="text-lg font-bold text-primary-600 dark:text-primary-400">{{ formatSelectedPaymentAmount(totalAmount) }}</span>
                 </div>
-                <div v-if="balanceRechargeMultiplier !== 1" class="flex justify-between" :class="{ 'border-t border-gray-200 pt-2 dark:border-dark-600': feeRate <= 0 }">
-                  <span class="text-gray-500 dark:text-gray-400">{{ t('payment.creditedBalance') }}</span>
-                  <span class="text-gray-900 dark:text-white">${{ creditedAmount.toFixed(2) }}</span>
+                <div v-if="showRechargeCreditPreview" class="flex justify-between" :class="{ 'border-t border-gray-200 pt-2 dark:border-dark-600': feeRate <= 0 }">
+                  <span class="text-gray-500 dark:text-gray-400">{{ t('payment.baseCreditedBalance') }}</span>
+                  <span class="text-gray-900 dark:text-white">${{ baseCreditedAmount.toFixed(2) }}</span>
                 </div>
-                <p v-if="balanceRechargeMultiplier !== 1" class="border-t border-gray-200 pt-2 text-xs text-gray-500 dark:border-dark-600 dark:text-gray-400">
+                <div v-if="bonusAmount > 0" class="flex justify-between">
+                  <span class="text-gray-500 dark:text-gray-400">{{ t('payment.bonusBalance') }}</span>
+                  <span class="font-medium text-green-600 dark:text-green-400">+${{ bonusAmount.toFixed(2) }}</span>
+                </div>
+                <div v-if="showRechargeCreditPreview" class="flex justify-between border-t border-gray-200 pt-2 dark:border-dark-600">
+                  <span class="font-medium text-gray-700 dark:text-gray-300">{{ t('payment.creditedBalance') }}</span>
+                  <span class="text-lg font-bold text-green-600 dark:text-green-400">${{ creditedAmount.toFixed(2) }}</span>
+                </div>
+                <p v-if="showRechargeCreditPreview" class="border-t border-gray-200 pt-2 text-xs text-gray-500 dark:border-dark-600 dark:text-gray-400">
                   {{ t('payment.rechargeRatePreview', { usd: balanceRechargeMultiplier.toFixed(2) }) }}
+                  <span v-if="matchedBonusRuleLabel"> · {{ matchedBonusRuleLabel }}</span>
                 </p>
               </div>
             </div>
@@ -478,7 +487,7 @@ function onPaymentSettled() {
 // All checkout data from single API call
 const checkout = ref<CheckoutInfoResponse>({
   methods: {}, global_min: 0, global_max: 0,
-  plans: [], balance_disabled: false, balance_recharge_multiplier: 1, recharge_fee_rate: 0, help_text: '', help_image_url: '', stripe_publishable_key: '',
+  plans: [], balance_disabled: false, balance_recharge_multiplier: 1, balance_recharge_bonus_rules: [], recharge_fee_rate: 0, help_text: '', help_image_url: '', stripe_publishable_key: '',
 })
 
 const tabs = computed(() => {
@@ -495,7 +504,27 @@ const balanceRechargeMultiplier = computed(() => {
   const multiplier = checkout.value.balance_recharge_multiplier
   return multiplier > 0 ? multiplier : 1
 })
-const creditedAmount = computed(() => Math.round((validAmount.value * balanceRechargeMultiplier.value) * 100) / 100)
+const baseCreditedAmount = computed(() => Math.round((validAmount.value * balanceRechargeMultiplier.value) * 100) / 100)
+const matchedBonusRule = computed(() => {
+  let matched: CheckoutInfoResponse['balance_recharge_bonus_rules'][number] | null = null
+  let matchedThreshold = 0
+  for (const rule of checkout.value.balance_recharge_bonus_rules || []) {
+    if (rule.enabled === false || rule.threshold <= 0 || rule.bonus <= 0) continue
+    if (validAmount.value >= rule.threshold && rule.threshold >= matchedThreshold) {
+      matchedThreshold = rule.threshold
+      matched = rule
+    }
+  }
+  return matched
+})
+const bonusAmount = computed(() => Math.round(((matchedBonusRule.value?.bonus || 0) * 100)) / 100)
+const creditedAmount = computed(() => Math.round((baseCreditedAmount.value + bonusAmount.value) * 100) / 100)
+const showRechargeCreditPreview = computed(() => balanceRechargeMultiplier.value !== 1 || bonusAmount.value > 0)
+const matchedBonusRuleLabel = computed(() => {
+  const rule = matchedBonusRule.value
+  if (!rule) return ''
+  return rule.label || t('payment.bonusRulePreview', { threshold: rule.threshold.toFixed(2), bonus: rule.bonus.toFixed(2) })
+})
 
 // Adaptive grid: center single card, 2-col for 2 plans, 3-col for 3+
 const planGridClass = computed(() => {

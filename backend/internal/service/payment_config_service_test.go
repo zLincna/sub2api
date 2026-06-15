@@ -115,6 +115,7 @@ func TestParsePaymentConfig(t *testing.T) {
 			SettingMaxPendingOrders:    "5",
 			SettingEnabledPaymentTypes: "alipay,wxpay,stripe",
 			SettingBalancePayDisabled:  "true",
+			SettingBalanceBonusRules:   `[{"threshold":200,"bonus":25,"enabled":true,"label":"满200送25"},{"threshold":100,"bonus":10,"enabled":true}]`,
 			SettingLoadBalanceStrategy: "least_amount",
 			SettingProductNamePrefix:   "PRE",
 			SettingProductNameSuffix:   "SUF",
@@ -147,6 +148,15 @@ func TestParsePaymentConfig(t *testing.T) {
 		}
 		if !cfg.BalanceDisabled {
 			t.Fatal("expected BalanceDisabled=true")
+		}
+		if len(cfg.BalanceBonusRules) != 2 {
+			t.Fatalf("BalanceBonusRules len = %d, want 2", len(cfg.BalanceBonusRules))
+		}
+		if cfg.BalanceBonusRules[0].Threshold != 100 || cfg.BalanceBonusRules[0].Bonus != 10 {
+			t.Fatalf("BalanceBonusRules[0] = %+v, want threshold=100 bonus=10", cfg.BalanceBonusRules[0])
+		}
+		if cfg.BalanceBonusRules[1].Threshold != 200 || cfg.BalanceBonusRules[1].Bonus != 25 || cfg.BalanceBonusRules[1].Label != "满200送25" {
+			t.Fatalf("BalanceBonusRules[1] = %+v, want threshold=200 bonus=25 with label", cfg.BalanceBonusRules[1])
 		}
 		if cfg.LoadBalanceStrategy != "least_amount" {
 			t.Fatalf("LoadBalanceStrategy = %q, want %q", cfg.LoadBalanceStrategy, "least_amount")
@@ -429,6 +439,40 @@ func TestUpdatePaymentConfig_PersistsVisibleMethodRouting(t *testing.T) {
 	}
 	if repo.values[SettingPaymentVisibleMethodWxpaySource] != VisibleMethodSourceOfficialWechat {
 		t.Fatalf("wxpay source = %q, want %q", repo.values[SettingPaymentVisibleMethodWxpaySource], VisibleMethodSourceOfficialWechat)
+	}
+}
+
+func TestUpdatePaymentConfig_PersistsBalanceBonusRules(t *testing.T) {
+	repo := &paymentConfigSettingRepoStub{values: map[string]string{}}
+	svc := &PaymentConfigService{settingRepo: repo}
+
+	err := svc.UpdatePaymentConfig(context.Background(), UpdatePaymentConfigRequest{
+		BalanceBonusRules: []BalanceRechargeBonusRule{
+			{Threshold: 200, Bonus: 25, Enabled: true, Label: "满200送25"},
+			{Threshold: 100, Bonus: 10, Enabled: true},
+			{Threshold: 500, Bonus: 0, Enabled: false},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdatePaymentConfig returned error: %v", err)
+	}
+
+	got := repo.values[SettingBalanceBonusRules]
+	want := `[{"threshold":100,"bonus":10,"enabled":true},{"threshold":200,"bonus":25,"enabled":true,"label":"满200送25"},{"threshold":500,"bonus":0,"enabled":false}]`
+	if got != want {
+		t.Fatalf("bonus rules = %s, want %s", got, want)
+	}
+}
+
+func TestUpdatePaymentConfig_RejectsInvalidBalanceBonusRules(t *testing.T) {
+	repo := &paymentConfigSettingRepoStub{values: map[string]string{}}
+	svc := &PaymentConfigService{settingRepo: repo}
+
+	err := svc.UpdatePaymentConfig(context.Background(), UpdatePaymentConfigRequest{
+		BalanceBonusRules: []BalanceRechargeBonusRule{{Threshold: -1, Bonus: 10, Enabled: true}},
+	})
+	if err == nil {
+		t.Fatal("expected invalid bonus rule error")
 	}
 }
 

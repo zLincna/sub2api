@@ -5982,6 +5982,80 @@
                       }}
                     </p>
                   </div>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+                  <div class="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <label class="font-medium text-gray-900 dark:text-white">{{
+                        t("admin.settings.payment.balanceBonusRules")
+                      }}</label>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ t("admin.settings.payment.balanceBonusRulesHint") }}
+                      </p>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" @click="addBalanceBonusRule">
+                      <Icon name="plus" size="sm" class="mr-1.5" />
+                      {{ t("admin.settings.payment.addBonusRule") }}
+                    </button>
+                  </div>
+                  <div v-if="form.payment_balance_bonus_rules.length === 0" class="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-500 dark:bg-dark-800 dark:text-gray-400">
+                    {{ t("admin.settings.payment.noBonusRules") }}
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="(rule, index) in form.payment_balance_bonus_rules"
+                      :key="index"
+                      class="grid gap-3 rounded-lg bg-gray-50 p-3 dark:bg-dark-800 md:grid-cols-[auto_1fr_1fr_1.5fr_auto]"
+                    >
+                      <div class="flex items-center">
+                        <Toggle v-model="rule.enabled" />
+                      </div>
+                      <div>
+                        <label class="input-label">{{ t("admin.settings.payment.bonusThreshold") }}</label>
+                        <input
+                          v-model.number="rule.threshold"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          class="input"
+                        />
+                      </div>
+                      <div>
+                        <label class="input-label">{{ t("admin.settings.payment.bonusAmount") }}</label>
+                        <input
+                          v-model.number="rule.bonus"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          class="input"
+                        />
+                      </div>
+                      <div>
+                        <label class="input-label">{{ t("admin.settings.payment.bonusLabel") }}</label>
+                        <input
+                          v-model="rule.label"
+                          type="text"
+                          class="input"
+                          :placeholder="t('admin.settings.payment.bonusLabelPlaceholder')"
+                        />
+                      </div>
+                      <div class="flex items-end">
+                        <button
+                          type="button"
+                          class="btn btn-danger btn-sm"
+                          :title="t('common.delete')"
+                          @click="removeBalanceBonusRule(index)"
+                        >
+                          <Icon name="trash" size="sm" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p v-if="form.payment_balance_bonus_rules.length > 0" class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    {{ t("admin.settings.payment.balanceBonusRulesPreview", { amount: "200", bonus: previewBalanceBonus(200).toFixed(2) }) }}
+                  </p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
                   <div>
                     <label class="input-label"
                       >{{ t("admin.settings.payment.orderTimeout") }}
@@ -6898,7 +6972,7 @@ import type {
   NotifyEmailEntry,
   Proxy,
 } from "@/types";
-import type { ProviderInstance } from "@/types/payment";
+import type { BalanceRechargeBonusRule, ProviderInstance } from "@/types/payment";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import Icon from "@/components/icons/Icon.vue";
 import Select from "@/components/common/Select.vue";
@@ -7229,6 +7303,7 @@ const form = reactive<SettingsForm>({
   payment_order_timeout_minutes: 30,
   payment_balance_disabled: false,
   payment_balance_recharge_multiplier: 1,
+  payment_balance_bonus_rules: [],
   payment_recharge_fee_rate: 0,
   payment_enabled_types: [],
   payment_help_image_url: "",
@@ -8535,6 +8610,7 @@ async function saveSettings() {
       payment_balance_disabled: form.payment_balance_disabled,
       payment_balance_recharge_multiplier:
         Number(form.payment_balance_recharge_multiplier) || 1,
+      payment_balance_bonus_rules: normalizeBalanceBonusRulesForSave(),
       payment_recharge_fee_rate: Number(form.payment_recharge_fee_rate) || 0,
       payment_enabled_types: form.payment_enabled_types,
       payment_load_balance_strategy: form.payment_load_balance_strategy,
@@ -9237,6 +9313,46 @@ const cancelRateLimitModeOptions = computed(() => [
     label: t("admin.settings.payment.cancelRateLimitWindowModeFixed"),
   },
 ]);
+
+function addBalanceBonusRule() {
+  form.payment_balance_bonus_rules.push({
+    threshold: 100,
+    bonus: 10,
+    enabled: true,
+    label: "",
+  });
+}
+
+function removeBalanceBonusRule(index: number) {
+  form.payment_balance_bonus_rules.splice(index, 1);
+}
+
+function normalizeBalanceBonusRulesForSave(): BalanceRechargeBonusRule[] {
+  return form.payment_balance_bonus_rules
+    .map((rule) => ({
+      threshold: Math.round((Number(rule.threshold) || 0) * 100) / 100,
+      bonus: Math.round((Number(rule.bonus) || 0) * 100) / 100,
+      enabled: rule.enabled !== false,
+      label: (rule.label || "").trim(),
+    }))
+    .filter((rule) => rule.threshold > 0 && rule.bonus >= 0)
+    .sort((a, b) => a.threshold - b.threshold || a.bonus - b.bonus);
+}
+
+function previewBalanceBonus(amount: number): number {
+  let matchedThreshold = 0;
+  let matched = 0;
+  for (const rule of normalizeBalanceBonusRulesForSave()) {
+    if (!rule.enabled || rule.bonus <= 0) {
+      continue;
+    }
+    if (amount >= rule.threshold && rule.threshold >= matchedThreshold) {
+      matchedThreshold = rule.threshold;
+      matched = rule.bonus;
+    }
+  }
+  return matched;
+}
 
 type ProviderEnablementCandidate = Pick<
   ProviderInstance,
