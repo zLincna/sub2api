@@ -11,29 +11,12 @@ export default {
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
     // 新增：面向用户的价值主张
-    heroEyebrow: '真高级模型 · 低倍率 · 稳定号池',
-    heroSubtitle: '稳定真模型 AI 中转服务',
-    heroDescription: 'GPT 稳定 100+ Pro 20x 号池，低倍率 Claude Code 顶级模型，专业团队和集群服务器提供可靠稳定的使用环境。',
-    heroTrust: '价格透明，只赚合理运维利润',
-    proof: {
-      eyebrow: 'ZemraAI 运营能力',
-      title: '不是公共模板，是认真运营的模型服务',
-      status: '稳定运行',
-      gptPool: 'GPT Pro 20x 号池',
-      proPool: '高级模型能力',
-      margin: '目标利润率',
-      lottery: '抽奖最高余额',
-      rows: {
-        realModels: '绝不掺水，不拿低级模型冒充高级模型。',
-        clusterOps: '专业团队运维，集群服务器保障使用环境。',
-        benefits: '充值赠送、登录签到、消费充值抽奖活动持续开放。'
-      }
-    },
+    heroSubtitle: '一个密钥，畅用多个 AI 模型',
+    heroDescription: '无需管理多个订阅账号，一站式接入 Claude、GPT、Gemini 等主流 AI 服务',
     tags: {
-      realModels: '实实在在高级模型',
-      lowMultiplier: 'Claude Code 低倍率',
-      opsCluster: '专业集群运维',
-      transparentPricing: '利润率 10% 以下'
+      subscriptionToApi: '订阅转 API',
+      stickySession: '会话保持',
+      realtimeBilling: '按量计费'
     },
     // 用户痛点区块
     painPoints: {

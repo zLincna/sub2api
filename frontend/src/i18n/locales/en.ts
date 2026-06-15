@@ -11,29 +11,12 @@ export default {
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
     // User-focused value proposition
-    heroEyebrow: 'Real premium models · Low multiplier · Stable pool',
-    heroSubtitle: 'Stable AI relay service with real premium models',
-    heroDescription: 'GPT 100+ Pro 20x account pool, low-multiplier Claude Code premium models, and professional cluster operations for a reliable usage environment.',
-    heroTrust: 'Transparent pricing with reasonable operating profit',
-    proof: {
-      eyebrow: 'ZemraAI Operations',
-      title: 'A seriously operated model service, not a generic template',
-      status: 'Stable',
-      gptPool: 'GPT Pro 20x Pool',
-      proPool: 'Premium Models',
-      margin: 'Target Margin',
-      lottery: 'Max Prize Balance',
-      rows: {
-        realModels: 'No diluted models. We do not disguise lower-tier models as premium ones.',
-        clusterOps: 'Professional operations and clustered servers for a reliable environment.',
-        benefits: 'Top-up bonuses, daily check-ins, spending and recharge lottery events stay active.'
-      }
-    },
+    heroSubtitle: 'One Key, All AI Models',
+    heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
     tags: {
-      realModels: 'Real Premium Models',
-      lowMultiplier: 'Low-Multiplier Claude Code',
-      opsCluster: 'Professional Cluster Ops',
-      transparentPricing: 'Margin Below 10%'
+      subscriptionToApi: 'Subscription to API',
+      stickySession: 'Session Persistence',
+      realtimeBilling: 'Pay As You Go'
     },
     // Pain points section
     painPoints: {
