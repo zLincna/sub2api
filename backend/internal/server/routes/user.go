@@ -107,6 +107,13 @@ func RegisterUserRoutes(
 			redeem.GET("/history", h.Redeem.GetHistory)
 		}
 
+		lottery := authenticated.Group("/lottery")
+		{
+			lottery.GET("/status", h.Lottery.Status)
+			lottery.POST("/draw", h.Lottery.Draw)
+			lottery.GET("/history", h.Lottery.History)
+		}
+
 		// 用户订阅
 		subscriptions := authenticated.Group("/subscriptions")
 		{

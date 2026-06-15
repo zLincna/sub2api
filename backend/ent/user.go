@@ -101,11 +101,15 @@ type UserEdges struct {
 	PendingAuthSessions []*PendingAuthSession `json:"pending_auth_sessions,omitempty"`
 	// PlatformQuotas holds the value of the platform_quotas edge.
 	PlatformQuotas []*UserPlatformQuota `json:"platform_quotas,omitempty"`
+	// LotteryChances holds the value of the lottery_chances edge.
+	LotteryChances []*LotteryChance `json:"lottery_chances,omitempty"`
+	// LotteryDrawRecords holds the value of the lottery_draw_records edge.
+	LotteryDrawRecords []*LotteryDrawRecord `json:"lottery_draw_records,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [14]bool
+	loadedTypes [16]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -225,10 +229,28 @@ func (e UserEdges) PlatformQuotasOrErr() ([]*UserPlatformQuota, error) {
 	return nil, &NotLoadedError{edge: "platform_quotas"}
 }
 
+// LotteryChancesOrErr returns the LotteryChances value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) LotteryChancesOrErr() ([]*LotteryChance, error) {
+	if e.loadedTypes[13] {
+		return e.LotteryChances, nil
+	}
+	return nil, &NotLoadedError{edge: "lottery_chances"}
+}
+
+// LotteryDrawRecordsOrErr returns the LotteryDrawRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) LotteryDrawRecordsOrErr() ([]*LotteryDrawRecord, error) {
+	if e.loadedTypes[14] {
+		return e.LotteryDrawRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "lottery_draw_records"}
+}
+
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[13] {
+	if e.loadedTypes[15] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -503,6 +525,16 @@ func (_m *User) QueryPendingAuthSessions() *PendingAuthSessionQuery {
 // QueryPlatformQuotas queries the "platform_quotas" edge of the User entity.
 func (_m *User) QueryPlatformQuotas() *UserPlatformQuotaQuery {
 	return NewUserClient(_m.config).QueryPlatformQuotas(_m)
+}
+
+// QueryLotteryChances queries the "lottery_chances" edge of the User entity.
+func (_m *User) QueryLotteryChances() *LotteryChanceQuery {
+	return NewUserClient(_m.config).QueryLotteryChances(_m)
+}
+
+// QueryLotteryDrawRecords queries the "lottery_draw_records" edge of the User entity.
+func (_m *User) QueryLotteryDrawRecords() *LotteryDrawRecordQuery {
+	return NewUserClient(_m.config).QueryLotteryDrawRecords(_m)
 }
 
 // QueryUserAllowedGroups queries the "user_allowed_groups" edge of the User entity.

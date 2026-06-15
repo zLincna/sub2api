@@ -379,6 +379,7 @@ export default {
     apiKeys: 'API 密钥',
     usage: '使用记录',
     redeem: '兑换',
+    lottery: '抽奖',
     affiliate: '邀请返利',
     affiliateManagement: '邀请返利',
     affiliateInviteRecords: '邀请记录',
@@ -395,6 +396,7 @@ export default {
     redeemCodes: '兑换码',
     ops: '运维监控',
     promoCodes: '优惠码',
+    lotteryCenter: '抽奖中心',
     settings: '系统设置',
     myAccount: '我的账户',
     lightMode: '浅色模式',
@@ -1195,6 +1197,7 @@ export default {
     historyWillAppear: '您的兑换历史将显示在这里',
     balanceAddedRedeem: '余额充值（兑换）',
     balanceAddedAffiliate: '余额充值（返利转入）',
+    balanceAddedLottery: '余额充值（抽奖）',
     balanceAddedAdmin: '余额充值（管理员）',
     balanceDeductedAdmin: '余额扣除（管理员）',
     concurrencyAddedRedeem: '并发增加（兑换）',
@@ -1209,6 +1212,39 @@ export default {
     failedToRedeem: '兑换失败，请检查兑换码后重试。',
     subscriptionRefreshFailed: '兑换成功，但订阅状态刷新失败。',
     pleaseEnterCode: '请输入兑换码'
+  },
+
+  lottery: {
+    title: '抽奖中心',
+    description: '每日登录、消费和充值获得抽奖次数，中奖余额自动到账',
+    remaining: '剩余 {count} 次抽奖机会',
+    granted: '已获得',
+    used: '已使用',
+    expired: '已过期',
+    disabled: '抽奖中心暂未开启',
+    draw: '立即抽奖',
+    drawing: '抽奖中',
+    once: '消耗 1 次',
+    winPrefix: '恭喜获得',
+    rules: '规则说明',
+    sources: '次数来源',
+    records: '抽奖记录',
+    noRecords: '暂无抽奖记录',
+    prize: '奖品',
+    amount: '金额',
+    source: '来源',
+    time: '时间',
+    drawSuccess: '中奖：{name}，余额 +${amount}',
+    sourceTypes: {
+      daily_login: '每日登录',
+      spend: '消费赠送',
+      recharge: '充值赠送'
+    },
+    errors: {
+      LOTTERY_DISABLED: '抽奖中心暂未开启',
+      LOTTERY_NO_CHANCE: '暂无可用抽奖次数',
+      LOTTERY_NO_PRIZE: '暂无可用奖品'
+    }
   },
 
   // Profile
@@ -4495,7 +4531,8 @@ export default {
         invitation: '邀请码',
         // 管理员在用户管理页面调整余额/并发时产生的记录
         admin_balance: '余额（管理员）',
-        admin_concurrency: '并发数（管理员）'
+        admin_concurrency: '并发数（管理员）',
+        lottery_balance: '余额（抽奖）'
       },
       // 用于选择器和筛选器的直接键
       balance: '余额',
@@ -4602,6 +4639,45 @@ export default {
       failedToGenerate: '生成兑换码失败',
       failedToUpdate: '更新兑换码失败',
       failedToDelete: '删除兑换码失败'
+    },
+
+    lottery: {
+      title: '抽奖中心',
+      description: '配置抽奖开关、发放规则、奖品概率和中奖记录',
+      configTitle: '抽奖配置',
+      configDesc: '登录、消费、充值三类规则互相独立，关闭某一类不会影响其他服务。',
+      enabled: '启用',
+      buttonEnabled: '显示顶部入口',
+      timezone: '规则时区',
+      ruleText: '规则说明',
+      loginRule: '每日登录送次数',
+      spendRule: '消费送次数',
+      rechargeRule: '充值送次数',
+      dailyChances: '每日次数',
+      addTier: '添加阶梯',
+      expireEndOfDay: '当天结束过期',
+      expireHours: '按小时过期',
+      prizesTitle: '奖品配置',
+      prizesDesc: '概率为权重，系统会按可用奖品权重随机；库存填 0 表示不限。',
+      addPrize: '添加奖品',
+      editPrize: '编辑奖品',
+      deletePrizeConfirm: '确定要删除这个奖品吗？已有中奖记录的奖品可能无法删除。',
+      prizeName: '奖品名称',
+      amount: '中奖余额',
+      probability: '概率权重',
+      stock: '库存（日/总）',
+      dailyStock: '每日库存',
+      totalStock: '总库存',
+      color: '颜色',
+      sortOrder: '排序',
+      unlimited: '不限',
+      recordsTitle: '中奖记录',
+      source: '来源',
+      user: '用户',
+      time: '时间',
+      errors: {
+        LOTTERY_INVALID_RULE: '抽奖配置不正确'
+      }
     },
 
     // Announcements

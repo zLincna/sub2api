@@ -81,6 +81,7 @@ type AuthService struct {
 	affiliateService      *AffiliateService
 	defaultSubAssigner    DefaultSubscriptionAssigner
 	userPlatformQuotaRepo UserPlatformQuotaRepository
+	lotteryService        *LotteryService
 	smsChallengeMu        sync.Mutex
 	smsChallenges         map[string]smsChallenge
 }
@@ -141,6 +142,12 @@ func (s *AuthService) EntClient() *dbent.Client {
 		return nil
 	}
 	return s.entClient
+}
+
+func (s *AuthService) SetLotteryService(lotteryService *LotteryService) {
+	if s != nil {
+		s.lotteryService = lotteryService
+	}
 }
 
 // Register 用户注册，返回token和用户

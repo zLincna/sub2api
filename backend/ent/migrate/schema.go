@@ -792,6 +792,153 @@ var (
 			},
 		},
 	}
+	// LotteryChancesColumns holds the columns for the "lottery_chances" table.
+	LotteryChancesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "source_type", Type: field.TypeString, Size: 32},
+		{Name: "source_key", Type: field.TypeString, Size: 128},
+		{Name: "total_count", Type: field.TypeInt, Default: 0},
+		{Name: "used_count", Type: field.TypeInt, Default: 0},
+		{Name: "source_amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "grant_date", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "date"}},
+		{Name: "expires_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "notes", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// LotteryChancesTable holds the schema information for the "lottery_chances" table.
+	LotteryChancesTable = &schema.Table{
+		Name:       "lottery_chances",
+		Columns:    LotteryChancesColumns,
+		PrimaryKey: []*schema.Column{LotteryChancesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "lottery_chances_users_lottery_chances",
+				Columns:    []*schema.Column{LotteryChancesColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "lotterychance_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryChancesColumns[11]},
+			},
+			{
+				Name:    "lotterychance_source_type",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryChancesColumns[1]},
+			},
+			{
+				Name:    "lotterychance_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryChancesColumns[7]},
+			},
+			{
+				Name:    "lotterychance_grant_date",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryChancesColumns[6]},
+			},
+			{
+				Name:    "lotterychance_user_id_source_type_source_key",
+				Unique:  true,
+				Columns: []*schema.Column{LotteryChancesColumns[11], LotteryChancesColumns[1], LotteryChancesColumns[2]},
+			},
+		},
+	}
+	// LotteryDrawRecordsColumns holds the columns for the "lottery_draw_records" table.
+	LotteryDrawRecordsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "prize_name", Type: field.TypeString, Size: 100},
+		{Name: "amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "balance_before", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "balance_after", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "source_type", Type: field.TypeString, Size: 32},
+		{Name: "config_snapshot", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "chance_id", Type: field.TypeInt64},
+		{Name: "prize_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// LotteryDrawRecordsTable holds the schema information for the "lottery_draw_records" table.
+	LotteryDrawRecordsTable = &schema.Table{
+		Name:       "lottery_draw_records",
+		Columns:    LotteryDrawRecordsColumns,
+		PrimaryKey: []*schema.Column{LotteryDrawRecordsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "lottery_draw_records_lottery_chances_draw_records",
+				Columns:    []*schema.Column{LotteryDrawRecordsColumns[8]},
+				RefColumns: []*schema.Column{LotteryChancesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "lottery_draw_records_lottery_prizes_draw_records",
+				Columns:    []*schema.Column{LotteryDrawRecordsColumns[9]},
+				RefColumns: []*schema.Column{LotteryPrizesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "lottery_draw_records_users_lottery_draw_records",
+				Columns:    []*schema.Column{LotteryDrawRecordsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "lotterydrawrecord_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryDrawRecordsColumns[10]},
+			},
+			{
+				Name:    "lotterydrawrecord_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryDrawRecordsColumns[7]},
+			},
+			{
+				Name:    "lotterydrawrecord_source_type",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryDrawRecordsColumns[5]},
+			},
+		},
+	}
+	// LotteryPrizesColumns holds the columns for the "lottery_prizes" table.
+	LotteryPrizesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "probability", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(10,6)"}},
+		{Name: "daily_stock", Type: field.TypeInt, Default: 0},
+		{Name: "daily_used", Type: field.TypeInt, Default: 0},
+		{Name: "total_stock", Type: field.TypeInt, Default: 0},
+		{Name: "total_used", Type: field.TypeInt, Default: 0},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "color", Type: field.TypeString, Size: 32, Default: "#f59e0b"},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// LotteryPrizesTable holds the schema information for the "lottery_prizes" table.
+	LotteryPrizesTable = &schema.Table{
+		Name:       "lottery_prizes",
+		Columns:    LotteryPrizesColumns,
+		PrimaryKey: []*schema.Column{LotteryPrizesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "lotteryprize_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryPrizesColumns[8]},
+			},
+			{
+				Name:    "lotteryprize_sort_order",
+				Unique:  false,
+				Columns: []*schema.Column{LotteryPrizesColumns[10]},
+			},
+		},
+	}
 	// PaymentAuditLogsColumns holds the columns for the "payment_audit_logs" table.
 	PaymentAuditLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1791,6 +1938,9 @@ var (
 		GroupsTable,
 		IdempotencyRecordsTable,
 		IdentityAdoptionDecisionsTable,
+		LotteryChancesTable,
+		LotteryDrawRecordsTable,
+		LotteryPrizesTable,
 		PaymentAuditLogsTable,
 		PaymentOrdersTable,
 		PaymentProviderInstancesTable,
@@ -1873,6 +2023,19 @@ func init() {
 	IdentityAdoptionDecisionsTable.ForeignKeys[1].RefTable = PendingAuthSessionsTable
 	IdentityAdoptionDecisionsTable.Annotation = &entsql.Annotation{
 		Table: "identity_adoption_decisions",
+	}
+	LotteryChancesTable.ForeignKeys[0].RefTable = UsersTable
+	LotteryChancesTable.Annotation = &entsql.Annotation{
+		Table: "lottery_chances",
+	}
+	LotteryDrawRecordsTable.ForeignKeys[0].RefTable = LotteryChancesTable
+	LotteryDrawRecordsTable.ForeignKeys[1].RefTable = LotteryPrizesTable
+	LotteryDrawRecordsTable.ForeignKeys[2].RefTable = UsersTable
+	LotteryDrawRecordsTable.Annotation = &entsql.Annotation{
+		Table: "lottery_draw_records",
+	}
+	LotteryPrizesTable.Annotation = &entsql.Annotation{
+		Table: "lottery_prizes",
 	}
 	PaymentAuditLogsTable.Annotation = &entsql.Annotation{
 		Table: "payment_audit_logs",

@@ -103,6 +103,22 @@ func RegisterAdminRoutes(
 
 		// 邀请返利（专属用户管理）
 		registerAffiliateRoutes(admin, h)
+
+		// 抽奖中心
+		registerLotteryRoutes(admin, h)
+	}
+}
+
+func registerLotteryRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	lottery := admin.Group("/lottery")
+	{
+		lottery.GET("/config", h.Admin.Lottery.GetConfig)
+		lottery.PUT("/config", h.Admin.Lottery.UpdateConfig)
+		lottery.GET("/prizes", h.Admin.Lottery.ListPrizes)
+		lottery.POST("/prizes", h.Admin.Lottery.CreatePrize)
+		lottery.PUT("/prizes/:id", h.Admin.Lottery.UpdatePrize)
+		lottery.DELETE("/prizes/:id", h.Admin.Lottery.DeletePrize)
+		lottery.GET("/records", h.Admin.Lottery.ListRecords)
 	}
 }
 

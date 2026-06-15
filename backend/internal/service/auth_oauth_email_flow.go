@@ -12,6 +12,7 @@ import (
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 )
 
 func normalizeOAuthSignupSource(signupSource string) string {
@@ -484,4 +485,9 @@ func (s *AuthService) RecordSuccessfulLogin(ctx context.Context, userID int64) {
 		}
 	}
 	s.touchUserLogin(ctx, userID)
+	if s != nil && s.lotteryService != nil && userID > 0 {
+		if err := s.lotteryService.GrantDailyLogin(ctx, userID); err != nil {
+			logger.LegacyPrintf("service.auth", "[Auth] lottery daily login grant failed for user %d: %v", userID, err)
+		}
+	}
 }

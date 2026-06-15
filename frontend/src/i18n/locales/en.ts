@@ -379,6 +379,7 @@ export default {
     apiKeys: 'API Keys',
     usage: 'Usage',
     redeem: 'Redeem',
+    lottery: 'Lottery',
     affiliate: 'Affiliate Rebates',
     affiliateManagement: 'Affiliate Rebates',
     affiliateInviteRecords: 'Invite Records',
@@ -395,6 +396,7 @@ export default {
     redeemCodes: 'Redeem Codes',
     ops: 'Ops',
     promoCodes: 'Promo Codes',
+    lotteryCenter: 'Lottery Center',
     settings: 'Settings',
     myAccount: 'My Account',
     lightMode: 'Light Mode',
@@ -1191,6 +1193,7 @@ export default {
     historyWillAppear: 'Your redemption history will appear here',
     balanceAddedRedeem: 'Balance Added (Redeem)',
     balanceAddedAffiliate: 'Balance Added (Affiliate Transfer)',
+    balanceAddedLottery: 'Balance Added (Lottery)',
     balanceAddedAdmin: 'Balance Added (Admin)',
     balanceDeductedAdmin: 'Balance Deducted (Admin)',
     concurrencyAddedRedeem: 'Concurrency Added (Redeem)',
@@ -1205,6 +1208,39 @@ export default {
     failedToRedeem: 'Failed to redeem code. Please check the code and try again.',
     subscriptionRefreshFailed: 'Redeemed successfully, but failed to refresh subscription status.',
     pleaseEnterCode: 'Please enter a redeem code'
+  },
+
+  lottery: {
+    title: 'Lottery Center',
+    description: 'Earn draw chances from daily login, spending, and top-ups. Balance prizes are credited instantly.',
+    remaining: '{count} draw chance(s) remaining',
+    granted: 'Granted',
+    used: 'Used',
+    expired: 'Expired',
+    disabled: 'Lottery center is disabled',
+    draw: 'Draw Now',
+    drawing: 'Drawing',
+    once: 'Use 1 chance',
+    winPrefix: 'You won',
+    rules: 'Rules',
+    sources: 'Chance Sources',
+    records: 'Draw Records',
+    noRecords: 'No draw records yet',
+    prize: 'Prize',
+    amount: 'Amount',
+    source: 'Source',
+    time: 'Time',
+    drawSuccess: 'Won {name}, balance +${amount}',
+    sourceTypes: {
+      daily_login: 'Daily Login',
+      spend: 'Spending',
+      recharge: 'Top-up'
+    },
+    errors: {
+      LOTTERY_DISABLED: 'Lottery center is disabled',
+      LOTTERY_NO_CHANCE: 'No draw chances available',
+      LOTTERY_NO_PRIZE: 'No available prizes'
+    }
   },
 
   // Profile
@@ -4430,7 +4466,8 @@ export default {
         invitation: 'Invitation',
         // Admin adjustment types (created when admin modifies user balance/concurrency)
         admin_balance: 'Balance (Admin)',
-        admin_concurrency: 'Concurrency (Admin)'
+        admin_concurrency: 'Concurrency (Admin)',
+        lottery_balance: 'Balance (Lottery)'
       },
       selectGroup: 'Select Group',
       selectGroupPlaceholder: 'Choose a subscription group',
@@ -4448,6 +4485,45 @@ export default {
         used: 'Used',
         expired: 'Expired',
         disabled: 'Disabled'
+      }
+    },
+
+    lottery: {
+      title: 'Lottery Center',
+      description: 'Configure lottery switches, grant rules, prize odds, and draw records',
+      configTitle: 'Lottery Config',
+      configDesc: 'Login, spending, and top-up rules are independent. Disabling one does not affect normal services.',
+      enabled: 'Enabled',
+      buttonEnabled: 'Show Header Entry',
+      timezone: 'Rule Timezone',
+      ruleText: 'Rule Text',
+      loginRule: 'Daily Login Chances',
+      spendRule: 'Spending Chances',
+      rechargeRule: 'Top-up Chances',
+      dailyChances: 'Daily Chances',
+      addTier: 'Add Tier',
+      expireEndOfDay: 'Expire at end of day',
+      expireHours: 'Expire after hours',
+      prizesTitle: 'Prize Config',
+      prizesDesc: 'Probability is used as weight. Stock 0 means unlimited.',
+      addPrize: 'Add Prize',
+      editPrize: 'Edit Prize',
+      deletePrizeConfirm: 'Delete this prize? Prizes with draw records may not be removable.',
+      prizeName: 'Prize Name',
+      amount: 'Balance Amount',
+      probability: 'Probability Weight',
+      stock: 'Stock (Daily/Total)',
+      dailyStock: 'Daily Stock',
+      totalStock: 'Total Stock',
+      color: 'Color',
+      sortOrder: 'Sort',
+      unlimited: 'Unlimited',
+      recordsTitle: 'Draw Records',
+      source: 'Source',
+      user: 'User',
+      time: 'Time',
+      errors: {
+        LOTTERY_INVALID_RULE: 'Invalid lottery config'
       }
     },
 

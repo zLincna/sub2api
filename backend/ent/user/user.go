@@ -91,6 +91,10 @@ const (
 	EdgePendingAuthSessions = "pending_auth_sessions"
 	// EdgePlatformQuotas holds the string denoting the platform_quotas edge name in mutations.
 	EdgePlatformQuotas = "platform_quotas"
+	// EdgeLotteryChances holds the string denoting the lottery_chances edge name in mutations.
+	EdgeLotteryChances = "lottery_chances"
+	// EdgeLotteryDrawRecords holds the string denoting the lottery_draw_records edge name in mutations.
+	EdgeLotteryDrawRecords = "lottery_draw_records"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -184,6 +188,20 @@ const (
 	PlatformQuotasInverseTable = "user_platform_quotas"
 	// PlatformQuotasColumn is the table column denoting the platform_quotas relation/edge.
 	PlatformQuotasColumn = "user_id"
+	// LotteryChancesTable is the table that holds the lottery_chances relation/edge.
+	LotteryChancesTable = "lottery_chances"
+	// LotteryChancesInverseTable is the table name for the LotteryChance entity.
+	// It exists in this package in order to avoid circular dependency with the "lotterychance" package.
+	LotteryChancesInverseTable = "lottery_chances"
+	// LotteryChancesColumn is the table column denoting the lottery_chances relation/edge.
+	LotteryChancesColumn = "user_id"
+	// LotteryDrawRecordsTable is the table that holds the lottery_draw_records relation/edge.
+	LotteryDrawRecordsTable = "lottery_draw_records"
+	// LotteryDrawRecordsInverseTable is the table name for the LotteryDrawRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "lotterydrawrecord" package.
+	LotteryDrawRecordsInverseTable = "lottery_draw_records"
+	// LotteryDrawRecordsColumn is the table column denoting the lottery_draw_records relation/edge.
+	LotteryDrawRecordsColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -612,6 +630,34 @@ func ByPlatformQuotas(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByLotteryChancesCount orders the results by lottery_chances count.
+func ByLotteryChancesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newLotteryChancesStep(), opts...)
+	}
+}
+
+// ByLotteryChances orders the results by lottery_chances terms.
+func ByLotteryChances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLotteryChancesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByLotteryDrawRecordsCount orders the results by lottery_draw_records count.
+func ByLotteryDrawRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newLotteryDrawRecordsStep(), opts...)
+	}
+}
+
+// ByLotteryDrawRecords orders the results by lottery_draw_records terms.
+func ByLotteryDrawRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLotteryDrawRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -714,6 +760,20 @@ func newPlatformQuotasStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PlatformQuotasInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PlatformQuotasTable, PlatformQuotasColumn),
+	)
+}
+func newLotteryChancesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LotteryChancesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, LotteryChancesTable, LotteryChancesColumn),
+	)
+}
+func newLotteryDrawRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LotteryDrawRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, LotteryDrawRecordsTable, LotteryDrawRecordsColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

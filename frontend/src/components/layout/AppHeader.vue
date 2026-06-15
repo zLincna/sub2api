@@ -44,6 +44,17 @@
         <!-- Subscription Progress (for users with active subscriptions) -->
         <SubscriptionProgressMini v-if="user" />
 
+        <router-link
+          v-if="showLotteryButton"
+          to="/lottery"
+          class="lottery-header-button"
+          :title="t('lottery.title')"
+        >
+          <span class="lottery-header-spark">★</span>
+          <span class="hidden sm:inline">{{ t('nav.lottery') }}</span>
+          <span v-if="lotteryRemaining > 0" class="lottery-header-count">{{ lotteryRemaining }}</span>
+        </router-link>
+
         <!-- Balance Display -->
         <div
           v-if="user"
@@ -222,6 +233,7 @@ import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import SubscriptionProgressMini from '@/components/common/SubscriptionProgressMini.vue'
 import AnnouncementBell from '@/components/common/AnnouncementBell.vue'
 import Icon from '@/components/icons/Icon.vue'
+import { lotteryAPI } from '@/api/lottery'
 
 const router = useRouter()
 const route = useRoute()
@@ -237,6 +249,11 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const contactInfo = computed(() => appStore.contactInfo)
 const docUrl = computed(() => appStore.docUrl)
 const avatarUrl = computed(() => user.value?.avatar_url?.trim() || '')
+const lotteryRemaining = ref(0)
+const lotteryButtonEnabled = ref(false)
+const showLotteryButton = computed(() => {
+  return !!user.value && lotteryButtonEnabled.value && !authStore.isSimpleMode
+})
 
 // 只在标准模式的管理员下显示新手引导按钮
 const showOnboardingButton = computed(() => {
@@ -322,6 +339,16 @@ function handleClickOutside(event: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  if (user.value) {
+    lotteryAPI.status()
+      .then((status) => {
+        lotteryRemaining.value = status.chances.remaining
+        lotteryButtonEnabled.value = status.config.enabled && status.config.button_enabled
+      })
+      .catch(() => {
+        lotteryButtonEnabled.value = false
+      })
+  }
 })
 
 onBeforeUnmount(() => {
@@ -339,5 +366,49 @@ onBeforeUnmount(() => {
 .dropdown-leave-to {
   opacity: 0;
   transform: scale(0.95) translateY(-4px);
+}
+
+.lottery-header-button {
+  align-items: center;
+  animation: lottery-pulse 2.2s ease-in-out infinite;
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  border-radius: 9999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 700;
+  gap: 0.375rem;
+  min-height: 2rem;
+  padding: 0.375rem 0.625rem;
+  white-space: nowrap;
+}
+
+.lottery-header-spark {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.lottery-header-count {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 9999px;
+  color: #dc2626;
+  display: inline-flex;
+  font-size: 0.75rem;
+  height: 1.125rem;
+  justify-content: center;
+  min-width: 1.125rem;
+  padding: 0 0.25rem;
+}
+
+@keyframes lottery-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    transform: translateY(-1px);
+  }
 }
 </style>

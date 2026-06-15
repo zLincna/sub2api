@@ -1764,6 +1764,52 @@ func HasPlatformQuotasWith(preds ...predicate.UserPlatformQuota) predicate.User 
 	})
 }
 
+// HasLotteryChances applies the HasEdge predicate on the "lottery_chances" edge.
+func HasLotteryChances() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LotteryChancesTable, LotteryChancesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLotteryChancesWith applies the HasEdge predicate on the "lottery_chances" edge with a given conditions (other predicates).
+func HasLotteryChancesWith(preds ...predicate.LotteryChance) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newLotteryChancesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasLotteryDrawRecords applies the HasEdge predicate on the "lottery_draw_records" edge.
+func HasLotteryDrawRecords() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LotteryDrawRecordsTable, LotteryDrawRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLotteryDrawRecordsWith applies the HasEdge predicate on the "lottery_draw_records" edge with a given conditions (other predicates).
+func HasLotteryDrawRecordsWith(preds ...predicate.LotteryDrawRecord) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newLotteryDrawRecordsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUserAllowedGroups applies the HasEdge predicate on the "user_allowed_groups" edge.
 func HasUserAllowedGroups() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

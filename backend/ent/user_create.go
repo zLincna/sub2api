@@ -15,6 +15,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/lotterychance"
+	"github.com/Wei-Shaw/sub2api/ent/lotterydrawrecord"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/pendingauthsession"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
@@ -563,6 +565,36 @@ func (_c *UserCreate) AddPlatformQuotas(v ...*UserPlatformQuota) *UserCreate {
 	return _c.AddPlatformQuotaIDs(ids...)
 }
 
+// AddLotteryChanceIDs adds the "lottery_chances" edge to the LotteryChance entity by IDs.
+func (_c *UserCreate) AddLotteryChanceIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddLotteryChanceIDs(ids...)
+	return _c
+}
+
+// AddLotteryChances adds the "lottery_chances" edges to the LotteryChance entity.
+func (_c *UserCreate) AddLotteryChances(v ...*LotteryChance) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddLotteryChanceIDs(ids...)
+}
+
+// AddLotteryDrawRecordIDs adds the "lottery_draw_records" edge to the LotteryDrawRecord entity by IDs.
+func (_c *UserCreate) AddLotteryDrawRecordIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddLotteryDrawRecordIDs(ids...)
+	return _c
+}
+
+// AddLotteryDrawRecords adds the "lottery_draw_records" edges to the LotteryDrawRecord entity.
+func (_c *UserCreate) AddLotteryDrawRecords(v ...*LotteryDrawRecord) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddLotteryDrawRecordIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -1096,6 +1128,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userplatformquota.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.LotteryChancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LotteryChancesTable,
+			Columns: []string{user.LotteryChancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lotterychance.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.LotteryDrawRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.LotteryDrawRecordsTable,
+			Columns: []string{user.LotteryDrawRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(lotterydrawrecord.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

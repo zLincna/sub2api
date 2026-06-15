@@ -16,6 +16,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/internal/payment"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 )
 
 // ErrOrderNotFound is returned by HandlePaymentNotification when the webhook
@@ -310,6 +311,11 @@ func (s *PaymentService) markCompleted(ctx context.Context, o *dbent.PaymentOrde
 		"creditedAmount": o.Amount,
 		"payAmount":      o.PayAmount,
 	})
+	if auditAction == "RECHARGE_SUCCESS" && s.lotteryService != nil && o != nil {
+		if err := s.lotteryService.GrantRechargeForOrder(ctx, o.ID, o.UserID, o.PayAmount, now); err != nil {
+			logger.LegacyPrintf("service.payment", "[Payment] lottery recharge grant failed for order %d user %d: %v", o.ID, o.UserID, err)
+		}
+	}
 	s.dispatchPaymentFulfillmentNotification(o, auditAction)
 	return nil
 }
