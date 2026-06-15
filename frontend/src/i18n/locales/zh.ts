@@ -11,12 +11,29 @@ export default {
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
     // 新增：面向用户的价值主张
-    heroSubtitle: '一个密钥，畅用多个 AI 模型',
-    heroDescription: '无需管理多个订阅账号，一站式接入 Claude、GPT、Gemini 等主流 AI 服务',
+    heroEyebrow: '真高级模型 · 低倍率 · 稳定号池',
+    heroSubtitle: '稳定真模型 AI 中转服务',
+    heroDescription: 'GPT 稳定 100+ Pro 20x 号池，低倍率 Claude Code 顶级模型，专业团队和集群服务器提供可靠稳定的使用环境。',
+    heroTrust: '价格透明，只赚合理运维利润',
+    proof: {
+      eyebrow: 'ZemraAI 运营能力',
+      title: '不是公共模板，是认真运营的模型服务',
+      status: '稳定运行',
+      gptPool: 'GPT Pro 20x 号池',
+      proPool: '高级模型能力',
+      margin: '目标利润率',
+      lottery: '抽奖最高余额',
+      rows: {
+        realModels: '绝不掺水，不拿低级模型冒充高级模型。',
+        clusterOps: '专业团队运维，集群服务器保障使用环境。',
+        benefits: '充值赠送、登录签到、消费充值抽奖活动持续开放。'
+      }
+    },
     tags: {
-      subscriptionToApi: '订阅转 API',
-      stickySession: '会话保持',
-      realtimeBilling: '按量计费'
+      realModels: '实实在在高级模型',
+      lowMultiplier: 'Claude Code 低倍率',
+      opsCluster: '专业集群运维',
+      transparentPricing: '利润率 10% 以下'
     },
     // 用户痛点区块
     painPoints: {
@@ -51,7 +68,19 @@ export default {
       multiAccount: '稳定可靠',
       multiAccountDesc: '智能调度多个上游账号，自动切换和负载均衡，告别频繁报错。',
       balanceQuota: '用多少付多少',
-      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。'
+      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。',
+      gptPool: 'GPT 稳定号池',
+      gptPoolDesc: '100+ Pro 20x 账号池，多账号调度与负载均衡，尽量降低单号波动对使用体验的影响。',
+      claudeCode: '低倍率 Claude Code',
+      claudeCodeDesc: '低倍率接入 Claude Code 顶级模型能力，适合开发、代码分析、自动化工作流等高强度场景。',
+      opsTeam: '专业团队运维',
+      opsTeamDesc: '专业团队维护账号、线路与服务器集群，持续监控可用性，提供更可靠的使用环境。',
+      noWater: '绝不掺水',
+      noWaterDesc: '不拿低级模型冒充高级模型，不做暗中降级。模型质量是底线，掺水可耻。',
+      transparentProfit: '价格透明',
+      transparentProfitDesc: '坚持合理利润，目标利润率控制在 10% 以下，把主要成本花在账号、服务器和稳定性上。',
+      benefits: '活动多多',
+      benefitsDesc: '充值赠送持续开放，登录签到、消费、充值可获得抽奖机会，最高可中 999 余额奖励。'
     },
     // 优势对比
     comparison: {

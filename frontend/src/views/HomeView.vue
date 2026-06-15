@@ -117,17 +117,26 @@
         <div class="mb-12 flex flex-col items-center justify-between gap-12 lg:flex-row lg:gap-16">
           <!-- Left: Text Content -->
           <div class="flex-1 text-center lg:text-left">
+            <div
+              class="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-200/70 bg-white/70 px-4 py-2 text-sm font-medium text-primary-700 shadow-sm backdrop-blur-sm dark:border-primary-800/60 dark:bg-dark-800/70 dark:text-primary-300"
+            >
+              <Icon name="badge" size="sm" />
+              {{ t('home.heroEyebrow') }}
+            </div>
             <h1
               class="mb-4 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl lg:text-6xl"
             >
               {{ siteName }}
             </h1>
-            <p class="mb-8 text-lg text-gray-600 dark:text-dark-300 md:text-xl">
-              {{ siteSubtitle }}
+            <p class="mb-4 text-2xl font-semibold text-gray-800 dark:text-dark-100 md:text-3xl">
+              {{ t('home.heroSubtitle') }}
+            </p>
+            <p class="mb-8 max-w-2xl text-lg leading-8 text-gray-600 dark:text-dark-300">
+              {{ t('home.heroDescription') }}
             </p>
 
             <!-- CTA Button -->
-            <div>
+            <div class="flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
               <router-link
                 :to="isAuthenticated ? dashboardPath : '/login'"
                 class="btn btn-primary px-8 py-3 text-base shadow-lg shadow-primary-500/30"
@@ -135,41 +144,56 @@
                 {{ isAuthenticated ? t('home.goToDashboard') : t('home.getStarted') }}
                 <Icon name="arrowRight" size="md" class="ml-2" :stroke-width="2" />
               </router-link>
+              <span class="text-sm text-gray-500 dark:text-dark-400">
+                {{ t('home.heroTrust') }}
+              </span>
             </div>
           </div>
 
-          <!-- Right: Terminal Animation -->
+          <!-- Right: Service Proof Panel -->
           <div class="flex flex-1 justify-center lg:justify-end">
-            <div class="terminal-container">
-              <div class="terminal-window">
-                <!-- Window header -->
-                <div class="terminal-header">
-                  <div class="terminal-buttons">
-                    <span class="btn-close"></span>
-                    <span class="btn-minimize"></span>
-                    <span class="btn-maximize"></span>
-                  </div>
-                  <span class="terminal-title">terminal</span>
+            <div class="service-panel">
+              <div class="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary-500 dark:text-primary-300">
+                    {{ t('home.proof.eyebrow') }}
+                  </p>
+                  <h2 class="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    {{ t('home.proof.title') }}
+                  </h2>
                 </div>
-                <!-- Terminal content -->
-                <div class="terminal-body">
-                  <div class="code-line line-1">
-                    <span class="code-prompt">$</span>
-                    <span class="code-cmd">curl</span>
-                    <span class="code-flag">-X POST</span>
-                    <span class="code-url">/v1/messages</span>
-                  </div>
-                  <div class="code-line line-2">
-                    <span class="code-comment"># Routing to upstream...</span>
-                  </div>
-                  <div class="code-line line-3">
-                    <span class="code-success">200 OK</span>
-                    <span class="code-response">{ "content": "Hello!" }</span>
-                  </div>
-                  <div class="code-line line-4">
-                    <span class="code-prompt">$</span>
-                    <span class="cursor"></span>
-                  </div>
+                <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  {{ t('home.proof.status') }}
+                </span>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="proof-metric">
+                  <span class="proof-metric-value">100+</span>
+                  <span class="proof-metric-label">{{ t('home.proof.gptPool') }}</span>
+                </div>
+                <div class="proof-metric">
+                  <span class="proof-metric-value">20x</span>
+                  <span class="proof-metric-label">{{ t('home.proof.proPool') }}</span>
+                </div>
+                <div class="proof-metric">
+                  <span class="proof-metric-value">&lt;10%</span>
+                  <span class="proof-metric-label">{{ t('home.proof.margin') }}</span>
+                </div>
+                <div class="proof-metric">
+                  <span class="proof-metric-value">999</span>
+                  <span class="proof-metric-label">{{ t('home.proof.lottery') }}</span>
+                </div>
+              </div>
+
+              <div class="mt-5 space-y-3">
+                <div
+                  v-for="item in proofRows"
+                  :key="item"
+                  class="flex items-center gap-3 rounded-xl border border-gray-200/60 bg-white/60 px-4 py-3 text-sm text-gray-700 backdrop-blur-sm dark:border-dark-700/70 dark:bg-dark-900/50 dark:text-dark-200"
+                >
+                  <Icon name="checkCircle" size="sm" class="shrink-0 text-primary-500" />
+                  <span>{{ item }}</span>
                 </div>
               </div>
             </div>
@@ -181,32 +205,39 @@
           <div
             class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
           >
-            <Icon name="swap" size="sm" class="text-primary-500" />
+            <Icon name="badge" size="sm" class="text-primary-500" />
             <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.subscriptionToApi')
+              t('home.tags.realModels')
             }}</span>
           </div>
           <div
             class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
           >
-            <Icon name="shield" size="sm" class="text-primary-500" />
+            <Icon name="trendingUp" size="sm" class="text-primary-500" />
             <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.stickySession')
+              t('home.tags.lowMultiplier')
             }}</span>
           </div>
           <div
             class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
           >
-            <Icon name="chart" size="sm" class="text-primary-500" />
+            <Icon name="server" size="sm" class="text-primary-500" />
             <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.realtimeBilling')
+              t('home.tags.opsCluster')
+            }}</span>
+          </div>
+          <div
+            class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
+          >
+            <Icon name="dollar" size="sm" class="text-primary-500" />
+            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
+              t('home.tags.transparentPricing')
             }}</span>
           </div>
         </div>
 
         <!-- Features Grid -->
-        <div class="mb-12 grid gap-6 md:grid-cols-3">
-          <!-- Feature 1: Unified Gateway -->
+        <div class="mb-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <div
             class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
           >
@@ -216,14 +247,13 @@
               <Icon name="server" size="lg" class="text-white" />
             </div>
             <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('home.features.unifiedGateway') }}
+              {{ t('home.features.gptPool') }}
             </h3>
             <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
-              {{ t('home.features.unifiedGatewayDesc') }}
+              {{ t('home.features.gptPoolDesc') }}
             </p>
           </div>
 
-          <!-- Feature 2: Account Pool -->
           <div
             class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
           >
@@ -245,14 +275,13 @@
               </svg>
             </div>
             <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('home.features.multiAccount') }}
+              {{ t('home.features.claudeCode') }}
             </h3>
             <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
-              {{ t('home.features.multiAccountDesc') }}
+              {{ t('home.features.claudeCodeDesc') }}
             </p>
           </div>
 
-          <!-- Feature 3: Billing & Quota -->
           <div
             class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
           >
@@ -274,10 +303,58 @@
               </svg>
             </div>
             <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('home.features.balanceQuota') }}
+              {{ t('home.features.opsTeam') }}
             </h3>
             <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
-              {{ t('home.features.balanceQuotaDesc') }}
+              {{ t('home.features.opsTeamDesc') }}
+            </p>
+          </div>
+
+          <div
+            class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
+          >
+            <div
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 transition-transform group-hover:scale-110"
+            >
+              <Icon name="shield" size="lg" class="text-white" />
+            </div>
+            <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('home.features.noWater') }}
+            </h3>
+            <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
+              {{ t('home.features.noWaterDesc') }}
+            </p>
+          </div>
+
+          <div
+            class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
+          >
+            <div
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 shadow-lg shadow-cyan-500/30 transition-transform group-hover:scale-110"
+            >
+              <Icon name="dollar" size="lg" class="text-white" />
+            </div>
+            <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('home.features.transparentProfit') }}
+            </h3>
+            <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
+              {{ t('home.features.transparentProfitDesc') }}
+            </p>
+          </div>
+
+          <div
+            class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
+          >
+            <div
+              class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30 transition-transform group-hover:scale-110"
+            >
+              <Icon name="gift" size="lg" class="text-white" />
+            </div>
+            <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('home.features.benefits') }}
+            </h3>
+            <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
+              {{ t('home.features.benefitsDesc') }}
             </p>
           </div>
         </div>
@@ -419,7 +496,6 @@ const appStore = useAppStore()
 // Site settings - directly from appStore (already initialized from injected config)
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
 const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
-const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || 'AI API Gateway Platform')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
 
@@ -447,6 +523,11 @@ const userInitial = computed(() => {
 
 // Current year for footer
 const currentYear = computed(() => new Date().getFullYear())
+const proofRows = computed(() => [
+  t('home.proof.rows.realModels'),
+  t('home.proof.rows.clusterOps'),
+  t('home.proof.rows.benefits')
+])
 
 // Toggle theme
 function toggleTheme() {
@@ -481,103 +562,105 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Terminal Container */
-.terminal-container {
+/* Service Proof Panel */
+.service-panel {
   position: relative;
-  display: inline-block;
-}
-
-/* Terminal Window */
-.terminal-window {
-  width: 420px;
-  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-  border-radius: 14px;
+  width: min(100%, 460px);
+  border-radius: 22px;
+  border: 1px solid rgba(20, 184, 166, 0.22);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(240, 253, 250, 0.72)),
+    radial-gradient(circle at 15% 20%, rgba(20, 184, 166, 0.2), transparent 28%);
+  padding: 24px;
   box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 25px 50px -12px rgba(15, 23, 42, 0.22),
     0 0 0 1px rgba(255, 255, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  overflow: hidden;
   transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);
   transition: transform 0.3s ease;
 }
 
-.terminal-window:hover {
+.service-panel:hover {
   transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(-4px);
 }
 
-/* Terminal Header */
-.terminal-header {
+.proof-metric {
   display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: rgba(30, 41, 59, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 96px;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid rgba(20, 184, 166, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 16px;
 }
 
-.terminal-buttons {
-  display: flex;
-  gap: 8px;
+.proof-metric-value {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 800;
+  color: #0f766e;
 }
 
-.terminal-buttons span {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.proof-metric-label {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #475569;
 }
 
-.btn-close {
-  background: #ef4444;
-}
-.btn-minimize {
-  background: #eab308;
-}
-.btn-maximize {
-  background: #22c55e;
-}
-
-.terminal-title {
-  flex: 1;
-  text-align: center;
-  font-size: 12px;
-  font-family: ui-monospace, monospace;
-  color: #64748b;
-  margin-right: 52px;
+/* Dark mode adjustments */
+:deep(.dark) .service-panel {
+  background:
+    linear-gradient(145deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.92)),
+    radial-gradient(circle at 15% 20%, rgba(20, 184, 166, 0.18), transparent 28%);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(20, 184, 166, 0.2),
+    0 0 40px rgba(20, 184, 166, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Terminal Body */
-.terminal-body {
-  padding: 20px 24px;
-  font-family: ui-monospace, 'Fira Code', monospace;
-  font-size: 14px;
-  line-height: 2;
+:deep(.dark) .proof-metric {
+  border-color: rgba(20, 184, 166, 0.2);
+  background: rgba(15, 23, 42, 0.62);
 }
 
-.code-line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+:deep(.dark) .proof-metric-value {
+  color: #5eead4;
+}
+
+:deep(.dark) .proof-metric-label {
+  color: #cbd5e1;
+}
+
+/* Subtle entry animation */
+.proof-metric,
+.service-panel .flex.items-center.gap-3 {
   opacity: 0;
-  animation: line-appear 0.5s ease forwards;
+  animation: proof-appear 0.5s ease forwards;
 }
 
-.line-1 {
-  animation-delay: 0.3s;
-}
-.line-2 {
-  animation-delay: 1s;
-}
-.line-3 {
-  animation-delay: 1.8s;
-}
-.line-4 {
-  animation-delay: 2.5s;
+.proof-metric:nth-child(1) {
+  animation-delay: 0.15s;
 }
 
-@keyframes line-appear {
+.proof-metric:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.proof-metric:nth-child(3) {
+  animation-delay: 0.35s;
+}
+
+.proof-metric:nth-child(4) {
+  animation-delay: 0.45s;
+}
+
+@keyframes proof-appear {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -585,60 +668,14 @@ onMounted(() => {
   }
 }
 
-.code-prompt {
-  color: #22c55e;
-  font-weight: bold;
-}
-.code-cmd {
-  color: #38bdf8;
-}
-.code-flag {
-  color: #a78bfa;
-}
-.code-url {
-  color: #14b8a6;
-}
-.code-comment {
-  color: #64748b;
-  font-style: italic;
-}
-.code-success {
-  color: #22c55e;
-  background: rgba(34, 197, 94, 0.15);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-}
-.code-response {
-  color: #fbbf24;
-}
-
-/* Blinking Cursor */
-.cursor {
-  display: inline-block;
-  width: 8px;
-  height: 16px;
-  background: #22c55e;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%,
-  50% {
-    opacity: 1;
+@media (max-width: 640px) {
+  .service-panel {
+    width: 100%;
+    transform: none;
   }
-  51%,
-  100% {
-    opacity: 0;
-  }
-}
 
-/* Dark mode adjustments */
-:deep(.dark) .terminal-window {
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(20, 184, 166, 0.2),
-    0 0 40px rgba(20, 184, 166, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  .service-panel:hover {
+    transform: translateY(-2px);
+  }
 }
 </style>

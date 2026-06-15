@@ -11,12 +11,29 @@ export default {
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
     // User-focused value proposition
-    heroSubtitle: 'One Key, All AI Models',
-    heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
+    heroEyebrow: 'Real premium models · Low multiplier · Stable pool',
+    heroSubtitle: 'Stable AI relay service with real premium models',
+    heroDescription: 'GPT 100+ Pro 20x account pool, low-multiplier Claude Code premium models, and professional cluster operations for a reliable usage environment.',
+    heroTrust: 'Transparent pricing with reasonable operating profit',
+    proof: {
+      eyebrow: 'ZemraAI Operations',
+      title: 'A seriously operated model service, not a generic template',
+      status: 'Stable',
+      gptPool: 'GPT Pro 20x Pool',
+      proPool: 'Premium Models',
+      margin: 'Target Margin',
+      lottery: 'Max Prize Balance',
+      rows: {
+        realModels: 'No diluted models. We do not disguise lower-tier models as premium ones.',
+        clusterOps: 'Professional operations and clustered servers for a reliable environment.',
+        benefits: 'Top-up bonuses, daily check-ins, spending and recharge lottery events stay active.'
+      }
+    },
     tags: {
-      subscriptionToApi: 'Subscription to API',
-      stickySession: 'Session Persistence',
-      realtimeBilling: 'Pay As You Go'
+      realModels: 'Real Premium Models',
+      lowMultiplier: 'Low-Multiplier Claude Code',
+      opsCluster: 'Professional Cluster Ops',
+      transparentPricing: 'Margin Below 10%'
     },
     // Pain points section
     painPoints: {
@@ -51,7 +68,19 @@ export default {
       multiAccount: 'Always Reliable',
       multiAccountDesc: 'Smart routing across multiple upstream accounts with automatic failover. Say goodbye to errors.',
       balanceQuota: 'Pay What You Use',
-      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.'
+      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.',
+      gptPool: 'Stable GPT Account Pool',
+      gptPoolDesc: '100+ Pro 20x account pool with multi-account routing and load balancing to reduce single-account volatility.',
+      claudeCode: 'Low-Multiplier Claude Code',
+      claudeCodeDesc: 'Access premium Claude Code model capability at low multipliers for development, code analysis, and automation workflows.',
+      opsTeam: 'Professional Operations',
+      opsTeamDesc: 'A professional team maintains accounts, routes, and server clusters while continuously monitoring availability.',
+      noWater: 'No Dilution',
+      noWaterDesc: 'No lower-tier models disguised as premium models, and no hidden downgrades. Model quality is the bottom line.',
+      transparentProfit: 'Transparent Pricing',
+      transparentProfitDesc: 'We aim to keep margin below 10%, spending most costs on accounts, servers, and stability.',
+      benefits: 'Frequent Benefits',
+      benefitsDesc: 'Top-up bonuses stay active. Daily login, spending, and recharge can earn lottery chances with prizes up to 999 balance.'
     },
     // Comparison section
     comparison: {
