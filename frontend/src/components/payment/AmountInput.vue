@@ -5,19 +5,25 @@
       <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
         {{ t('payment.quickAmounts') }}
       </label>
-      <div class="grid grid-cols-3 gap-2">
+      <div class="grid grid-cols-3 gap-2 pt-1">
         <button
           v-for="amt in filteredAmounts"
           :key="amt"
           type="button"
           :class="[
-            'rounded-lg border-2 px-4 py-3 text-center font-medium transition-colors',
+            'relative min-h-12 overflow-visible rounded-lg border-2 px-4 py-3 text-center font-medium transition-colors',
             modelValue === amt
               ? 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/40 dark:text-primary-300'
               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200 dark:hover:border-dark-500',
           ]"
           @click="selectAmount(amt)"
         >
+          <span
+            v-if="badgeForAmount(amt)"
+            class="pointer-events-none absolute right-2 top-0 -translate-y-1/2 rounded-full border border-green-400/40 bg-green-500 px-2 py-0.5 text-[11px] font-semibold leading-none text-white shadow-sm shadow-green-500/20 dark:border-green-300/30 dark:bg-green-500/90"
+          >
+            {{ badgeForAmount(amt) }}
+          </span>
           {{ amt }}
         </button>
       </div>
@@ -54,10 +60,12 @@ const props = withDefaults(defineProps<{
   modelValue: number | null
   min?: number
   max?: number
+  badges?: Record<number, string>
 }>(), {
   amounts: () => [10, 20, 50, 100, 200, 500, 1000, 2000, 5000],
   min: 0,
   max: 0,
+  badges: () => ({}),
 })
 
 const emit = defineEmits<{
@@ -85,6 +93,10 @@ const AMOUNT_PATTERN = /^\d*(\.\d{0,2})?$/
 function selectAmount(amt: number) {
   customText.value = String(amt)
   emit('update:modelValue', amt)
+}
+
+function badgeForAmount(amt: number) {
+  return props.badges[amt] || ''
 }
 
 function handleInput(e: Event) {

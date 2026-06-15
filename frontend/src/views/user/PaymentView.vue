@@ -44,7 +44,8 @@
             <div class="card p-6">
               <AmountInput
                 v-model="amount"
-                :amounts="[10, 20, 50, 100, 200, 500, 1000, 2000, 5000]"
+                :amounts="quickRechargeAmounts"
+                :badges="quickAmountBonusBadges"
                 :min="globalMinAmount"
                 :max="globalMaxAmount"
               />
@@ -490,6 +491,8 @@ const checkout = ref<CheckoutInfoResponse>({
   plans: [], balance_disabled: false, balance_recharge_multiplier: 1, balance_recharge_bonus_rules: [], recharge_fee_rate: 0, help_text: '', help_image_url: '', stripe_publishable_key: '',
 })
 
+const quickRechargeAmounts = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+
 const tabs = computed(() => {
   const result: { key: 'recharge' | 'subscription'; label: string }[] = []
   if (!checkout.value.balance_disabled) result.push({ key: 'recharge', label: t('payment.tabTopUp') })
@@ -504,19 +507,31 @@ const balanceRechargeMultiplier = computed(() => {
   const multiplier = checkout.value.balance_recharge_multiplier
   return multiplier > 0 ? multiplier : 1
 })
-const baseCreditedAmount = computed(() => Math.round((validAmount.value * balanceRechargeMultiplier.value) * 100) / 100)
-const matchedBonusRule = computed(() => {
+function matchBonusRuleForAmount(inputAmount: number) {
   let matched: CheckoutInfoResponse['balance_recharge_bonus_rules'][number] | null = null
   let matchedThreshold = 0
   for (const rule of checkout.value.balance_recharge_bonus_rules || []) {
     if (rule.enabled === false || rule.threshold <= 0 || rule.bonus <= 0) continue
-    if (validAmount.value >= rule.threshold && rule.threshold >= matchedThreshold) {
+    if (inputAmount >= rule.threshold && rule.threshold >= matchedThreshold) {
       matchedThreshold = rule.threshold
       matched = rule
     }
   }
   return matched
+}
+
+const quickAmountBonusBadges = computed<Record<number, string>>(() => {
+  const badges: Record<number, string> = {}
+  for (const presetAmount of quickRechargeAmounts) {
+    const rule = matchBonusRuleForAmount(presetAmount)
+    if (rule?.bonus && rule.bonus > 0) {
+      badges[presetAmount] = t('payment.bonusBadge', { bonus: rule.bonus.toFixed(2) })
+    }
+  }
+  return badges
 })
+const baseCreditedAmount = computed(() => Math.round((validAmount.value * balanceRechargeMultiplier.value) * 100) / 100)
+const matchedBonusRule = computed(() => matchBonusRuleForAmount(validAmount.value))
 const bonusAmount = computed(() => Math.round(((matchedBonusRule.value?.bonus || 0) * 100)) / 100)
 const creditedAmount = computed(() => Math.round((baseCreditedAmount.value + bonusAmount.value) * 100) / 100)
 const showRechargeCreditPreview = computed(() => balanceRechargeMultiplier.value !== 1 || bonusAmount.value > 0)

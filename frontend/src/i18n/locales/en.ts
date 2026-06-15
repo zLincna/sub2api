@@ -6960,6 +6960,7 @@ export default {
     rechargeRatePreview: 'Current rate: 1 CNY = {usd} USD',
     baseCreditedBalance: 'Base credit',
     bonusBalance: 'Bonus balance',
+    bonusBadge: '+${bonus}',
     bonusRulePreview: 'Top up {threshold}, get {bonus}',
     refundReason: 'Refund Reason',
     refundReasonPlaceholder: 'Please describe your refund reason',

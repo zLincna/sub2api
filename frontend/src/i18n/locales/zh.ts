@@ -7140,6 +7140,7 @@ export default {
     rechargeRatePreview: '当前倍率：1 CNY = {usd} USD',
     baseCreditedBalance: '基础到账',
     bonusBalance: '赠送余额',
+    bonusBadge: '送 ${bonus}',
     bonusRulePreview: '满 {threshold} 送 {bonus}',
     refundReason: '退款原因',
     refundReasonPlaceholder: '请描述您的退款原因',
