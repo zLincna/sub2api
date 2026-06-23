@@ -51,6 +51,15 @@ const {
 }));
 
 const localeRef = vi.hoisted(() => ({ value: "zh-CN" }));
+const routeMock = vi.hoisted(() => ({ query: {} as Record<string, unknown> }));
+const routerReplace = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+
+vi.mock("vue-router", () => ({
+  useRoute: () => routeMock,
+  useRouter: () => ({
+    replace: routerReplace,
+  }),
+}));
 
 vi.mock("@/api", () => ({
   adminAPI: {
@@ -106,6 +115,7 @@ vi.mock("@/composables/useClipboard", () => ({
 
 vi.mock("@/utils/apiError", () => ({
   extractApiErrorMessage: () => "error",
+  extractI18nErrorMessage: () => "error",
 }));
 
 vi.mock("vue-i18n", async () => {
@@ -460,6 +470,7 @@ function mountView() {
         Icon: true,
         ConfirmDialog: true,
         BaseDialog: false,
+        RouterLink: { template: "<a><slot /></a>" },
         PaymentProviderList: true,
         PaymentProviderDialog: true,
         GroupBadge: true,
@@ -525,6 +536,8 @@ describe("admin SettingsView registration verification controls", () => {
     adminSettingsFetch.mockReset();
     showError.mockReset();
     showSuccess.mockReset();
+    routeMock.query = {};
+    routerReplace.mockClear();
     localeRef.value = "zh-CN";
 
     getSettings.mockResolvedValue({
