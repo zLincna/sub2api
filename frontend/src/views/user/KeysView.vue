@@ -319,15 +319,20 @@
                 <Icon name="terminal" size="sm" />
                 <span class="text-xs">{{ t('keys.useKey') }}</span>
               </button>
-              <!-- Import to CC Switch Button -->
-              <button
-                v-if="!publicSettings?.hide_ccs_import_button"
-                @click="importToCcswitch(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
-              >
-                <Icon name="upload" size="sm" />
-                <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
-              </button>
+              <!-- Chat Integrations Button -->
+              <div class="chat-integration/dropdown relative">
+                <button
+                  :data-chat-integration-trigger="row.id"
+                  @click="openChatIntegrationMenu(row)"
+                  class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                >
+                  <span class="flex items-center gap-0.5">
+                    <Icon name="chat" size="sm" />
+                    <Icon name="chevronDown" size="xs" />
+                  </span>
+                  <span class="text-xs">{{ t('keys.chatIntegrations') }}</span>
+                </button>
+              </div>
               <!-- Toggle Status Button -->
               <button
                 @click="toggleKeyStatus(row)"
@@ -977,6 +982,35 @@
       </template>
     </BaseDialog>
 
+    <!-- Chat Integrations Dropdown (Teleported to body to avoid overflow clipping) -->
+    <Teleport to="body">
+      <div
+        v-if="chatIntegrationMenuKeyId !== null && chatIntegrationDropdownPosition"
+        ref="chatIntegrationDropdownRef"
+        class="animate-in fade-in slide-in-from-top-2 fixed z-[100000020] w-64 overflow-hidden rounded-xl bg-white py-1.5 shadow-lg ring-1 ring-black/5 duration-200 dark:bg-dark-800 dark:ring-white/10"
+        style="pointer-events: auto !important;"
+        :style="{
+          top: chatIntegrationDropdownPosition.top !== undefined ? chatIntegrationDropdownPosition.top + 'px' : undefined,
+          bottom: chatIntegrationDropdownPosition.bottom !== undefined ? chatIntegrationDropdownPosition.bottom + 'px' : undefined,
+          left: chatIntegrationDropdownPosition.left + 'px'
+        }"
+      >
+        <button
+          v-for="integration in visibleChatIntegrationTemplates"
+          :key="integration.id"
+          @click="openChatIntegration(integration)"
+          class="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-dark-700"
+        >
+          <span class="truncate">{{ integration.name }}</span>
+          <Icon
+            :name="integration.type === 'web' ? 'externalLink' : integration.type === 'ccswitch' ? 'upload' : 'link'"
+            size="sm"
+            class="shrink-0 text-gray-400"
+          />
+        </button>
+      </div>
+    </Teleport>
+
     <!-- Group Selector Dropdown (Teleported to body to avoid overflow clipping) -->
     <Teleport to="body">
       <div
@@ -1074,6 +1108,13 @@ import type { BatchApiKeyUsageStats } from '@/api/usage'
 import { formatDateTime } from '@/utils/format'
 import { maskApiKey } from '@/utils/maskApiKey'
 import {
+  CHAT_INTEGRATION_TEMPLATES,
+  getChatIntegrationBaseUrl,
+  resolveChatIntegrationUrl,
+  sendToFluentRead,
+  type ChatIntegrationTemplate
+} from '@/utils/chatIntegrations'
+import {
   buildCcSwitchImportDeeplink,
   type CcSwitchClientType
 } from '@/utils/ccswitchImport'
@@ -1147,12 +1188,26 @@ const showCcsClientSelect = ref(false)
 const pendingCcsRow = ref<ApiKey | null>(null)
 const selectedKey = ref<ApiKey | null>(null)
 const copiedKeyId = ref<number | null>(null)
+const chatIntegrationMenuKeyId = ref<number | null>(null)
 const groupSelectorKeyId = ref<number | null>(null)
 const publicSettings = ref<PublicSettings | null>(null)
+const chatIntegrationDropdownRef = ref<HTMLElement | null>(null)
+const chatIntegrationDropdownPosition = ref<{ top?: number; bottom?: number; left: number } | null>(null)
 const dropdownRef = ref<HTMLElement | null>(null)
 const dropdownPosition = ref<{ top?: number; bottom?: number; left: number } | null>(null)
 const groupButtonRefs = ref<Map<number, HTMLElement>>(new Map())
 let abortController: AbortController | null = null
+
+const visibleChatIntegrationTemplates = computed(() =>
+  CHAT_INTEGRATION_TEMPLATES.filter(
+    (integration) => integration.type !== 'ccswitch' || !publicSettings.value?.hide_ccs_import_button
+  )
+)
+
+const selectedChatIntegrationKey = computed(() => {
+  if (chatIntegrationMenuKeyId.value === null) return null
+  return apiKeys.value.find((k) => k.id === chatIntegrationMenuKeyId.value) || null
+})
 
 // Get the currently selected key for group change
 const selectedKeyForGroup = computed(() => {
@@ -1427,6 +1482,9 @@ const toggleKeyStatus = async (key: ApiKey) => {
 }
 
 const openGroupSelector = (key: ApiKey) => {
+  chatIntegrationMenuKeyId.value = null
+  chatIntegrationDropdownPosition.value = null
+
   if (groupSelectorKeyId.value === key.id) {
     groupSelectorKeyId.value = null
     dropdownPosition.value = null
@@ -1457,6 +1515,89 @@ const openGroupSelector = (key: ApiKey) => {
   }
 }
 
+const openChatIntegrationMenu = (key: ApiKey) => {
+  groupSelectorKeyId.value = null
+  dropdownPosition.value = null
+
+  if (chatIntegrationMenuKeyId.value === key.id) {
+    chatIntegrationMenuKeyId.value = null
+    chatIntegrationDropdownPosition.value = null
+    return
+  }
+
+  const buttonEl = document.querySelector(
+    `[data-chat-integration-trigger="${key.id}"]`
+  ) as HTMLElement | null
+  if (buttonEl) {
+    const rect = buttonEl.getBoundingClientRect()
+    const dropdownEstHeight = 380
+    const dropdownWidth = 256
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - dropdownWidth - 8)
+
+    if (spaceBelow < dropdownEstHeight && spaceAbove > spaceBelow) {
+      chatIntegrationDropdownPosition.value = {
+        bottom: window.innerHeight - rect.top + 4,
+        left
+      }
+    } else {
+      chatIntegrationDropdownPosition.value = {
+        top: rect.bottom + 4,
+        left
+      }
+    }
+  }
+
+  chatIntegrationMenuKeyId.value = key.id
+}
+
+const closeChatIntegrationMenu = () => {
+  chatIntegrationMenuKeyId.value = null
+  chatIntegrationDropdownPosition.value = null
+}
+
+const getProviderId = () => {
+  const siteName = publicSettings.value?.site_name?.trim()
+  return (siteName || 'sub2api').toLowerCase().replace(/[^a-z0-9_-]+/g, '-')
+}
+
+const openChatIntegration = (integration: ChatIntegrationTemplate) => {
+  const row = selectedChatIntegrationKey.value
+  closeChatIntegrationMenu()
+  if (!row) return
+
+  if (integration.type === 'ccswitch') {
+    importToCcswitch(row)
+    return
+  }
+
+  const baseUrl = getChatIntegrationBaseUrl(publicSettings.value?.api_base_url)
+  const providerId = getProviderId()
+
+  if (integration.type === 'fluent') {
+    const sent = sendToFluentRead(row.key, baseUrl, providerId)
+    if (sent) {
+      appStore.showSuccess(t('keys.chatIntegrationSentToFluent'))
+    } else {
+      appStore.showInfo(t('keys.chatIntegrationFluentNotDetected'))
+    }
+    return
+  }
+
+  const resolvedUrl = resolveChatIntegrationUrl(integration.template, row.key, baseUrl, providerId)
+  if (!resolvedUrl) {
+    appStore.showError(t('keys.chatIntegrationInvalid'))
+    return
+  }
+
+  try {
+    window.open(resolvedUrl, integration.type === 'web' ? '_blank' : '_self')
+  } catch {
+    appStore.showError(t('keys.chatIntegrationOpenFailed'))
+  }
+}
+
 const changeGroup = async (key: ApiKey, newGroupId: number | null) => {
   groupSelectorKeyId.value = null
   dropdownPosition.value = null
@@ -1477,6 +1618,18 @@ const closeGroupSelector = (event: MouseEvent) => {
   if (!target.closest('.group\\/dropdown') && !dropdownRef.value?.contains(target)) {
     groupSelectorKeyId.value = null
     dropdownPosition.value = null
+  }
+}
+
+const closeFloatingMenus = (event: MouseEvent) => {
+  closeGroupSelector(event)
+
+  const target = event.target as HTMLElement
+  if (
+    !target.closest('.chat-integration\\/dropdown') &&
+    !chatIntegrationDropdownRef.value?.contains(target)
+  ) {
+    closeChatIntegrationMenu()
   }
 }
 
@@ -1779,12 +1932,12 @@ onMounted(() => {
   loadGroups()
   loadUserGroupRates()
   loadPublicSettings()
-  document.addEventListener('click', closeGroupSelector)
+  document.addEventListener('click', closeFloatingMenus)
   resetTimer = setInterval(() => { now.value = new Date() }, 60000)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeGroupSelector)
+  document.removeEventListener('click', closeFloatingMenus)
   if (resetTimer) clearInterval(resetTimer)
 })
 </script>
