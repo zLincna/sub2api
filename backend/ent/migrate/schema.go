@@ -422,6 +422,263 @@ var (
 			},
 		},
 	}
+	// CarpoolNoticeVersionsColumns holds the columns for the "carpool_notice_versions" table.
+	CarpoolNoticeVersionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "title", Type: field.TypeString, Size: 120},
+		{Name: "content_md", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "active", Type: field.TypeBool, Default: false},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// CarpoolNoticeVersionsTable holds the schema information for the "carpool_notice_versions" table.
+	CarpoolNoticeVersionsTable = &schema.Table{
+		Name:       "carpool_notice_versions",
+		Columns:    CarpoolNoticeVersionsColumns,
+		PrimaryKey: []*schema.Column{CarpoolNoticeVersionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "carpoolnoticeversion_active",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolNoticeVersionsColumns[4]},
+			},
+			{
+				Name:    "carpoolnoticeversion_version",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolNoticeVersionsColumns[3]},
+			},
+		},
+	}
+	// CarpoolParticipantsColumns holds the columns for the "carpool_participants" table.
+	CarpoolParticipantsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "pending_payment"},
+		{Name: "amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,2)"}},
+		{Name: "wait_until", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "refund_method", Type: field.TypeString, Size: 32, Default: "balance"},
+		{Name: "notice_accepted_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "notice_accept_ip", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "joined_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "refunded_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "notice_version_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "session_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "vehicle_type_id", Type: field.TypeInt64},
+		{Name: "payment_order_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// CarpoolParticipantsTable holds the schema information for the "carpool_participants" table.
+	CarpoolParticipantsTable = &schema.Table{
+		Name:       "carpool_participants",
+		Columns:    CarpoolParticipantsColumns,
+		PrimaryKey: []*schema.Column{CarpoolParticipantsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "carpool_participants_carpool_notice_versions_participants",
+				Columns:    []*schema.Column{CarpoolParticipantsColumns[12]},
+				RefColumns: []*schema.Column{CarpoolNoticeVersionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "carpool_participants_carpool_sessions_participants",
+				Columns:    []*schema.Column{CarpoolParticipantsColumns[13]},
+				RefColumns: []*schema.Column{CarpoolSessionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "carpool_participants_carpool_vehicle_types_participants",
+				Columns:    []*schema.Column{CarpoolParticipantsColumns[14]},
+				RefColumns: []*schema.Column{CarpoolVehicleTypesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "carpool_participants_payment_orders_carpool_participants",
+				Columns:    []*schema.Column{CarpoolParticipantsColumns[15]},
+				RefColumns: []*schema.Column{PaymentOrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "carpool_participants_users_carpool_participants",
+				Columns:    []*schema.Column{CarpoolParticipantsColumns[16]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "carpoolparticipant_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolParticipantsColumns[13]},
+			},
+			{
+				Name:    "carpoolparticipant_vehicle_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolParticipantsColumns[14]},
+			},
+			{
+				Name:    "carpoolparticipant_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolParticipantsColumns[16]},
+			},
+			{
+				Name:    "carpoolparticipant_payment_order_id",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolParticipantsColumns[15]},
+			},
+			{
+				Name:    "carpoolparticipant_status",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolParticipantsColumns[1]},
+			},
+			{
+				Name:    "carpoolparticipant_wait_until",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolParticipantsColumns[3]},
+			},
+		},
+	}
+	// CarpoolSessionsColumns holds the columns for the "carpool_sessions" table.
+	CarpoolSessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "session_no", Type: field.TypeString, Size: 64, Default: ""},
+		{Name: "status", Type: field.TypeString, Size: 32, Default: "recruiting"},
+		{Name: "seat_count", Type: field.TypeInt, Default: 2},
+		{Name: "paid_count", Type: field.TypeInt, Default: 0},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "filled_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "provisioned_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "service_started_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "service_ended_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "account_info", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "proxy_info", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "communication", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "admin_notes", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "vehicle_type_id", Type: field.TypeInt64},
+	}
+	// CarpoolSessionsTable holds the schema information for the "carpool_sessions" table.
+	CarpoolSessionsTable = &schema.Table{
+		Name:       "carpool_sessions",
+		Columns:    CarpoolSessionsColumns,
+		PrimaryKey: []*schema.Column{CarpoolSessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "carpool_sessions_carpool_vehicle_types_sessions",
+				Columns:    []*schema.Column{CarpoolSessionsColumns[16]},
+				RefColumns: []*schema.Column{CarpoolVehicleTypesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "carpoolsession_vehicle_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolSessionsColumns[16]},
+			},
+			{
+				Name:    "carpoolsession_status",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolSessionsColumns[2]},
+			},
+			{
+				Name:    "carpoolsession_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolSessionsColumns[14]},
+			},
+			{
+				Name:    "carpoolsession_vehicle_type_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolSessionsColumns[16], CarpoolSessionsColumns[2]},
+			},
+		},
+	}
+	// CarpoolVehicleTypesColumns holds the columns for the "carpool_vehicle_types" table.
+	CarpoolVehicleTypesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "product", Type: field.TypeString, Size: 32, Default: "openai"},
+		{Name: "plan_tier", Type: field.TypeString, Size: 32, Default: "pro"},
+		{Name: "multiplier", Type: field.TypeString, Size: 32, Default: "20x"},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "seat_count", Type: field.TypeInt, Default: 2},
+		{Name: "total_price", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,2)"}},
+		{Name: "unit_price", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,2)"}},
+		{Name: "service_days", Type: field.TypeInt, Default: 30},
+		{Name: "refund_wait_hours", Type: field.TypeInt, Default: 2},
+		{Name: "completed_base_count", Type: field.TypeInt, Default: 0},
+		{Name: "enabled", Type: field.TypeBool, Default: false},
+		{Name: "support_revenue_pool", Type: field.TypeBool, Default: false},
+		{Name: "require_static_ip", Type: field.TypeBool, Default: true},
+		{Name: "wait_duration_options", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "refund_methods", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "description", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+	}
+	// CarpoolVehicleTypesTable holds the schema information for the "carpool_vehicle_types" table.
+	CarpoolVehicleTypesTable = &schema.Table{
+		Name:       "carpool_vehicle_types",
+		Columns:    CarpoolVehicleTypesColumns,
+		PrimaryKey: []*schema.Column{CarpoolVehicleTypesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "carpoolvehicletype_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolVehicleTypesColumns[11]},
+			},
+			{
+				Name:    "carpoolvehicletype_sort_order",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolVehicleTypesColumns[17]},
+			},
+			{
+				Name:    "carpoolvehicletype_seat_count",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolVehicleTypesColumns[5]},
+			},
+		},
+	}
+	// CarpoolVouchersColumns holds the columns for the "carpool_vouchers" table.
+	CarpoolVouchersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "file_url", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "file_name", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "description", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "uploaded_by", Type: field.TypeInt64, Default: 0},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "session_id", Type: field.TypeInt64},
+	}
+	// CarpoolVouchersTable holds the schema information for the "carpool_vouchers" table.
+	CarpoolVouchersTable = &schema.Table{
+		Name:       "carpool_vouchers",
+		Columns:    CarpoolVouchersColumns,
+		PrimaryKey: []*schema.Column{CarpoolVouchersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "carpool_vouchers_carpool_sessions_vouchers",
+				Columns:    []*schema.Column{CarpoolVouchersColumns[6]},
+				RefColumns: []*schema.Column{CarpoolSessionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "carpoolvoucher_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolVouchersColumns[6]},
+			},
+			{
+				Name:    "carpoolvoucher_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{CarpoolVouchersColumns[5]},
+			},
+		},
+	}
 	// ChannelMonitorsColumns holds the columns for the "channel_monitors" table.
 	ChannelMonitorsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -1931,6 +2188,11 @@ var (
 		AnnouncementReadsTable,
 		AuthIdentitiesTable,
 		AuthIdentityChannelsTable,
+		CarpoolNoticeVersionsTable,
+		CarpoolParticipantsTable,
+		CarpoolSessionsTable,
+		CarpoolVehicleTypesTable,
+		CarpoolVouchersTable,
 		ChannelMonitorsTable,
 		ChannelMonitorDailyRollupsTable,
 		ChannelMonitorHistoriesTable,
@@ -1995,6 +2257,28 @@ func init() {
 	AuthIdentityChannelsTable.ForeignKeys[0].RefTable = AuthIdentitiesTable
 	AuthIdentityChannelsTable.Annotation = &entsql.Annotation{
 		Table: "auth_identity_channels",
+	}
+	CarpoolNoticeVersionsTable.Annotation = &entsql.Annotation{
+		Table: "carpool_notice_versions",
+	}
+	CarpoolParticipantsTable.ForeignKeys[0].RefTable = CarpoolNoticeVersionsTable
+	CarpoolParticipantsTable.ForeignKeys[1].RefTable = CarpoolSessionsTable
+	CarpoolParticipantsTable.ForeignKeys[2].RefTable = CarpoolVehicleTypesTable
+	CarpoolParticipantsTable.ForeignKeys[3].RefTable = PaymentOrdersTable
+	CarpoolParticipantsTable.ForeignKeys[4].RefTable = UsersTable
+	CarpoolParticipantsTable.Annotation = &entsql.Annotation{
+		Table: "carpool_participants",
+	}
+	CarpoolSessionsTable.ForeignKeys[0].RefTable = CarpoolVehicleTypesTable
+	CarpoolSessionsTable.Annotation = &entsql.Annotation{
+		Table: "carpool_sessions",
+	}
+	CarpoolVehicleTypesTable.Annotation = &entsql.Annotation{
+		Table: "carpool_vehicle_types",
+	}
+	CarpoolVouchersTable.ForeignKeys[0].RefTable = CarpoolSessionsTable
+	CarpoolVouchersTable.Annotation = &entsql.Annotation{
+		Table: "carpool_vouchers",
 	}
 	ChannelMonitorsTable.ForeignKeys[0].RefTable = ChannelMonitorRequestTemplatesTable
 	ChannelMonitorsTable.Annotation = &entsql.Annotation{

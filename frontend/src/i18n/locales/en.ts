@@ -18,6 +18,32 @@ export default {
       stickySession: 'Session Persistence',
       realtimeBilling: 'Pay As You Go'
     },
+    carpoolSpotlight: {
+      badge: 'Carpool Hall · Launch When Full',
+      title: 'Share premium Codex / OpenAI accounts with flexible seats',
+      description:
+        'Join 2-10 seat carpools with shared costs. Once all members pay, admins purchase the account and static residential IP, then members can view progress, delivery proof, member details, and usage data.',
+      cta: 'View Carpool Hall',
+      guarantee: 'Refunds follow the failed-carpool rules',
+      items: {
+        shared: {
+          title: 'Shared Cost',
+          desc: 'Flexible 1-10 seat vehicle types split package costs across members.'
+        },
+        queue: {
+          title: 'Queued Launch',
+          desc: 'Each vehicle type shows one active round; a new queue starts after it fills.'
+        },
+        visible: {
+          title: 'Visible Usage',
+          desc: 'Members can see car members, total usage, and personal usage after launch.'
+        },
+        revenue: {
+          title: 'Revenue Plan Ready',
+          desc: 'Reserved for future in-car voting to join the relay pool and settle revenue to balance.'
+        }
+      }
+    },
     // Pain points section
     painPoints: {
       title: 'Sound Familiar?',
@@ -392,6 +418,8 @@ export default {
     usage: 'Usage',
     redeem: 'Redeem',
     lottery: 'Lottery',
+    carpool: 'Carpool Hall',
+    carpoolManagement: 'Carpool',
     affiliate: 'Affiliate Rebates',
     affiliateManagement: 'Affiliate Rebates',
     affiliateInviteRecords: 'Invite Records',
@@ -1265,6 +1293,11 @@ export default {
     }
   },
 
+  carpool: {
+    title: 'Carpool Hall',
+    description: 'Queue by car type and launch when full'
+  },
+
   // Profile
   profile: {
     title: 'Profile Settings',
@@ -1495,6 +1528,10 @@ export default {
 
   // Admin
   admin: {
+    carpool: {
+      title: 'Carpool',
+      description: 'Manage carpool types, sessions, provisioning, and notices'
+    },
     // Dashboard
     dashboard: {
       title: 'Admin Dashboard',
@@ -4623,9 +4660,16 @@ export default {
         conditionType: 'Condition type',
         conditionSubscription: 'Subscription',
         conditionBalance: 'Balance',
+        conditionAPIKeyGroup: 'API Key group',
+        conditionUser: 'Specific users',
         operator: 'Operator',
         balanceValue: 'Balance threshold',
-        selectPackages: 'Select packages'
+        selectPackages: 'Select packages',
+        selectAPIKeyGroups: 'Select API Key bound groups',
+        apiKeyGroupsHint: 'Matches when any API Key owned by the user is bound to a selected group',
+        selectUsers: 'Select users',
+        addUserID: 'Add ID',
+        addUserIDPlaceholder: 'Enter user ID'
       },
       operators: {
         gt: '>',
@@ -5552,6 +5596,8 @@ export default {
         users: 'Users',
         gateway: 'Gateway',
         email: 'Email',
+        sms: 'SMS',
+        carpool: 'Carpool',
         backup: 'Backup',
         payment: 'Payment',
         lottery: 'Lottery',

@@ -141,6 +141,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("platform_quotas", UserPlatformQuota.Type),
 		edge.To("lottery_chances", LotteryChance.Type),
 		edge.To("lottery_draw_records", LotteryDrawRecord.Type),
+		edge.To("carpool_participants", CarpoolParticipant.Type),
 	}
 }
 

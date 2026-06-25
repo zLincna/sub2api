@@ -70,6 +70,7 @@ type APIKeyRepository interface {
 	UpdateGroupIDByUserAndGroup(ctx context.Context, userID, oldGroupID, newGroupID int64) (int64, error)
 	CountByGroupID(ctx context.Context, groupID int64) (int64, error)
 	ListKeysByUserID(ctx context.Context, userID int64) ([]string, error)
+	ListDistinctGroupIDsByUserID(ctx context.Context, userID int64) ([]int64, error)
 	ListKeysByGroupID(ctx context.Context, groupID int64) ([]string, error)
 
 	// Quota methods

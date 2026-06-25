@@ -12,6 +12,11 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/authidentitychannel"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolnoticeversion"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolsession"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolvehicletype"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolvoucher"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitor"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitordailyrollup"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitorhistory"
@@ -435,6 +440,226 @@ func init() {
 	authidentitychannelDescMetadata := authidentitychannelFields[6].Descriptor()
 	// authidentitychannel.DefaultMetadata holds the default value on creation for the metadata field.
 	authidentitychannel.DefaultMetadata = authidentitychannelDescMetadata.Default.(func() map[string]interface{})
+	carpoolnoticeversionFields := schema.CarpoolNoticeVersion{}.Fields()
+	_ = carpoolnoticeversionFields
+	// carpoolnoticeversionDescTitle is the schema descriptor for title field.
+	carpoolnoticeversionDescTitle := carpoolnoticeversionFields[0].Descriptor()
+	// carpoolnoticeversion.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	carpoolnoticeversion.TitleValidator = func() func(string) error {
+		validators := carpoolnoticeversionDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// carpoolnoticeversionDescContentMd is the schema descriptor for content_md field.
+	carpoolnoticeversionDescContentMd := carpoolnoticeversionFields[1].Descriptor()
+	// carpoolnoticeversion.DefaultContentMd holds the default value on creation for the content_md field.
+	carpoolnoticeversion.DefaultContentMd = carpoolnoticeversionDescContentMd.Default.(string)
+	// carpoolnoticeversionDescVersion is the schema descriptor for version field.
+	carpoolnoticeversionDescVersion := carpoolnoticeversionFields[2].Descriptor()
+	// carpoolnoticeversion.DefaultVersion holds the default value on creation for the version field.
+	carpoolnoticeversion.DefaultVersion = carpoolnoticeversionDescVersion.Default.(int)
+	// carpoolnoticeversionDescActive is the schema descriptor for active field.
+	carpoolnoticeversionDescActive := carpoolnoticeversionFields[3].Descriptor()
+	// carpoolnoticeversion.DefaultActive holds the default value on creation for the active field.
+	carpoolnoticeversion.DefaultActive = carpoolnoticeversionDescActive.Default.(bool)
+	// carpoolnoticeversionDescCreatedAt is the schema descriptor for created_at field.
+	carpoolnoticeversionDescCreatedAt := carpoolnoticeversionFields[5].Descriptor()
+	// carpoolnoticeversion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	carpoolnoticeversion.DefaultCreatedAt = carpoolnoticeversionDescCreatedAt.Default.(func() time.Time)
+	// carpoolnoticeversionDescUpdatedAt is the schema descriptor for updated_at field.
+	carpoolnoticeversionDescUpdatedAt := carpoolnoticeversionFields[6].Descriptor()
+	// carpoolnoticeversion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	carpoolnoticeversion.DefaultUpdatedAt = carpoolnoticeversionDescUpdatedAt.Default.(func() time.Time)
+	// carpoolnoticeversion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	carpoolnoticeversion.UpdateDefaultUpdatedAt = carpoolnoticeversionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	carpoolparticipantFields := schema.CarpoolParticipant{}.Fields()
+	_ = carpoolparticipantFields
+	// carpoolparticipantDescStatus is the schema descriptor for status field.
+	carpoolparticipantDescStatus := carpoolparticipantFields[4].Descriptor()
+	// carpoolparticipant.DefaultStatus holds the default value on creation for the status field.
+	carpoolparticipant.DefaultStatus = carpoolparticipantDescStatus.Default.(string)
+	// carpoolparticipant.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	carpoolparticipant.StatusValidator = carpoolparticipantDescStatus.Validators[0].(func(string) error)
+	// carpoolparticipantDescAmount is the schema descriptor for amount field.
+	carpoolparticipantDescAmount := carpoolparticipantFields[5].Descriptor()
+	// carpoolparticipant.DefaultAmount holds the default value on creation for the amount field.
+	carpoolparticipant.DefaultAmount = carpoolparticipantDescAmount.Default.(float64)
+	// carpoolparticipantDescRefundMethod is the schema descriptor for refund_method field.
+	carpoolparticipantDescRefundMethod := carpoolparticipantFields[7].Descriptor()
+	// carpoolparticipant.DefaultRefundMethod holds the default value on creation for the refund_method field.
+	carpoolparticipant.DefaultRefundMethod = carpoolparticipantDescRefundMethod.Default.(string)
+	// carpoolparticipant.RefundMethodValidator is a validator for the "refund_method" field. It is called by the builders before save.
+	carpoolparticipant.RefundMethodValidator = carpoolparticipantDescRefundMethod.Validators[0].(func(string) error)
+	// carpoolparticipantDescNoticeAcceptIP is the schema descriptor for notice_accept_ip field.
+	carpoolparticipantDescNoticeAcceptIP := carpoolparticipantFields[10].Descriptor()
+	// carpoolparticipant.DefaultNoticeAcceptIP holds the default value on creation for the notice_accept_ip field.
+	carpoolparticipant.DefaultNoticeAcceptIP = carpoolparticipantDescNoticeAcceptIP.Default.(string)
+	// carpoolparticipant.NoticeAcceptIPValidator is a validator for the "notice_accept_ip" field. It is called by the builders before save.
+	carpoolparticipant.NoticeAcceptIPValidator = carpoolparticipantDescNoticeAcceptIP.Validators[0].(func(string) error)
+	// carpoolparticipantDescCreatedAt is the schema descriptor for created_at field.
+	carpoolparticipantDescCreatedAt := carpoolparticipantFields[14].Descriptor()
+	// carpoolparticipant.DefaultCreatedAt holds the default value on creation for the created_at field.
+	carpoolparticipant.DefaultCreatedAt = carpoolparticipantDescCreatedAt.Default.(func() time.Time)
+	// carpoolparticipantDescUpdatedAt is the schema descriptor for updated_at field.
+	carpoolparticipantDescUpdatedAt := carpoolparticipantFields[15].Descriptor()
+	// carpoolparticipant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	carpoolparticipant.DefaultUpdatedAt = carpoolparticipantDescUpdatedAt.Default.(func() time.Time)
+	// carpoolparticipant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	carpoolparticipant.UpdateDefaultUpdatedAt = carpoolparticipantDescUpdatedAt.UpdateDefault.(func() time.Time)
+	carpoolsessionFields := schema.CarpoolSession{}.Fields()
+	_ = carpoolsessionFields
+	// carpoolsessionDescSessionNo is the schema descriptor for session_no field.
+	carpoolsessionDescSessionNo := carpoolsessionFields[1].Descriptor()
+	// carpoolsession.DefaultSessionNo holds the default value on creation for the session_no field.
+	carpoolsession.DefaultSessionNo = carpoolsessionDescSessionNo.Default.(string)
+	// carpoolsession.SessionNoValidator is a validator for the "session_no" field. It is called by the builders before save.
+	carpoolsession.SessionNoValidator = carpoolsessionDescSessionNo.Validators[0].(func(string) error)
+	// carpoolsessionDescStatus is the schema descriptor for status field.
+	carpoolsessionDescStatus := carpoolsessionFields[2].Descriptor()
+	// carpoolsession.DefaultStatus holds the default value on creation for the status field.
+	carpoolsession.DefaultStatus = carpoolsessionDescStatus.Default.(string)
+	// carpoolsession.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	carpoolsession.StatusValidator = carpoolsessionDescStatus.Validators[0].(func(string) error)
+	// carpoolsessionDescSeatCount is the schema descriptor for seat_count field.
+	carpoolsessionDescSeatCount := carpoolsessionFields[3].Descriptor()
+	// carpoolsession.DefaultSeatCount holds the default value on creation for the seat_count field.
+	carpoolsession.DefaultSeatCount = carpoolsessionDescSeatCount.Default.(int)
+	// carpoolsessionDescPaidCount is the schema descriptor for paid_count field.
+	carpoolsessionDescPaidCount := carpoolsessionFields[4].Descriptor()
+	// carpoolsession.DefaultPaidCount holds the default value on creation for the paid_count field.
+	carpoolsession.DefaultPaidCount = carpoolsessionDescPaidCount.Default.(int)
+	// carpoolsessionDescCreatedAt is the schema descriptor for created_at field.
+	carpoolsessionDescCreatedAt := carpoolsessionFields[14].Descriptor()
+	// carpoolsession.DefaultCreatedAt holds the default value on creation for the created_at field.
+	carpoolsession.DefaultCreatedAt = carpoolsessionDescCreatedAt.Default.(func() time.Time)
+	// carpoolsessionDescUpdatedAt is the schema descriptor for updated_at field.
+	carpoolsessionDescUpdatedAt := carpoolsessionFields[15].Descriptor()
+	// carpoolsession.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	carpoolsession.DefaultUpdatedAt = carpoolsessionDescUpdatedAt.Default.(func() time.Time)
+	// carpoolsession.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	carpoolsession.UpdateDefaultUpdatedAt = carpoolsessionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	carpoolvehicletypeFields := schema.CarpoolVehicleType{}.Fields()
+	_ = carpoolvehicletypeFields
+	// carpoolvehicletypeDescProduct is the schema descriptor for product field.
+	carpoolvehicletypeDescProduct := carpoolvehicletypeFields[0].Descriptor()
+	// carpoolvehicletype.DefaultProduct holds the default value on creation for the product field.
+	carpoolvehicletype.DefaultProduct = carpoolvehicletypeDescProduct.Default.(string)
+	// carpoolvehicletype.ProductValidator is a validator for the "product" field. It is called by the builders before save.
+	carpoolvehicletype.ProductValidator = carpoolvehicletypeDescProduct.Validators[0].(func(string) error)
+	// carpoolvehicletypeDescPlanTier is the schema descriptor for plan_tier field.
+	carpoolvehicletypeDescPlanTier := carpoolvehicletypeFields[1].Descriptor()
+	// carpoolvehicletype.DefaultPlanTier holds the default value on creation for the plan_tier field.
+	carpoolvehicletype.DefaultPlanTier = carpoolvehicletypeDescPlanTier.Default.(string)
+	// carpoolvehicletype.PlanTierValidator is a validator for the "plan_tier" field. It is called by the builders before save.
+	carpoolvehicletype.PlanTierValidator = carpoolvehicletypeDescPlanTier.Validators[0].(func(string) error)
+	// carpoolvehicletypeDescMultiplier is the schema descriptor for multiplier field.
+	carpoolvehicletypeDescMultiplier := carpoolvehicletypeFields[2].Descriptor()
+	// carpoolvehicletype.DefaultMultiplier holds the default value on creation for the multiplier field.
+	carpoolvehicletype.DefaultMultiplier = carpoolvehicletypeDescMultiplier.Default.(string)
+	// carpoolvehicletype.MultiplierValidator is a validator for the "multiplier" field. It is called by the builders before save.
+	carpoolvehicletype.MultiplierValidator = carpoolvehicletypeDescMultiplier.Validators[0].(func(string) error)
+	// carpoolvehicletypeDescName is the schema descriptor for name field.
+	carpoolvehicletypeDescName := carpoolvehicletypeFields[3].Descriptor()
+	// carpoolvehicletype.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	carpoolvehicletype.NameValidator = func() func(string) error {
+		validators := carpoolvehicletypeDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// carpoolvehicletypeDescSeatCount is the schema descriptor for seat_count field.
+	carpoolvehicletypeDescSeatCount := carpoolvehicletypeFields[4].Descriptor()
+	// carpoolvehicletype.DefaultSeatCount holds the default value on creation for the seat_count field.
+	carpoolvehicletype.DefaultSeatCount = carpoolvehicletypeDescSeatCount.Default.(int)
+	// carpoolvehicletypeDescTotalPrice is the schema descriptor for total_price field.
+	carpoolvehicletypeDescTotalPrice := carpoolvehicletypeFields[5].Descriptor()
+	// carpoolvehicletype.DefaultTotalPrice holds the default value on creation for the total_price field.
+	carpoolvehicletype.DefaultTotalPrice = carpoolvehicletypeDescTotalPrice.Default.(float64)
+	// carpoolvehicletypeDescUnitPrice is the schema descriptor for unit_price field.
+	carpoolvehicletypeDescUnitPrice := carpoolvehicletypeFields[6].Descriptor()
+	// carpoolvehicletype.DefaultUnitPrice holds the default value on creation for the unit_price field.
+	carpoolvehicletype.DefaultUnitPrice = carpoolvehicletypeDescUnitPrice.Default.(float64)
+	// carpoolvehicletypeDescServiceDays is the schema descriptor for service_days field.
+	carpoolvehicletypeDescServiceDays := carpoolvehicletypeFields[7].Descriptor()
+	// carpoolvehicletype.DefaultServiceDays holds the default value on creation for the service_days field.
+	carpoolvehicletype.DefaultServiceDays = carpoolvehicletypeDescServiceDays.Default.(int)
+	// carpoolvehicletypeDescRefundWaitHours is the schema descriptor for refund_wait_hours field.
+	carpoolvehicletypeDescRefundWaitHours := carpoolvehicletypeFields[8].Descriptor()
+	// carpoolvehicletype.DefaultRefundWaitHours holds the default value on creation for the refund_wait_hours field.
+	carpoolvehicletype.DefaultRefundWaitHours = carpoolvehicletypeDescRefundWaitHours.Default.(int)
+	// carpoolvehicletypeDescCompletedBaseCount is the schema descriptor for completed_base_count field.
+	carpoolvehicletypeDescCompletedBaseCount := carpoolvehicletypeFields[9].Descriptor()
+	// carpoolvehicletype.DefaultCompletedBaseCount holds the default value on creation for the completed_base_count field.
+	carpoolvehicletype.DefaultCompletedBaseCount = carpoolvehicletypeDescCompletedBaseCount.Default.(int)
+	// carpoolvehicletypeDescEnabled is the schema descriptor for enabled field.
+	carpoolvehicletypeDescEnabled := carpoolvehicletypeFields[10].Descriptor()
+	// carpoolvehicletype.DefaultEnabled holds the default value on creation for the enabled field.
+	carpoolvehicletype.DefaultEnabled = carpoolvehicletypeDescEnabled.Default.(bool)
+	// carpoolvehicletypeDescSupportRevenuePool is the schema descriptor for support_revenue_pool field.
+	carpoolvehicletypeDescSupportRevenuePool := carpoolvehicletypeFields[11].Descriptor()
+	// carpoolvehicletype.DefaultSupportRevenuePool holds the default value on creation for the support_revenue_pool field.
+	carpoolvehicletype.DefaultSupportRevenuePool = carpoolvehicletypeDescSupportRevenuePool.Default.(bool)
+	// carpoolvehicletypeDescRequireStaticIP is the schema descriptor for require_static_ip field.
+	carpoolvehicletypeDescRequireStaticIP := carpoolvehicletypeFields[12].Descriptor()
+	// carpoolvehicletype.DefaultRequireStaticIP holds the default value on creation for the require_static_ip field.
+	carpoolvehicletype.DefaultRequireStaticIP = carpoolvehicletypeDescRequireStaticIP.Default.(bool)
+	// carpoolvehicletypeDescDescription is the schema descriptor for description field.
+	carpoolvehicletypeDescDescription := carpoolvehicletypeFields[15].Descriptor()
+	// carpoolvehicletype.DefaultDescription holds the default value on creation for the description field.
+	carpoolvehicletype.DefaultDescription = carpoolvehicletypeDescDescription.Default.(string)
+	// carpoolvehicletypeDescSortOrder is the schema descriptor for sort_order field.
+	carpoolvehicletypeDescSortOrder := carpoolvehicletypeFields[16].Descriptor()
+	// carpoolvehicletype.DefaultSortOrder holds the default value on creation for the sort_order field.
+	carpoolvehicletype.DefaultSortOrder = carpoolvehicletypeDescSortOrder.Default.(int)
+	// carpoolvehicletypeDescCreatedAt is the schema descriptor for created_at field.
+	carpoolvehicletypeDescCreatedAt := carpoolvehicletypeFields[17].Descriptor()
+	// carpoolvehicletype.DefaultCreatedAt holds the default value on creation for the created_at field.
+	carpoolvehicletype.DefaultCreatedAt = carpoolvehicletypeDescCreatedAt.Default.(func() time.Time)
+	// carpoolvehicletypeDescUpdatedAt is the schema descriptor for updated_at field.
+	carpoolvehicletypeDescUpdatedAt := carpoolvehicletypeFields[18].Descriptor()
+	// carpoolvehicletype.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	carpoolvehicletype.DefaultUpdatedAt = carpoolvehicletypeDescUpdatedAt.Default.(func() time.Time)
+	// carpoolvehicletype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	carpoolvehicletype.UpdateDefaultUpdatedAt = carpoolvehicletypeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	carpoolvoucherFields := schema.CarpoolVoucher{}.Fields()
+	_ = carpoolvoucherFields
+	// carpoolvoucherDescFileURL is the schema descriptor for file_url field.
+	carpoolvoucherDescFileURL := carpoolvoucherFields[1].Descriptor()
+	// carpoolvoucher.DefaultFileURL holds the default value on creation for the file_url field.
+	carpoolvoucher.DefaultFileURL = carpoolvoucherDescFileURL.Default.(string)
+	// carpoolvoucherDescFileName is the schema descriptor for file_name field.
+	carpoolvoucherDescFileName := carpoolvoucherFields[2].Descriptor()
+	// carpoolvoucher.DefaultFileName holds the default value on creation for the file_name field.
+	carpoolvoucher.DefaultFileName = carpoolvoucherDescFileName.Default.(string)
+	// carpoolvoucher.FileNameValidator is a validator for the "file_name" field. It is called by the builders before save.
+	carpoolvoucher.FileNameValidator = carpoolvoucherDescFileName.Validators[0].(func(string) error)
+	// carpoolvoucherDescUploadedBy is the schema descriptor for uploaded_by field.
+	carpoolvoucherDescUploadedBy := carpoolvoucherFields[4].Descriptor()
+	// carpoolvoucher.DefaultUploadedBy holds the default value on creation for the uploaded_by field.
+	carpoolvoucher.DefaultUploadedBy = carpoolvoucherDescUploadedBy.Default.(int64)
+	// carpoolvoucherDescCreatedAt is the schema descriptor for created_at field.
+	carpoolvoucherDescCreatedAt := carpoolvoucherFields[5].Descriptor()
+	// carpoolvoucher.DefaultCreatedAt holds the default value on creation for the created_at field.
+	carpoolvoucher.DefaultCreatedAt = carpoolvoucherDescCreatedAt.Default.(func() time.Time)
 	channelmonitorMixin := schema.ChannelMonitor{}.Mixin()
 	channelmonitorMixinFields0 := channelmonitorMixin[0].Fields()
 	_ = channelmonitorMixinFields0

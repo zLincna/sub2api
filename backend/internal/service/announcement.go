@@ -23,6 +23,8 @@ const (
 const (
 	AnnouncementConditionTypeSubscription = domain.AnnouncementConditionTypeSubscription
 	AnnouncementConditionTypeBalance      = domain.AnnouncementConditionTypeBalance
+	AnnouncementConditionTypeGroup        = domain.AnnouncementConditionTypeGroup
+	AnnouncementConditionTypeUser         = domain.AnnouncementConditionTypeUser
 )
 
 const (
@@ -62,6 +64,8 @@ type AnnouncementCondition = domain.AnnouncementCondition
 
 type Announcement = domain.Announcement
 
+type AnnouncementMatchContext = domain.AnnouncementMatchContext
+
 type AnnouncementListFilters struct {
 	Status string
 	Search string
@@ -82,4 +86,8 @@ type AnnouncementReadRepository interface {
 	GetReadMapByUser(ctx context.Context, userID int64, announcementIDs []int64) (map[int64]time.Time, error)
 	GetReadMapByUsers(ctx context.Context, announcementID int64, userIDs []int64) (map[int64]time.Time, error)
 	CountByAnnouncementID(ctx context.Context, announcementID int64) (int64, error)
+}
+
+type AnnouncementAPIKeyGroupReader interface {
+	ListDistinctGroupIDsByUserID(ctx context.Context, userID int64) ([]int64, error)
 }

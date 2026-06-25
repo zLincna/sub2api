@@ -457,6 +457,11 @@ export interface SystemSettings {
   aliyun_sms_scheme_name?: string;
   aliyun_sms_valid_time_seconds?: number;
   aliyun_sms_interval_seconds?: number;
+  carpool_admin_full_sms_notify_enabled: boolean;
+  carpool_admin_full_sms_phones: string;
+  carpool_admin_full_sms_template_code: string;
+  carpool_user_active_sms_notify_enabled: boolean;
+  carpool_user_active_sms_template_code: string;
   // Cloudflare Turnstile settings
   turnstile_enabled: boolean;
   turnstile_site_key: string;
@@ -733,6 +738,11 @@ export interface UpdateSettingsRequest {
   aliyun_sms_scheme_name?: string;
   aliyun_sms_valid_time_seconds?: number;
   aliyun_sms_interval_seconds?: number;
+  carpool_admin_full_sms_notify_enabled?: boolean;
+  carpool_admin_full_sms_phones?: string;
+  carpool_admin_full_sms_template_code?: string;
+  carpool_user_active_sms_notify_enabled?: boolean;
+  carpool_user_active_sms_template_code?: string;
   turnstile_enabled?: boolean;
   turnstile_site_key?: string;
   turnstile_secret_key?: string;

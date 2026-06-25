@@ -189,6 +189,7 @@ type PaymentService struct {
 	affiliateService         *AffiliateService
 	notificationEmailService *NotificationEmailService
 	lotteryService           *LotteryService
+	carpoolService           *CarpoolService
 }
 
 func NewPaymentService(entClient *dbent.Client, registry *payment.Registry, loadBalancer payment.LoadBalancer, redeemService *RedeemService, subscriptionSvc *SubscriptionService, configService *PaymentConfigService, userRepo UserRepository, groupRepo GroupRepository, affiliateService *AffiliateService) *PaymentService {
@@ -203,6 +204,10 @@ func (s *PaymentService) SetNotificationEmailService(notificationEmailService *N
 
 func (s *PaymentService) SetLotteryService(lotteryService *LotteryService) {
 	s.lotteryService = lotteryService
+}
+
+func (s *PaymentService) SetCarpoolService(carpoolService *CarpoolService) {
+	s.carpoolService = carpoolService
 }
 
 // --- Provider Registry ---

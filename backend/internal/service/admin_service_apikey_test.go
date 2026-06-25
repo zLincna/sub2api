@@ -200,6 +200,9 @@ func (s *apiKeyRepoStubForGroupUpdate) GetRateLimitData(context.Context, int64) 
 func (s *apiKeyRepoStubForGroupUpdate) UpdateGroupIDByUserAndGroup(context.Context, int64, int64, int64) (int64, error) {
 	panic("unexpected")
 }
+func (s *apiKeyRepoStubForGroupUpdate) ListDistinctGroupIDsByUserID(context.Context, int64) ([]int64, error) {
+	return nil, nil
+}
 
 // groupRepoStubForGroupUpdate implements GroupRepository for AdminUpdateAPIKeyGroupID tests.
 type groupRepoStubForGroupUpdate struct {

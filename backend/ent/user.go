@@ -105,11 +105,13 @@ type UserEdges struct {
 	LotteryChances []*LotteryChance `json:"lottery_chances,omitempty"`
 	// LotteryDrawRecords holds the value of the lottery_draw_records edge.
 	LotteryDrawRecords []*LotteryDrawRecord `json:"lottery_draw_records,omitempty"`
+	// CarpoolParticipants holds the value of the carpool_participants edge.
+	CarpoolParticipants []*CarpoolParticipant `json:"carpool_participants,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [16]bool
+	loadedTypes [17]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -247,10 +249,19 @@ func (e UserEdges) LotteryDrawRecordsOrErr() ([]*LotteryDrawRecord, error) {
 	return nil, &NotLoadedError{edge: "lottery_draw_records"}
 }
 
+// CarpoolParticipantsOrErr returns the CarpoolParticipants value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CarpoolParticipantsOrErr() ([]*CarpoolParticipant, error) {
+	if e.loadedTypes[15] {
+		return e.CarpoolParticipants, nil
+	}
+	return nil, &NotLoadedError{edge: "carpool_participants"}
+}
+
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[15] {
+	if e.loadedTypes[16] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -535,6 +546,11 @@ func (_m *User) QueryLotteryChances() *LotteryChanceQuery {
 // QueryLotteryDrawRecords queries the "lottery_draw_records" edge of the User entity.
 func (_m *User) QueryLotteryDrawRecords() *LotteryDrawRecordQuery {
 	return NewUserClient(_m.config).QueryLotteryDrawRecords(_m)
+}
+
+// QueryCarpoolParticipants queries the "carpool_participants" edge of the User entity.
+func (_m *User) QueryCarpoolParticipants() *CarpoolParticipantQuery {
+	return NewUserClient(_m.config).QueryCarpoolParticipants(_m)
 }
 
 // QueryUserAllowedGroups queries the "user_allowed_groups" edge of the User entity.

@@ -21,6 +21,8 @@ const (
 const (
 	AnnouncementConditionTypeSubscription = "subscription"
 	AnnouncementConditionTypeBalance      = "balance"
+	AnnouncementConditionTypeGroup        = "group"
+	AnnouncementConditionTypeUser         = "user"
 )
 
 const (
@@ -48,7 +50,7 @@ type AnnouncementConditionGroup struct {
 }
 
 type AnnouncementCondition struct {
-	// Type: subscription | balance
+	// Type: subscription | balance | group | user
 	Type string `json:"type"`
 
 	// Operator:
@@ -59,11 +61,28 @@ type AnnouncementCondition struct {
 	// subscription 条件：匹配的订阅套餐（group_id）
 	GroupIDs []int64 `json:"group_ids,omitempty"`
 
+	// user 条件：匹配指定用户 ID。
+	UserIDs []int64 `json:"user_ids,omitempty"`
+
 	// balance 条件：比较阈值
 	Value float64 `json:"value,omitempty"`
 }
 
+type AnnouncementMatchContext struct {
+	UserID                     int64
+	Balance                    float64
+	ActiveSubscriptionGroupIDs map[int64]struct{}
+	APIKeyGroupIDs             map[int64]struct{}
+}
+
 func (t AnnouncementTargeting) Matches(balance float64, activeSubscriptionGroupIDs map[int64]struct{}) bool {
+	return t.MatchesContext(AnnouncementMatchContext{
+		Balance:                    balance,
+		ActiveSubscriptionGroupIDs: activeSubscriptionGroupIDs,
+	})
+}
+
+func (t AnnouncementTargeting) MatchesContext(ctx AnnouncementMatchContext) bool {
 	// 空规则：展示给所有用户
 	if len(t.AnyOf) == 0 {
 		return true
@@ -76,7 +95,7 @@ func (t AnnouncementTargeting) Matches(balance float64, activeSubscriptionGroupI
 		}
 		allMatched := true
 		for _, cond := range group.AllOf {
-			if !cond.Matches(balance, activeSubscriptionGroupIDs) {
+			if !cond.MatchesContext(ctx) {
 				allMatched = false
 				break
 			}
@@ -90,6 +109,13 @@ func (t AnnouncementTargeting) Matches(balance float64, activeSubscriptionGroupI
 }
 
 func (c AnnouncementCondition) Matches(balance float64, activeSubscriptionGroupIDs map[int64]struct{}) bool {
+	return c.MatchesContext(AnnouncementMatchContext{
+		Balance:                    balance,
+		ActiveSubscriptionGroupIDs: activeSubscriptionGroupIDs,
+	})
+}
+
+func (c AnnouncementCondition) MatchesContext(ctx AnnouncementMatchContext) bool {
 	switch c.Type {
 	case AnnouncementConditionTypeSubscription:
 		if c.Operator != AnnouncementOperatorIn {
@@ -98,11 +124,42 @@ func (c AnnouncementCondition) Matches(balance float64, activeSubscriptionGroupI
 		if len(c.GroupIDs) == 0 {
 			return false
 		}
-		if len(activeSubscriptionGroupIDs) == 0 {
+		if len(ctx.ActiveSubscriptionGroupIDs) == 0 {
 			return false
 		}
 		for _, gid := range c.GroupIDs {
-			if _, ok := activeSubscriptionGroupIDs[gid]; ok {
+			if _, ok := ctx.ActiveSubscriptionGroupIDs[gid]; ok {
+				return true
+			}
+		}
+		return false
+
+	case AnnouncementConditionTypeGroup:
+		if c.Operator != AnnouncementOperatorIn {
+			return false
+		}
+		if len(c.GroupIDs) == 0 {
+			return false
+		}
+		if len(ctx.APIKeyGroupIDs) == 0 {
+			return false
+		}
+		for _, gid := range c.GroupIDs {
+			if _, ok := ctx.APIKeyGroupIDs[gid]; ok {
+				return true
+			}
+		}
+		return false
+
+	case AnnouncementConditionTypeUser:
+		if c.Operator != AnnouncementOperatorIn {
+			return false
+		}
+		if ctx.UserID <= 0 || len(c.UserIDs) == 0 {
+			return false
+		}
+		for _, uid := range c.UserIDs {
+			if uid == ctx.UserID {
 				return true
 			}
 		}
@@ -111,15 +168,15 @@ func (c AnnouncementCondition) Matches(balance float64, activeSubscriptionGroupI
 	case AnnouncementConditionTypeBalance:
 		switch c.Operator {
 		case AnnouncementOperatorGT:
-			return balance > c.Value
+			return ctx.Balance > c.Value
 		case AnnouncementOperatorGTE:
-			return balance >= c.Value
+			return ctx.Balance >= c.Value
 		case AnnouncementOperatorLT:
-			return balance < c.Value
+			return ctx.Balance < c.Value
 		case AnnouncementOperatorLTE:
-			return balance <= c.Value
+			return ctx.Balance <= c.Value
 		case AnnouncementOperatorEQ:
-			return balance == c.Value
+			return ctx.Balance == c.Value
 		default:
 			return false
 		}
@@ -162,6 +219,12 @@ func (t AnnouncementTargeting) NormalizeAndValidate() (AnnouncementTargeting, er
 				}
 				cond.GroupIDs = append(cond.GroupIDs, gid)
 			}
+			for _, uid := range c.UserIDs {
+				if uid <= 0 {
+					return AnnouncementTargeting{}, ErrAnnouncementInvalidTarget
+				}
+				cond.UserIDs = append(cond.UserIDs, uid)
+			}
 
 			if err := cond.validate(); err != nil {
 				return AnnouncementTargeting{}, err
@@ -182,6 +245,24 @@ func (c AnnouncementCondition) validate() error {
 			return ErrAnnouncementInvalidTarget
 		}
 		if len(c.GroupIDs) == 0 {
+			return ErrAnnouncementInvalidTarget
+		}
+		return nil
+
+	case AnnouncementConditionTypeGroup:
+		if c.Operator != AnnouncementOperatorIn {
+			return ErrAnnouncementInvalidTarget
+		}
+		if len(c.GroupIDs) == 0 {
+			return ErrAnnouncementInvalidTarget
+		}
+		return nil
+
+	case AnnouncementConditionTypeUser:
+		if c.Operator != AnnouncementOperatorIn {
+			return ErrAnnouncementInvalidTarget
+		}
+		if len(c.UserIDs) == 0 {
 			return ErrAnnouncementInvalidTarget
 		}
 		return nil

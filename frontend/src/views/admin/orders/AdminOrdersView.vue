@@ -62,6 +62,7 @@
           <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.orders.orderId') }}</p><p class="font-mono text-sm font-medium text-gray-900 dark:text-white">#{{ selectedOrder.id }}</p></div>
           <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.orders.orderNo') }}</p><p class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedOrder.out_trade_no }}</p></div>
           <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.orders.status') }}</p><OrderStatusBadge :status="selectedOrder.status" /></div>
+          <div><p class="text-xs text-gray-500 dark:text-gray-400">订单类型</p><p class="text-sm font-medium text-gray-900 dark:text-white">{{ orderTypeLabel(selectedOrder.order_type) }}</p></div>
           <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.orders.amount') }}</p><p class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedOrder.order_type === 'balance' ? '$' : '¥' }}{{ selectedOrder.amount.toFixed(2) }}</p></div>
           <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.orders.payAmount') }}</p><p class="text-sm font-medium text-gray-900 dark:text-white">¥{{ selectedOrder.pay_amount.toFixed(2) }}</p></div>
           <div><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.orders.paymentMethod') }}</p><p class="text-sm text-gray-700 dark:text-gray-300">{{ t('payment.methods.' + selectedOrder.payment_type, selectedOrder.payment_type) }}</p></div>
@@ -71,6 +72,15 @@
           <div v-if="selectedOrder.paid_at"><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.admin.paidAt') }}</p><p class="text-sm text-gray-700 dark:text-gray-300">{{ formatDateTime(selectedOrder.paid_at) }}</p></div>
           <div v-if="selectedOrder.refund_amount"><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.admin.refundAmount') }}</p><p class="text-sm font-medium text-red-600 dark:text-red-400">{{ selectedOrder.order_type === 'balance' ? '$' : '¥' }}{{ selectedOrder.refund_amount.toFixed(2) }}</p></div>
           <div v-if="selectedOrder.refund_reason" class="col-span-2"><p class="text-xs text-gray-500 dark:text-gray-400">{{ t('payment.admin.refundReason') }}</p><p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedOrder.refund_reason }}</p></div>
+          <div v-if="selectedCarpoolInfo" class="col-span-2 rounded-lg border border-primary-100 bg-primary-50 p-3 dark:border-primary-900/40 dark:bg-primary-900/20">
+            <p class="mb-2 text-xs font-medium text-primary-700 dark:text-primary-200">拼车信息</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div><p class="text-xs text-gray-500 dark:text-gray-400">车类型</p><p class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedCarpoolInfo.vehicle }}</p></div>
+              <div><p class="text-xs text-gray-500 dark:text-gray-400">参与状态</p><p class="text-sm font-medium text-gray-900 dark:text-white">{{ selectedCarpoolInfo.status }}</p></div>
+              <div><p class="text-xs text-gray-500 dark:text-gray-400">轮次</p><p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedCarpoolInfo.session }}</p></div>
+              <div><p class="text-xs text-gray-500 dark:text-gray-400">等待截止</p><p class="text-sm text-gray-700 dark:text-gray-300">{{ selectedCarpoolInfo.waitUntil }}</p></div>
+            </div>
+          </div>
           <!-- Refund request info -->
           <div v-if="selectedOrder.refund_requested_at" class="col-span-2 border-t border-gray-200 pt-3 dark:border-dark-600">
             <p class="mb-2 text-xs font-medium text-purple-600 dark:text-purple-400">{{ t('payment.admin.refundRequestInfo') }}</p>
@@ -199,7 +209,21 @@ const orderTypeFilterOptions = computed(() => [
   { value: '', label: t('payment.admin.allOrderTypes') },
   { value: 'balance', label: t('payment.admin.balanceOrder') },
   { value: 'subscription', label: t('payment.admin.subscriptionOrder') },
+  { value: 'carpool', label: '拼车订单' },
 ])
+
+const selectedCarpoolInfo = computed(() => {
+  const item = selectedOrder.value?.edges?.carpool_participants?.[0]
+  if (!item) return null
+  const vt = item.edges?.vehicle_type
+  const session = item.edges?.session
+  return {
+    vehicle: vt ? `${segmentLabel(vt)} · ${vt.name}` : `#${item.vehicle_type_id}`,
+    status: carpoolStatusLabel(item.status),
+    session: session?.session_no || (item.session_id ? `#${item.session_id}` : '-'),
+    waitUntil: formatDateTime(item.wait_until),
+  }
+})
 
 async function showOrderDetail(order: PaymentOrder) {
   selectedOrder.value = order
@@ -236,6 +260,37 @@ async function handleRefund(data: { amount: number; reason: string; deduct_balan
 }
 
 function formatDateTime(dateStr: string): string { return formatOrderDateTime(dateStr) }
+
+function orderTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    balance: '余额充值',
+    subscription: '订阅套餐',
+    carpool: '拼车订单',
+  }
+  return labels[value] || value
+}
+
+function segmentLabel(vt: { product?: string; plan_tier?: string; multiplier?: string }) {
+  const productLabels: Record<string, string> = { openai: 'OpenAI', claudecode: 'ClaudeCode', claude_code: 'ClaudeCode' }
+  const tierLabels: Record<string, string> = { pro: 'Pro', plus: 'Plus' }
+  const product = productLabels[String(vt.product || '').toLowerCase()] || vt.product || 'OpenAI'
+  const tier = tierLabels[String(vt.plan_tier || '').toLowerCase()] || vt.plan_tier || 'Pro'
+  const multiplier = String(vt.multiplier || '').toUpperCase()
+  return [product, tier, multiplier].filter(Boolean).join(' ')
+}
+
+function carpoolStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    pending_payment: '待支付',
+    paid: '已支付',
+    active: '已发车',
+    refund_pending: '待退款',
+    refunded_balance: '已退余额',
+    refunded_gateway: '已原路退款',
+    cancelled: '已取消',
+  }
+  return labels[status] || status
+}
 
 onMounted(() => loadOrders())
 </script>

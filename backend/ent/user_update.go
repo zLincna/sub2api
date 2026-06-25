@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/lotterychance"
 	"github.com/Wei-Shaw/sub2api/ent/lotterydrawrecord"
@@ -672,6 +673,21 @@ func (_u *UserUpdate) AddLotteryDrawRecords(v ...*LotteryDrawRecord) *UserUpdate
 	return _u.AddLotteryDrawRecordIDs(ids...)
 }
 
+// AddCarpoolParticipantIDs adds the "carpool_participants" edge to the CarpoolParticipant entity by IDs.
+func (_u *UserUpdate) AddCarpoolParticipantIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// AddCarpoolParticipants adds the "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *UserUpdate) AddCarpoolParticipants(v ...*CarpoolParticipant) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCarpoolParticipantIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -990,6 +1006,27 @@ func (_u *UserUpdate) RemoveLotteryDrawRecords(v ...*LotteryDrawRecord) *UserUpd
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLotteryDrawRecordIDs(ids...)
+}
+
+// ClearCarpoolParticipants clears all "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *UserUpdate) ClearCarpoolParticipants() *UserUpdate {
+	_u.mutation.ClearCarpoolParticipants()
+	return _u
+}
+
+// RemoveCarpoolParticipantIDs removes the "carpool_participants" edge to CarpoolParticipant entities by IDs.
+func (_u *UserUpdate) RemoveCarpoolParticipantIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// RemoveCarpoolParticipants removes "carpool_participants" edges to CarpoolParticipant entities.
+func (_u *UserUpdate) RemoveCarpoolParticipants(v ...*CarpoolParticipant) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCarpoolParticipantIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1881,6 +1918,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCarpoolParticipantsIDs(); len(nodes) > 0 && !_u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CarpoolParticipantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -2531,6 +2613,21 @@ func (_u *UserUpdateOne) AddLotteryDrawRecords(v ...*LotteryDrawRecord) *UserUpd
 	return _u.AddLotteryDrawRecordIDs(ids...)
 }
 
+// AddCarpoolParticipantIDs adds the "carpool_participants" edge to the CarpoolParticipant entity by IDs.
+func (_u *UserUpdateOne) AddCarpoolParticipantIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// AddCarpoolParticipants adds the "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *UserUpdateOne) AddCarpoolParticipants(v ...*CarpoolParticipant) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCarpoolParticipantIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -2849,6 +2946,27 @@ func (_u *UserUpdateOne) RemoveLotteryDrawRecords(v ...*LotteryDrawRecord) *User
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveLotteryDrawRecordIDs(ids...)
+}
+
+// ClearCarpoolParticipants clears all "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *UserUpdateOne) ClearCarpoolParticipants() *UserUpdateOne {
+	_u.mutation.ClearCarpoolParticipants()
+	return _u
+}
+
+// RemoveCarpoolParticipantIDs removes the "carpool_participants" edge to CarpoolParticipant entities by IDs.
+func (_u *UserUpdateOne) RemoveCarpoolParticipantIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// RemoveCarpoolParticipants removes "carpool_participants" edges to CarpoolParticipant entities.
+func (_u *UserUpdateOne) RemoveCarpoolParticipants(v ...*CarpoolParticipant) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCarpoolParticipantIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -3763,6 +3881,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lotterydrawrecord.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCarpoolParticipantsIDs(); len(nodes) > 0 && !_u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CarpoolParticipantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

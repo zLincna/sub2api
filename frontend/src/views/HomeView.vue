@@ -204,6 +204,62 @@
           </div>
         </div>
 
+        <!-- Carpool Spotlight -->
+        <div
+          class="mb-12 overflow-hidden rounded-2xl border border-primary-200/70 bg-white/70 shadow-xl shadow-primary-500/10 backdrop-blur-sm dark:border-primary-800/60 dark:bg-dark-900/70"
+        >
+          <div class="grid gap-0 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+            <div class="p-6 sm:p-8">
+              <div
+                class="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-200"
+              >
+                <Icon name="users" size="sm" />
+                <span>{{ t('home.carpoolSpotlight.badge') }}</span>
+              </div>
+              <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-white sm:text-3xl">
+                {{ t('home.carpoolSpotlight.title') }}
+              </h2>
+              <p class="mt-3 max-w-2xl text-sm leading-7 text-gray-600 dark:text-dark-300 sm:text-base">
+                {{ t('home.carpoolSpotlight.description') }}
+              </p>
+              <div class="mt-6 flex flex-wrap gap-3">
+                <RouterLink
+                  to="/carpool"
+                  class="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:bg-primary-600"
+                >
+                  {{ t('home.carpoolSpotlight.cta') }}
+                  <Icon name="arrowRight" size="sm" />
+                </RouterLink>
+                <span
+                  class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white/70 px-4 py-2.5 text-sm font-medium text-gray-700 dark:border-dark-700 dark:bg-dark-800/70 dark:text-dark-200"
+                >
+                  <Icon name="shield" size="sm" class="text-emerald-500" />
+                  {{ t('home.carpoolSpotlight.guarantee') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="border-t border-primary-100/70 bg-primary-50/45 p-6 dark:border-primary-900/40 dark:bg-primary-950/20 lg:border-l lg:border-t-0">
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div
+                  v-for="item in carpoolHighlights"
+                  :key="item.title"
+                  class="rounded-xl border border-white/70 bg-white/75 p-4 shadow-sm dark:border-dark-700/70 dark:bg-dark-800/75"
+                >
+                  <div
+                    class="mb-3 flex h-10 w-10 items-center justify-center rounded-lg shadow-sm"
+                    :class="item.iconClass"
+                  >
+                    <Icon :name="item.icon" size="md" class="text-white" />
+                  </div>
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.title }}</h3>
+                  <p class="mt-1 text-xs leading-5 text-gray-600 dark:text-dark-300">{{ item.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Features Grid -->
         <div class="mb-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <div
@@ -457,6 +513,7 @@ import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
 
 const { t } = useI18n()
+type HomeFeatureIcon = 'users' | 'clock' | 'chart' | 'sparkles'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
@@ -467,6 +524,38 @@ const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appS
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || 'AI API Gateway Platform')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
+
+const carpoolHighlights: Array<{
+  icon: HomeFeatureIcon
+  iconClass: string
+  title: string
+  description: string
+}> = [
+  {
+    icon: 'users',
+    iconClass: 'bg-gradient-to-br from-primary-500 to-teal-500',
+    title: t('home.carpoolSpotlight.items.shared.title'),
+    description: t('home.carpoolSpotlight.items.shared.desc'),
+  },
+  {
+    icon: 'clock',
+    iconClass: 'bg-gradient-to-br from-blue-500 to-cyan-500',
+    title: t('home.carpoolSpotlight.items.queue.title'),
+    description: t('home.carpoolSpotlight.items.queue.desc'),
+  },
+  {
+    icon: 'chart',
+    iconClass: 'bg-gradient-to-br from-emerald-500 to-green-600',
+    title: t('home.carpoolSpotlight.items.visible.title'),
+    description: t('home.carpoolSpotlight.items.visible.desc'),
+  },
+  {
+    icon: 'sparkles',
+    iconClass: 'bg-gradient-to-br from-amber-500 to-orange-500',
+    title: t('home.carpoolSpotlight.items.revenue.title'),
+    description: t('home.carpoolSpotlight.items.revenue.desc'),
+  },
+]
 
 // Check if homeContent is a URL (for iframe display)
 const isHomeContentUrl = computed(() => {

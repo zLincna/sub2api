@@ -600,8 +600,9 @@ var ProviderSet = wire.NewSet(
 	NewContentModerationService,
 	NewAffiliateService,
 	NewLotteryService,
+	NewCarpoolService,
 	ProvidePaymentConfigService,
-	ProvidePaymentServiceWithLottery,
+	ProvidePaymentServiceWithCarpool,
 	ProvidePaymentOrderExpiryService,
 	ProvideBalanceNotifyService,
 	ProvideChannelMonitorService,
@@ -664,6 +665,15 @@ func ProvideAuthServiceWithLottery(
 func ProvidePaymentServiceWithLottery(entClient *dbent.Client, registry *payment.Registry, loadBalancer payment.LoadBalancer, redeemService *RedeemService, subscriptionSvc *SubscriptionService, configService *PaymentConfigService, userRepo UserRepository, groupRepo GroupRepository, affiliateService *AffiliateService, notificationEmailService *NotificationEmailService, lotteryService *LotteryService) *PaymentService {
 	svc := ProvidePaymentService(entClient, registry, loadBalancer, redeemService, subscriptionSvc, configService, userRepo, groupRepo, affiliateService, notificationEmailService)
 	svc.SetLotteryService(lotteryService)
+	return svc
+}
+
+// ProvidePaymentServiceWithCarpool wires optional hooks used by payment fulfillment.
+func ProvidePaymentServiceWithCarpool(entClient *dbent.Client, registry *payment.Registry, loadBalancer payment.LoadBalancer, redeemService *RedeemService, subscriptionSvc *SubscriptionService, configService *PaymentConfigService, userRepo UserRepository, groupRepo GroupRepository, affiliateService *AffiliateService, notificationEmailService *NotificationEmailService, lotteryService *LotteryService, carpoolService *CarpoolService, settingService *SettingService) *PaymentService {
+	svc := ProvidePaymentServiceWithLottery(entClient, registry, loadBalancer, redeemService, subscriptionSvc, configService, userRepo, groupRepo, affiliateService, notificationEmailService, lotteryService)
+	svc.SetCarpoolService(carpoolService)
+	carpoolService.SetPaymentService(svc)
+	carpoolService.SetSettingService(settingService)
 	return svc
 }
 

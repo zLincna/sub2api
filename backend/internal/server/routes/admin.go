@@ -106,6 +106,28 @@ func RegisterAdminRoutes(
 
 		// 抽奖中心
 		registerLotteryRoutes(admin, h)
+
+		// 拼车管理
+		registerCarpoolRoutes(admin, h)
+	}
+}
+
+func registerCarpoolRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	carpool := admin.Group("/carpool")
+	{
+		carpool.GET("/overview", h.Admin.Carpool.Overview)
+		carpool.GET("/types", h.Admin.Carpool.ListVehicleTypes)
+		carpool.POST("/types", h.Admin.Carpool.CreateVehicleType)
+		carpool.PUT("/types/:id", h.Admin.Carpool.UpdateVehicleType)
+		carpool.DELETE("/types/:id", h.Admin.Carpool.DeleteVehicleType)
+		carpool.GET("/management", h.Admin.Carpool.Management)
+		carpool.GET("/sessions", h.Admin.Carpool.ListSessions)
+		carpool.PUT("/sessions/:id/provision", h.Admin.Carpool.ProvisionSession)
+		carpool.GET("/sessions/:id/vouchers", h.Admin.Carpool.ListVouchers)
+		carpool.POST("/sessions/:id/vouchers", h.Admin.Carpool.CreateVoucher)
+		carpool.DELETE("/vouchers/:id", h.Admin.Carpool.DeleteVoucher)
+		carpool.GET("/notices", h.Admin.Carpool.ListNotices)
+		carpool.POST("/notices", h.Admin.Carpool.CreateNotice)
 	}
 }
 

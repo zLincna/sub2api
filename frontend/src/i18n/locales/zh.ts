@@ -18,6 +18,32 @@ export default {
       stickySession: '会话保持',
       realtimeBilling: '按量计费'
     },
+    carpoolSpotlight: {
+      badge: '拼车大厅 · 人满发车',
+      title: '纯血 Codex / OpenAI 账号拼车，少人也能低成本上车',
+      description:
+        '支持 2-10 人灵活拼车，成员确认支付后自动计入当前轮次；人满后由管理员采购账号与静态住宅 IP，车内成员可查看拼车进度、交付凭证、成员信息和用量数据。',
+      cta: '查看拼车大厅',
+      guarantee: '未成团支持按规则退款',
+      items: {
+        shared: {
+          title: '多人平摊成本',
+          desc: '1-10 人车灵活配置，包车成本按人数拆分，适合小团队和个人用户。'
+        },
+        queue: {
+          title: '排队自动发车',
+          desc: '每种车型只展示当前一辆车，满员后自动进入下一轮排队。'
+        },
+        visible: {
+          title: '成员与用量可见',
+          desc: '发车后可查看车内成员、总用量与个人用量，费用更透明。'
+        },
+        revenue: {
+          title: '预留中转投入',
+          desc: '后续支持车内投票投入号池，收益自动结算到余额。'
+        }
+      }
+    },
     // 用户痛点区块
     painPoints: {
       title: '你是否也遇到这些问题？',
@@ -392,6 +418,8 @@ export default {
     usage: '使用记录',
     redeem: '兑换',
     lottery: '抽奖',
+    carpool: '拼车大厅',
+    carpoolManagement: '拼车管理',
     affiliate: '邀请返利',
     affiliateManagement: '邀请返利',
     affiliateInviteRecords: '邀请记录',
@@ -1269,6 +1297,11 @@ export default {
     }
   },
 
+  carpool: {
+    title: '拼车大厅',
+    description: '按车类型排队拼车，人满自动发车'
+  },
+
   // Profile
   profile: {
     title: '个人设置',
@@ -1499,6 +1532,10 @@ export default {
 
   // Admin
   admin: {
+    carpool: {
+      title: '拼车管理',
+      description: '管理车类型、拼车轮次、交付信息和用户须知'
+    },
     // Dashboard
     dashboard: {
       title: '管理控制台',
@@ -4776,9 +4813,16 @@ export default {
         conditionType: '条件类型',
         conditionSubscription: '订阅套餐',
         conditionBalance: '余额',
+        conditionAPIKeyGroup: 'API Key 分组',
+        conditionUser: '指定用户',
         operator: '运算符',
         balanceValue: '余额阈值',
-        selectPackages: '选择套餐'
+        selectPackages: '选择套餐',
+        selectAPIKeyGroups: '选择 API Key 绑定分组',
+        apiKeyGroupsHint: '用户名下任意 API Key 绑定所选分组即命中',
+        selectUsers: '选择用户',
+        addUserID: '添加 ID',
+        addUserIDPlaceholder: '输入用户 ID'
       },
       operators: {
         gt: '>',
@@ -5712,6 +5756,8 @@ export default {
         users: '用户默认值',
         gateway: '网关服务',
         email: '邮件设置',
+        sms: '短信配置',
+        carpool: '拼车配置',
         backup: '数据备份',
         payment: '支付设置',
         lottery: '抽奖配置',

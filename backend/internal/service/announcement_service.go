@@ -16,6 +16,7 @@ type AnnouncementService struct {
 	readRepo         AnnouncementReadRepository
 	userRepo         UserRepository
 	userSubRepo      UserSubscriptionRepository
+	apiKeyGroupRepo  AnnouncementAPIKeyGroupReader
 }
 
 func NewAnnouncementService(
@@ -23,12 +24,14 @@ func NewAnnouncementService(
 	readRepo AnnouncementReadRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
+	apiKeyGroupRepo AnnouncementAPIKeyGroupReader,
 ) *AnnouncementService {
 	return &AnnouncementService{
 		announcementRepo: announcementRepo,
 		readRepo:         readRepo,
 		userRepo:         userRepo,
 		userSubRepo:      userSubRepo,
+		apiKeyGroupRepo:  apiKeyGroupRepo,
 	}
 }
 
@@ -229,6 +232,16 @@ func (s *AnnouncementService) ListForUser(ctx context.Context, userID int64, unr
 	for i := range activeSubs {
 		activeGroupIDs[activeSubs[i].GroupID] = struct{}{}
 	}
+	apiKeyGroupIDs, err := s.getAPIKeyGroupIDSet(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	matchCtx := domain.AnnouncementMatchContext{
+		UserID:                     user.ID,
+		Balance:                    user.Balance,
+		ActiveSubscriptionGroupIDs: activeGroupIDs,
+		APIKeyGroupIDs:             apiKeyGroupIDs,
+	}
 
 	now := time.Now()
 	anns, err := s.announcementRepo.ListActive(ctx, now)
@@ -243,7 +256,7 @@ func (s *AnnouncementService) ListForUser(ctx context.Context, userID int64, unr
 		if !a.IsActiveAt(now) {
 			continue
 		}
-		if !a.Targeting.Matches(user.Balance, activeGroupIDs) {
+		if !a.Targeting.MatchesContext(matchCtx) {
 			continue
 		}
 		visible = append(visible, a)
@@ -314,8 +327,18 @@ func (s *AnnouncementService) MarkRead(ctx context.Context, userID, announcement
 	for i := range activeSubs {
 		activeGroupIDs[activeSubs[i].GroupID] = struct{}{}
 	}
+	apiKeyGroupIDs, err := s.getAPIKeyGroupIDSet(ctx, userID)
+	if err != nil {
+		return err
+	}
+	matchCtx := domain.AnnouncementMatchContext{
+		UserID:                     user.ID,
+		Balance:                    user.Balance,
+		ActiveSubscriptionGroupIDs: activeGroupIDs,
+		APIKeyGroupIDs:             apiKeyGroupIDs,
+	}
 
-	if !a.Targeting.Matches(user.Balance, activeGroupIDs) {
+	if !a.Targeting.MatchesContext(matchCtx) {
 		return ErrAnnouncementNotFound
 	}
 
@@ -366,6 +389,16 @@ func (s *AnnouncementService) ListUserReadStatus(
 		for j := range subs {
 			activeGroupIDs[subs[j].GroupID] = struct{}{}
 		}
+		apiKeyGroupIDs, err := s.getAPIKeyGroupIDSet(ctx, u.ID)
+		if err != nil {
+			return nil, nil, err
+		}
+		matchCtx := domain.AnnouncementMatchContext{
+			UserID:                     u.ID,
+			Balance:                    u.Balance,
+			ActiveSubscriptionGroupIDs: activeGroupIDs,
+			APIKeyGroupIDs:             apiKeyGroupIDs,
+		}
 
 		readAt, ok := readMap[u.ID]
 		var ptr *time.Time
@@ -379,12 +412,29 @@ func (s *AnnouncementService) ListUserReadStatus(
 			Email:    u.Email,
 			Username: u.Username,
 			Balance:  u.Balance,
-			Eligible: domain.AnnouncementTargeting(ann.Targeting).Matches(u.Balance, activeGroupIDs),
+			Eligible: domain.AnnouncementTargeting(ann.Targeting).MatchesContext(matchCtx),
 			ReadAt:   ptr,
 		})
 	}
 
 	return out, page, nil
+}
+
+func (s *AnnouncementService) getAPIKeyGroupIDSet(ctx context.Context, userID int64) (map[int64]struct{}, error) {
+	result := map[int64]struct{}{}
+	if s.apiKeyGroupRepo == nil || userID <= 0 {
+		return result, nil
+	}
+	groupIDs, err := s.apiKeyGroupRepo.ListDistinctGroupIDsByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list api key groups: %w", err)
+	}
+	for _, groupID := range groupIDs {
+		if groupID > 0 {
+			result[groupID] = struct{}{}
+		}
+	}
+	return result, nil
 }
 
 func isValidAnnouncementStatus(status string) bool {

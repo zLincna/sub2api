@@ -20,7 +20,7 @@ export type OrderStatus =
 
 export type PaymentType = 'alipay' | 'wxpay' | 'alipay_direct' | 'wxpay_direct' | 'stripe' | 'easypay' | 'airwallex'
 
-export type OrderType = 'balance' | 'subscription'
+export type OrderType = 'balance' | 'subscription' | 'carpool'
 
 // ==================== Configuration ====================
 
@@ -106,6 +106,34 @@ export interface PaymentOrder {
   refund_request_reason?: string
   plan_id?: number
   provider_instance_id?: string
+  edges?: {
+    carpool_participants?: Array<{
+      id: number
+      session_id?: number
+      vehicle_type_id: number
+      status: string
+      amount: number
+      wait_until: string
+      refund_method: string
+      edges?: {
+        vehicle_type?: {
+          id: number
+          product: string
+          plan_tier: string
+          multiplier: string
+          name: string
+          seat_count: number
+        }
+        session?: {
+          id: number
+          session_no: string
+          status: string
+          paid_count: number
+          seat_count: number
+        }
+      }
+    }>
+  }
 }
 
 // ==================== Plans & Channels ====================

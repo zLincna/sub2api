@@ -28,6 +28,16 @@ type Tx struct {
 	AuthIdentity *AuthIdentityClient
 	// AuthIdentityChannel is the client for interacting with the AuthIdentityChannel builders.
 	AuthIdentityChannel *AuthIdentityChannelClient
+	// CarpoolNoticeVersion is the client for interacting with the CarpoolNoticeVersion builders.
+	CarpoolNoticeVersion *CarpoolNoticeVersionClient
+	// CarpoolParticipant is the client for interacting with the CarpoolParticipant builders.
+	CarpoolParticipant *CarpoolParticipantClient
+	// CarpoolSession is the client for interacting with the CarpoolSession builders.
+	CarpoolSession *CarpoolSessionClient
+	// CarpoolVehicleType is the client for interacting with the CarpoolVehicleType builders.
+	CarpoolVehicleType *CarpoolVehicleTypeClient
+	// CarpoolVoucher is the client for interacting with the CarpoolVoucher builders.
+	CarpoolVoucher *CarpoolVoucherClient
 	// ChannelMonitor is the client for interacting with the ChannelMonitor builders.
 	ChannelMonitor *ChannelMonitorClient
 	// ChannelMonitorDailyRollup is the client for interacting with the ChannelMonitorDailyRollup builders.
@@ -228,6 +238,11 @@ func (tx *Tx) init() {
 	tx.AnnouncementRead = NewAnnouncementReadClient(tx.config)
 	tx.AuthIdentity = NewAuthIdentityClient(tx.config)
 	tx.AuthIdentityChannel = NewAuthIdentityChannelClient(tx.config)
+	tx.CarpoolNoticeVersion = NewCarpoolNoticeVersionClient(tx.config)
+	tx.CarpoolParticipant = NewCarpoolParticipantClient(tx.config)
+	tx.CarpoolSession = NewCarpoolSessionClient(tx.config)
+	tx.CarpoolVehicleType = NewCarpoolVehicleTypeClient(tx.config)
+	tx.CarpoolVoucher = NewCarpoolVoucherClient(tx.config)
 	tx.ChannelMonitor = NewChannelMonitorClient(tx.config)
 	tx.ChannelMonitorDailyRollup = NewChannelMonitorDailyRollupClient(tx.config)
 	tx.ChannelMonitorHistory = NewChannelMonitorHistoryClient(tx.config)

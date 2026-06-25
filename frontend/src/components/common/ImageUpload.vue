@@ -1,5 +1,12 @@
 <template>
-  <div class="flex items-start gap-4">
+  <div
+    ref="pasteZoneRef"
+    class="flex items-start gap-4 rounded-lg outline-none"
+    :class="pasteEnabled && 'cursor-default focus-visible:ring-2 focus-visible:ring-primary-500/40'"
+    :tabindex="pasteEnabled ? 0 : undefined"
+    @click="focusPasteZone"
+    @paste="handlePaste"
+  >
     <!-- Preview Box -->
     <div class="flex-shrink-0">
       <div
@@ -63,6 +70,9 @@
         </button>
       </div>
       <p v-if="hint" class="text-xs text-gray-500 dark:text-gray-400">{{ hint }}</p>
+      <p v-if="pasteEnabled" class="text-xs text-primary-600 dark:text-primary-300">
+        点击上传区域后可直接粘贴截图。
+      </p>
       <p v-if="error" class="text-xs text-red-500">{{ error }}</p>
     </div>
   </div>
@@ -81,6 +91,7 @@ const props = withDefaults(defineProps<{
   removeLabel?: string
   hint?: string
   maxSize?: number // bytes
+  pasteEnabled?: boolean
 }>(), {
   mode: 'image',
   size: 'md',
@@ -88,6 +99,7 @@ const props = withDefaults(defineProps<{
   removeLabel: 'Remove',
   hint: '',
   maxSize: 300 * 1024,
+  pasteEnabled: false,
 })
 
 const emit = defineEmits<{
@@ -95,6 +107,7 @@ const emit = defineEmits<{
 }>()
 
 const error = ref('')
+const pasteZoneRef = ref<HTMLElement | null>(null)
 
 const acceptTypes = computed(() => props.mode === 'svg' ? '.svg' : 'image/*')
 
@@ -113,9 +126,31 @@ function handleUpload(event: Event) {
 
   if (!file) return
 
+  readFile(file, () => {
+    input.value = ''
+  })
+}
+
+function handlePaste(event: ClipboardEvent) {
+  if (!props.pasteEnabled || props.mode !== 'image') return
+  const items = Array.from(event.clipboardData?.items || [])
+  const imageItem = items.find((item) => item.kind === 'file' && item.type.startsWith('image/'))
+  const file = imageItem?.getAsFile()
+  if (!file) return
+
+  event.preventDefault()
+  error.value = ''
+  readFile(file)
+}
+
+function focusPasteZone() {
+  if (props.pasteEnabled) pasteZoneRef.value?.focus()
+}
+
+function readFile(file: File, onDone?: () => void) {
   if (props.maxSize && file.size > props.maxSize) {
     error.value = `File too large (${(file.size / 1024).toFixed(1)} KB), max ${(props.maxSize / 1024).toFixed(0)} KB`
-    input.value = ''
+    onDone?.()
     return
   }
 
@@ -129,7 +164,7 @@ function handleUpload(event: Event) {
   } else {
     if (!file.type.startsWith('image/')) {
       error.value = 'Please select an image file'
-      input.value = ''
+      onDone?.()
       return
     }
     reader.onload = (e) => {
@@ -141,6 +176,6 @@ function handleUpload(event: Event) {
   reader.onerror = () => {
     error.value = 'Failed to read file'
   }
-  input.value = ''
+  onDone?.()
 }
 </script>

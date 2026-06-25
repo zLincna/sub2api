@@ -60,6 +60,12 @@ type SystemSettings struct {
 	AliyunSMSValidTimeSeconds          int    `json:"aliyun_sms_valid_time_seconds"`
 	AliyunSMSIntervalSeconds           int    `json:"aliyun_sms_interval_seconds"`
 
+	CarpoolAdminFullSMSNotifyEnabled  bool   `json:"carpool_admin_full_sms_notify_enabled"`
+	CarpoolAdminFullSMSPhones         string `json:"carpool_admin_full_sms_phones"`
+	CarpoolAdminFullSMSTemplateCode   string `json:"carpool_admin_full_sms_template_code"`
+	CarpoolUserActiveSMSNotifyEnabled bool   `json:"carpool_user_active_sms_notify_enabled"`
+	CarpoolUserActiveSMSTemplateCode  string `json:"carpool_user_active_sms_template_code"`
+
 	TurnstileEnabled             bool   `json:"turnstile_enabled"`
 	TurnstileSiteKey             string `json:"turnstile_site_key"`
 	TurnstileSecretKeyConfigured bool   `json:"turnstile_secret_key_configured"`

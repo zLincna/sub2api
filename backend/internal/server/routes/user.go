@@ -114,6 +114,16 @@ func RegisterUserRoutes(
 			lottery.GET("/history", h.Lottery.History)
 		}
 
+		carpool := authenticated.Group("/carpool")
+		{
+			carpool.GET("/cards", h.Carpool.ListCards)
+			carpool.GET("/notice/current", h.Carpool.CurrentNotice)
+			carpool.POST("/join", h.Carpool.Join)
+			carpool.GET("/my", h.Carpool.My)
+			carpool.GET("/my/:id/detail", h.Carpool.MyDetail)
+			carpool.POST("/my/:id/refund", h.Carpool.RequestRefund)
+		}
+
 		// 用户订阅
 		subscriptions := authenticated.Group("/subscriptions")
 		{

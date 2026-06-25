@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -719,6 +720,21 @@ func (_u *PaymentOrderUpdate) SetUser(v *User) *PaymentOrderUpdate {
 	return _u.SetUserID(v.ID)
 }
 
+// AddCarpoolParticipantIDs adds the "carpool_participants" edge to the CarpoolParticipant entity by IDs.
+func (_u *PaymentOrderUpdate) AddCarpoolParticipantIDs(ids ...int64) *PaymentOrderUpdate {
+	_u.mutation.AddCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// AddCarpoolParticipants adds the "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *PaymentOrderUpdate) AddCarpoolParticipants(v ...*CarpoolParticipant) *PaymentOrderUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCarpoolParticipantIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -728,6 +744,27 @@ func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdate) ClearUser() *PaymentOrderUpdate {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearCarpoolParticipants clears all "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *PaymentOrderUpdate) ClearCarpoolParticipants() *PaymentOrderUpdate {
+	_u.mutation.ClearCarpoolParticipants()
+	return _u
+}
+
+// RemoveCarpoolParticipantIDs removes the "carpool_participants" edge to CarpoolParticipant entities by IDs.
+func (_u *PaymentOrderUpdate) RemoveCarpoolParticipantIDs(ids ...int64) *PaymentOrderUpdate {
+	_u.mutation.RemoveCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// RemoveCarpoolParticipants removes "carpool_participants" edges to CarpoolParticipant entities.
+func (_u *PaymentOrderUpdate) RemoveCarpoolParticipants(v ...*CarpoolParticipant) *PaymentOrderUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCarpoolParticipantIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1065,6 +1102,51 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.CarpoolParticipantsTable,
+			Columns: []string{paymentorder.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCarpoolParticipantsIDs(); len(nodes) > 0 && !_u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.CarpoolParticipantsTable,
+			Columns: []string{paymentorder.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CarpoolParticipantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.CarpoolParticipantsTable,
+			Columns: []string{paymentorder.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1782,6 +1864,21 @@ func (_u *PaymentOrderUpdateOne) SetUser(v *User) *PaymentOrderUpdateOne {
 	return _u.SetUserID(v.ID)
 }
 
+// AddCarpoolParticipantIDs adds the "carpool_participants" edge to the CarpoolParticipant entity by IDs.
+func (_u *PaymentOrderUpdateOne) AddCarpoolParticipantIDs(ids ...int64) *PaymentOrderUpdateOne {
+	_u.mutation.AddCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// AddCarpoolParticipants adds the "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *PaymentOrderUpdateOne) AddCarpoolParticipants(v ...*CarpoolParticipant) *PaymentOrderUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCarpoolParticipantIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -1791,6 +1888,27 @@ func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdateOne) ClearUser() *PaymentOrderUpdateOne {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearCarpoolParticipants clears all "carpool_participants" edges to the CarpoolParticipant entity.
+func (_u *PaymentOrderUpdateOne) ClearCarpoolParticipants() *PaymentOrderUpdateOne {
+	_u.mutation.ClearCarpoolParticipants()
+	return _u
+}
+
+// RemoveCarpoolParticipantIDs removes the "carpool_participants" edge to CarpoolParticipant entities by IDs.
+func (_u *PaymentOrderUpdateOne) RemoveCarpoolParticipantIDs(ids ...int64) *PaymentOrderUpdateOne {
+	_u.mutation.RemoveCarpoolParticipantIDs(ids...)
+	return _u
+}
+
+// RemoveCarpoolParticipants removes "carpool_participants" edges to CarpoolParticipant entities.
+func (_u *PaymentOrderUpdateOne) RemoveCarpoolParticipants(v ...*CarpoolParticipant) *PaymentOrderUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCarpoolParticipantIDs(ids...)
 }
 
 // Where appends a list predicates to the PaymentOrderUpdate builder.
@@ -2158,6 +2276,51 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.CarpoolParticipantsTable,
+			Columns: []string{paymentorder.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCarpoolParticipantsIDs(); len(nodes) > 0 && !_u.mutation.CarpoolParticipantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.CarpoolParticipantsTable,
+			Columns: []string{paymentorder.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CarpoolParticipantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.CarpoolParticipantsTable,
+			Columns: []string{paymentorder.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

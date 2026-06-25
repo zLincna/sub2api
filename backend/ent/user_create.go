@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/announcementread"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/lotterychance"
 	"github.com/Wei-Shaw/sub2api/ent/lotterydrawrecord"
@@ -595,6 +596,21 @@ func (_c *UserCreate) AddLotteryDrawRecords(v ...*LotteryDrawRecord) *UserCreate
 	return _c.AddLotteryDrawRecordIDs(ids...)
 }
 
+// AddCarpoolParticipantIDs adds the "carpool_participants" edge to the CarpoolParticipant entity by IDs.
+func (_c *UserCreate) AddCarpoolParticipantIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddCarpoolParticipantIDs(ids...)
+	return _c
+}
+
+// AddCarpoolParticipants adds the "carpool_participants" edges to the CarpoolParticipant entity.
+func (_c *UserCreate) AddCarpoolParticipants(v ...*CarpoolParticipant) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCarpoolParticipantIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -1160,6 +1176,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(lotterydrawrecord.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CarpoolParticipantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CarpoolParticipantsTable,
+			Columns: []string{user.CarpoolParticipantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(carpoolparticipant.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

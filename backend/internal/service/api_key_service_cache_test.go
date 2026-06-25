@@ -88,6 +88,10 @@ func (s *authRepoStub) UpdateGroupIDByUserAndGroup(ctx context.Context, userID, 
 	panic("unexpected UpdateGroupIDByUserAndGroup call")
 }
 
+func (s *authRepoStub) ListDistinctGroupIDsByUserID(ctx context.Context, userID int64) ([]int64, error) {
+	panic("unexpected ListDistinctGroupIDsByUserID call")
+}
+
 func (s *authRepoStub) CountByGroupID(ctx context.Context, groupID int64) (int64, error) {
 	panic("unexpected CountByGroupID call")
 }

@@ -46,6 +46,12 @@ type SystemSettings struct {
 	AliyunSMSValidTimeSeconds          int
 	AliyunSMSIntervalSeconds           int
 
+	CarpoolAdminFullSMSNotifyEnabled  bool
+	CarpoolAdminFullSMSPhones         string
+	CarpoolAdminFullSMSTemplateCode   string
+	CarpoolUserActiveSMSNotifyEnabled bool
+	CarpoolUserActiveSMSTemplateCode  string
+
 	TurnstileEnabled             bool
 	TurnstileSiteKey             string
 	TurnstileSecretKey           string

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
 	"github.com/Wei-Shaw/sub2api/ent/paymentauditlog"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/internal/payment"
@@ -137,6 +138,17 @@ func (s *PaymentService) cancelCore(ctx context.Context, o *dbent.PaymentOrder, 
 			auditAction = "ORDER_EXPIRED"
 		}
 		s.writeAuditLog(ctx, o.ID, auditAction, op, map[string]any{"detail": ad})
+		if o.OrderType == payment.OrderTypeCarpool {
+			if _, err := s.entClient.CarpoolParticipant.Update().
+				Where(
+					carpoolparticipant.PaymentOrderIDEQ(o.ID),
+					carpoolparticipant.StatusEQ(CarpoolParticipantPendingPayment),
+				).
+				SetStatus(CarpoolParticipantCancelled).
+				Save(ctx); err != nil {
+				slog.Warn("cancel carpool participant failed", "orderID", o.ID, "error", err)
+			}
+		}
 	}
 	return checkPaidResultCancelled, nil
 }

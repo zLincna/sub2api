@@ -242,6 +242,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/carpool',
+    name: 'Carpool',
+    component: () => import('@/views/user/CarpoolView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Carpool Hall',
+      titleKey: 'carpool.title',
+      descriptionKey: 'carpool.description'
+    }
+  },
+  {
     path: '/affiliate',
     name: 'Affiliate',
     component: () => import('@/views/user/AffiliateView.vue'),
@@ -547,6 +559,18 @@ const routes: RouteRecordRaw[] = [
       title: 'Promo Code Management',
       titleKey: 'admin.promo.title',
       descriptionKey: 'admin.promo.description'
+    }
+  },
+  {
+    path: '/admin/carpool',
+    name: 'AdminCarpool',
+    component: () => import('@/views/admin/CarpoolView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Carpool Management',
+      titleKey: 'admin.carpool.title',
+      descriptionKey: 'admin.carpool.description'
     }
   },
   {

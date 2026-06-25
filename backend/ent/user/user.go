@@ -95,6 +95,8 @@ const (
 	EdgeLotteryChances = "lottery_chances"
 	// EdgeLotteryDrawRecords holds the string denoting the lottery_draw_records edge name in mutations.
 	EdgeLotteryDrawRecords = "lottery_draw_records"
+	// EdgeCarpoolParticipants holds the string denoting the carpool_participants edge name in mutations.
+	EdgeCarpoolParticipants = "carpool_participants"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -202,6 +204,13 @@ const (
 	LotteryDrawRecordsInverseTable = "lottery_draw_records"
 	// LotteryDrawRecordsColumn is the table column denoting the lottery_draw_records relation/edge.
 	LotteryDrawRecordsColumn = "user_id"
+	// CarpoolParticipantsTable is the table that holds the carpool_participants relation/edge.
+	CarpoolParticipantsTable = "carpool_participants"
+	// CarpoolParticipantsInverseTable is the table name for the CarpoolParticipant entity.
+	// It exists in this package in order to avoid circular dependency with the "carpoolparticipant" package.
+	CarpoolParticipantsInverseTable = "carpool_participants"
+	// CarpoolParticipantsColumn is the table column denoting the carpool_participants relation/edge.
+	CarpoolParticipantsColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -658,6 +667,20 @@ func ByLotteryDrawRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOptio
 	}
 }
 
+// ByCarpoolParticipantsCount orders the results by carpool_participants count.
+func ByCarpoolParticipantsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCarpoolParticipantsStep(), opts...)
+	}
+}
+
+// ByCarpoolParticipants orders the results by carpool_participants terms.
+func ByCarpoolParticipants(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCarpoolParticipantsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -774,6 +797,13 @@ func newLotteryDrawRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LotteryDrawRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, LotteryDrawRecordsTable, LotteryDrawRecordsColumn),
+	)
+}
+func newCarpoolParticipantsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CarpoolParticipantsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CarpoolParticipantsTable, CarpoolParticipantsColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

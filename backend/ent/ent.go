@@ -19,6 +19,11 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/authidentitychannel"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolnoticeversion"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolsession"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolvehicletype"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolvoucher"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitor"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitordailyrollup"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitorhistory"
@@ -117,6 +122,11 @@ func checkColumn(t, c string) error {
 			announcementread.Table:              announcementread.ValidColumn,
 			authidentity.Table:                  authidentity.ValidColumn,
 			authidentitychannel.Table:           authidentitychannel.ValidColumn,
+			carpoolnoticeversion.Table:          carpoolnoticeversion.ValidColumn,
+			carpoolparticipant.Table:            carpoolparticipant.ValidColumn,
+			carpoolsession.Table:                carpoolsession.ValidColumn,
+			carpoolvehicletype.Table:            carpoolvehicletype.ValidColumn,
+			carpoolvoucher.Table:                carpoolvoucher.ValidColumn,
 			channelmonitor.Table:                channelmonitor.ValidColumn,
 			channelmonitordailyrollup.Table:     channelmonitordailyrollup.ValidColumn,
 			channelmonitorhistory.Table:         channelmonitorhistory.ValidColumn,

@@ -162,15 +162,20 @@ const (
 	SettingKeySMTPUseTLS   = "smtp_use_tls"   // 是否使用TLS
 
 	// 阿里云短信验证设置
-	SettingKeyAliyunSMSAccessKeyID        = "aliyun_sms_access_key_id"
-	SettingKeyAliyunSMSAccessKeySecret    = "aliyun_sms_access_key_secret"
-	SettingKeyAliyunSMSSignName           = "aliyun_sms_sign_name"
-	SettingKeyAliyunSMSTemplateCode       = "aliyun_sms_template_code"
-	SettingKeyAliyunSMSTemplateParamKey   = "aliyun_sms_template_param_key"
-	SettingKeyAliyunSMSTemplateStaticJSON = "aliyun_sms_template_static_params"
-	SettingKeyAliyunSMSSchemeName         = "aliyun_sms_scheme_name"
-	SettingKeyAliyunSMSValidTimeSeconds   = "aliyun_sms_valid_time_seconds"
-	SettingKeyAliyunSMSIntervalSeconds    = "aliyun_sms_interval_seconds"
+	SettingKeyAliyunSMSAccessKeyID              = "aliyun_sms_access_key_id"
+	SettingKeyAliyunSMSAccessKeySecret          = "aliyun_sms_access_key_secret"
+	SettingKeyAliyunSMSSignName                 = "aliyun_sms_sign_name"
+	SettingKeyAliyunSMSTemplateCode             = "aliyun_sms_template_code"
+	SettingKeyAliyunSMSTemplateParamKey         = "aliyun_sms_template_param_key"
+	SettingKeyAliyunSMSTemplateStaticJSON       = "aliyun_sms_template_static_params"
+	SettingKeyAliyunSMSSchemeName               = "aliyun_sms_scheme_name"
+	SettingKeyAliyunSMSValidTimeSeconds         = "aliyun_sms_valid_time_seconds"
+	SettingKeyAliyunSMSIntervalSeconds          = "aliyun_sms_interval_seconds"
+	SettingKeyCarpoolAdminFullSMSNotifyEnabled  = "carpool_admin_full_sms_notify_enabled"
+	SettingKeyCarpoolAdminFullSMSPhones         = "carpool_admin_full_sms_phones"
+	SettingKeyCarpoolAdminFullSMSTemplateCode   = "carpool_admin_full_sms_template_code"
+	SettingKeyCarpoolUserActiveSMSNotifyEnabled = "carpool_user_active_sms_notify_enabled"
+	SettingKeyCarpoolUserActiveSMSTemplateCode  = "carpool_user_active_sms_template_code"
 
 	// Cloudflare Turnstile 设置
 	SettingKeyTurnstileEnabled   = "turnstile_enabled"    // 是否启用 Turnstile 验证

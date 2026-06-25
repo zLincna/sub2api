@@ -149,6 +149,11 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		AliyunSMSSchemeName:                    settings.AliyunSMSSchemeName,
 		AliyunSMSValidTimeSeconds:              settings.AliyunSMSValidTimeSeconds,
 		AliyunSMSIntervalSeconds:               settings.AliyunSMSIntervalSeconds,
+		CarpoolAdminFullSMSNotifyEnabled:       settings.CarpoolAdminFullSMSNotifyEnabled,
+		CarpoolAdminFullSMSPhones:              settings.CarpoolAdminFullSMSPhones,
+		CarpoolAdminFullSMSTemplateCode:        settings.CarpoolAdminFullSMSTemplateCode,
+		CarpoolUserActiveSMSNotifyEnabled:      settings.CarpoolUserActiveSMSNotifyEnabled,
+		CarpoolUserActiveSMSTemplateCode:       settings.CarpoolUserActiveSMSTemplateCode,
 		TurnstileEnabled:                       settings.TurnstileEnabled,
 		TurnstileSiteKey:                       settings.TurnstileSiteKey,
 		TurnstileSecretKeyConfigured:           settings.TurnstileSecretKeyConfigured,
@@ -423,15 +428,20 @@ type UpdateSettingsRequest struct {
 	SMTPFromName string `json:"smtp_from_name"`
 	SMTPUseTLS   bool   `json:"smtp_use_tls"`
 
-	AliyunSMSAccessKeyID          string `json:"aliyun_sms_access_key_id"`
-	AliyunSMSAccessKeySecret      string `json:"aliyun_sms_access_key_secret"`
-	AliyunSMSSignName             string `json:"aliyun_sms_sign_name"`
-	AliyunSMSTemplateCode         string `json:"aliyun_sms_template_code"`
-	AliyunSMSTemplateParamKey     string `json:"aliyun_sms_template_param_key"`
-	AliyunSMSTemplateStaticParams string `json:"aliyun_sms_template_static_params"`
-	AliyunSMSSchemeName           string `json:"aliyun_sms_scheme_name"`
-	AliyunSMSValidTimeSeconds     int    `json:"aliyun_sms_valid_time_seconds"`
-	AliyunSMSIntervalSeconds      int    `json:"aliyun_sms_interval_seconds"`
+	AliyunSMSAccessKeyID              string `json:"aliyun_sms_access_key_id"`
+	AliyunSMSAccessKeySecret          string `json:"aliyun_sms_access_key_secret"`
+	AliyunSMSSignName                 string `json:"aliyun_sms_sign_name"`
+	AliyunSMSTemplateCode             string `json:"aliyun_sms_template_code"`
+	AliyunSMSTemplateParamKey         string `json:"aliyun_sms_template_param_key"`
+	AliyunSMSTemplateStaticParams     string `json:"aliyun_sms_template_static_params"`
+	AliyunSMSSchemeName               string `json:"aliyun_sms_scheme_name"`
+	AliyunSMSValidTimeSeconds         int    `json:"aliyun_sms_valid_time_seconds"`
+	AliyunSMSIntervalSeconds          int    `json:"aliyun_sms_interval_seconds"`
+	CarpoolAdminFullSMSNotifyEnabled  bool   `json:"carpool_admin_full_sms_notify_enabled"`
+	CarpoolAdminFullSMSPhones         string `json:"carpool_admin_full_sms_phones"`
+	CarpoolAdminFullSMSTemplateCode   string `json:"carpool_admin_full_sms_template_code"`
+	CarpoolUserActiveSMSNotifyEnabled bool   `json:"carpool_user_active_sms_notify_enabled"`
+	CarpoolUserActiveSMSTemplateCode  string `json:"carpool_user_active_sms_template_code"`
 
 	// Cloudflare Turnstile 设置
 	TurnstileEnabled   bool   `json:"turnstile_enabled"`
@@ -1507,38 +1517,43 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		// 系统全局 platform quota 默认值（整体替换语义）
 		DefaultPlatformQuotas: req.DefaultPlatformQuotas,
 
-		RegistrationEnabled:              req.RegistrationEnabled,
-		EmailVerifyEnabled:               req.EmailVerifyEnabled,
-		PhoneVerifyEnabled:               req.PhoneVerifyEnabled,
-		RegistrationEmailSuffixWhitelist: req.RegistrationEmailSuffixWhitelist,
-		PromoCodeEnabled:                 req.PromoCodeEnabled,
-		PasswordResetEnabled:             req.PasswordResetEnabled,
-		FrontendURL:                      req.FrontendURL,
-		InvitationCodeEnabled:            req.InvitationCodeEnabled,
-		TotpEnabled:                      req.TotpEnabled,
-		LoginAgreementEnabled:            req.LoginAgreementEnabled,
-		LoginAgreementMode:               loginAgreementMode,
-		LoginAgreementUpdatedAt:          loginAgreementUpdatedAt,
-		LoginAgreementDocuments:          loginAgreementDocuments,
-		SMTPHost:                         req.SMTPHost,
-		SMTPPort:                         req.SMTPPort,
-		SMTPUsername:                     req.SMTPUsername,
-		SMTPPassword:                     req.SMTPPassword,
-		SMTPFrom:                         req.SMTPFrom,
-		SMTPFromName:                     req.SMTPFromName,
-		SMTPUseTLS:                       req.SMTPUseTLS,
-		AliyunSMSAccessKeyID:             req.AliyunSMSAccessKeyID,
-		AliyunSMSAccessKeySecret:         req.AliyunSMSAccessKeySecret,
-		AliyunSMSSignName:                req.AliyunSMSSignName,
-		AliyunSMSTemplateCode:            req.AliyunSMSTemplateCode,
-		AliyunSMSTemplateParamKey:        req.AliyunSMSTemplateParamKey,
-		AliyunSMSTemplateStaticParams:    req.AliyunSMSTemplateStaticParams,
-		AliyunSMSSchemeName:              req.AliyunSMSSchemeName,
-		AliyunSMSValidTimeSeconds:        req.AliyunSMSValidTimeSeconds,
-		AliyunSMSIntervalSeconds:         req.AliyunSMSIntervalSeconds,
-		TurnstileEnabled:                 req.TurnstileEnabled,
-		TurnstileSiteKey:                 req.TurnstileSiteKey,
-		TurnstileSecretKey:               req.TurnstileSecretKey,
+		RegistrationEnabled:               req.RegistrationEnabled,
+		EmailVerifyEnabled:                req.EmailVerifyEnabled,
+		PhoneVerifyEnabled:                req.PhoneVerifyEnabled,
+		RegistrationEmailSuffixWhitelist:  req.RegistrationEmailSuffixWhitelist,
+		PromoCodeEnabled:                  req.PromoCodeEnabled,
+		PasswordResetEnabled:              req.PasswordResetEnabled,
+		FrontendURL:                       req.FrontendURL,
+		InvitationCodeEnabled:             req.InvitationCodeEnabled,
+		TotpEnabled:                       req.TotpEnabled,
+		LoginAgreementEnabled:             req.LoginAgreementEnabled,
+		LoginAgreementMode:                loginAgreementMode,
+		LoginAgreementUpdatedAt:           loginAgreementUpdatedAt,
+		LoginAgreementDocuments:           loginAgreementDocuments,
+		SMTPHost:                          req.SMTPHost,
+		SMTPPort:                          req.SMTPPort,
+		SMTPUsername:                      req.SMTPUsername,
+		SMTPPassword:                      req.SMTPPassword,
+		SMTPFrom:                          req.SMTPFrom,
+		SMTPFromName:                      req.SMTPFromName,
+		SMTPUseTLS:                        req.SMTPUseTLS,
+		AliyunSMSAccessKeyID:              req.AliyunSMSAccessKeyID,
+		AliyunSMSAccessKeySecret:          req.AliyunSMSAccessKeySecret,
+		AliyunSMSSignName:                 req.AliyunSMSSignName,
+		AliyunSMSTemplateCode:             req.AliyunSMSTemplateCode,
+		AliyunSMSTemplateParamKey:         req.AliyunSMSTemplateParamKey,
+		AliyunSMSTemplateStaticParams:     req.AliyunSMSTemplateStaticParams,
+		AliyunSMSSchemeName:               req.AliyunSMSSchemeName,
+		AliyunSMSValidTimeSeconds:         req.AliyunSMSValidTimeSeconds,
+		AliyunSMSIntervalSeconds:          req.AliyunSMSIntervalSeconds,
+		CarpoolAdminFullSMSNotifyEnabled:  req.CarpoolAdminFullSMSNotifyEnabled,
+		CarpoolAdminFullSMSPhones:         req.CarpoolAdminFullSMSPhones,
+		CarpoolAdminFullSMSTemplateCode:   req.CarpoolAdminFullSMSTemplateCode,
+		CarpoolUserActiveSMSNotifyEnabled: req.CarpoolUserActiveSMSNotifyEnabled,
+		CarpoolUserActiveSMSTemplateCode:  req.CarpoolUserActiveSMSTemplateCode,
+		TurnstileEnabled:                  req.TurnstileEnabled,
+		TurnstileSiteKey:                  req.TurnstileSiteKey,
+		TurnstileSecretKey:                req.TurnstileSecretKey,
 		APIKeyACLTrustForwardedIP: func() bool {
 			if req.APIKeyACLTrustForwardedIP != nil {
 				return *req.APIKeyACLTrustForwardedIP
@@ -2025,6 +2040,11 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AliyunSMSSchemeName:                    updatedSettings.AliyunSMSSchemeName,
 		AliyunSMSValidTimeSeconds:              updatedSettings.AliyunSMSValidTimeSeconds,
 		AliyunSMSIntervalSeconds:               updatedSettings.AliyunSMSIntervalSeconds,
+		CarpoolAdminFullSMSNotifyEnabled:       updatedSettings.CarpoolAdminFullSMSNotifyEnabled,
+		CarpoolAdminFullSMSPhones:              updatedSettings.CarpoolAdminFullSMSPhones,
+		CarpoolAdminFullSMSTemplateCode:        updatedSettings.CarpoolAdminFullSMSTemplateCode,
+		CarpoolUserActiveSMSNotifyEnabled:      updatedSettings.CarpoolUserActiveSMSNotifyEnabled,
+		CarpoolUserActiveSMSTemplateCode:       updatedSettings.CarpoolUserActiveSMSTemplateCode,
 		TurnstileEnabled:                       updatedSettings.TurnstileEnabled,
 		TurnstileSiteKey:                       updatedSettings.TurnstileSiteKey,
 		TurnstileSecretKeyConfigured:           updatedSettings.TurnstileSecretKeyConfigured,

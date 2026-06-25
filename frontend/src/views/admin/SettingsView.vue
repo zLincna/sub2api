@@ -1416,9 +1416,9 @@
                         data-testid="open-aliyun-sms-settings"
                         type="button"
                         class="btn btn-secondary btn-sm"
-                        @click="showAliyunSmsDialog = true"
+                        @click="selectSettingsTab('sms')"
                       >
-                        {{ localText("配置短信", "Configure SMS") }}
+                        {{ localText("前往短信配置", "Open SMS settings") }}
                       </button>
                       <p
                         class="mt-2 text-xs"
@@ -6993,6 +6993,218 @@
         </div>
         <!-- /Tab: Email -->
 
+        <!-- Tab: SMS -->
+        <div v-show="activeTab === 'sms'" class="space-y-6">
+          <div class="card">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  {{ localText("短信配置", "SMS settings") }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {{ localText("统一管理阿里云短信 AccessKey、签名和注册验证码模板。", "Manage Aliyun SMS AccessKey, sign name, and registration code template in one place.") }}
+                </p>
+              </div>
+              <div
+                class="rounded-full px-3 py-1 text-xs font-medium"
+                :class="
+                  aliyunSmsConfigured
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+                    : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+                "
+              >
+                {{
+                  aliyunSmsConfigured
+                    ? localText("已配置", "Configured")
+                    : localText("未完整配置", "Incomplete")
+                }}
+              </div>
+            </div>
+            <div class="space-y-6 p-6">
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="input-label">{{ localText("AccessKey ID", "AccessKey ID") }}</label>
+                  <input
+                    data-testid="aliyun-sms-access-key-id"
+                    v-model="form.aliyun_sms_access_key_id"
+                    type="text"
+                    class="input"
+                    placeholder="LTAI..."
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("AccessKey Secret", "AccessKey Secret") }}</label>
+                  <input
+                    data-testid="aliyun-sms-access-key-secret"
+                    v-model="form.aliyun_sms_access_key_secret"
+                    type="password"
+                    class="input"
+                    :placeholder="
+                      form.aliyun_sms_access_key_secret_configured
+                        ? localText('密钥已配置，留空以保留当前值。', 'Secret configured. Leave blank to keep it.')
+                        : 'AccessKey Secret'
+                    "
+                    autocomplete="new-password"
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("短信签名", "SMS sign name") }}</label>
+                  <input
+                    data-testid="aliyun-sms-sign-name"
+                    v-model="form.aliyun_sms_sign_name"
+                    type="text"
+                    class="input"
+                    placeholder="兴惠云科技"
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("注册验证码模板 Code", "Registration template code") }}</label>
+                  <input
+                    data-testid="aliyun-sms-template-code"
+                    v-model="form.aliyun_sms_template_code"
+                    type="text"
+                    class="input"
+                    placeholder="SMS_506825188"
+                  />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ localText("模板变量：${code}", "Template variable: ${code}") }}
+                  </p>
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("验证码变量名", "Code parameter key") }}</label>
+                  <input
+                    data-testid="aliyun-sms-template-param-key"
+                    v-model="form.aliyun_sms_template_param_key"
+                    type="text"
+                    class="input"
+                    placeholder="code"
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("SchemeName", "SchemeName") }}</label>
+                  <input
+                    data-testid="aliyun-sms-scheme-name"
+                    v-model="form.aliyun_sms_scheme_name"
+                    type="text"
+                    class="input"
+                    :placeholder="localText('普通模板短信可留空', 'Leave empty for template SMS')"
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("验证码有效期（秒）", "Code validity seconds") }}</label>
+                  <input
+                    data-testid="aliyun-sms-valid-time-seconds"
+                    v-model.number="form.aliyun_sms_valid_time_seconds"
+                    type="number"
+                    min="60"
+                    class="input"
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ localText("重发间隔（秒）", "Resend interval seconds") }}</label>
+                  <input
+                    data-testid="aliyun-sms-interval-seconds"
+                    v-model.number="form.aliyun_sms_interval_seconds"
+                    type="number"
+                    min="30"
+                    class="input"
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="input-label">{{ localText("模板固定参数 JSON", "Template static params JSON") }}</label>
+                <textarea
+                  data-testid="aliyun-sms-template-static-params"
+                  v-model="form.aliyun_sms_template_static_params"
+                  rows="3"
+                  class="input font-mono text-sm"
+                  placeholder="{}"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /Tab: SMS -->
+
+        <!-- Tab: Carpool Config -->
+        <div v-show="activeTab === 'carpool'" class="space-y-6">
+          <div class="card">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ localText("拼车配置", "Carpool settings") }}
+              </h2>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ localText("控制拼车满员提醒管理员、发车成功提醒用户的短信通知。短信 AK 和签名使用短信配置中的统一设置。", "Control SMS notifications for full carpool admin alerts and active carpool user alerts. AccessKey and sign name come from SMS settings.") }}
+              </p>
+            </div>
+            <div class="space-y-6 p-6">
+              <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-700">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">
+                      {{ localText("拼车满员通知管理员", "Notify admins when carpool is full") }}
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {{ localText("用户全部支付完成后发送，提醒管理员采购和配置账号。", "Sent after all seats are paid, reminding admins to purchase and configure the account.") }}
+                    </p>
+                  </div>
+                  <Toggle v-model="form.carpool_admin_full_sms_notify_enabled" />
+                </div>
+                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="input-label">{{ localText("管理员手机号", "Admin phone numbers") }}</label>
+                    <textarea
+                      v-model="form.carpool_admin_full_sms_phones"
+                      rows="3"
+                      class="input"
+                      :placeholder="localText('多个号码用逗号、空格或换行分隔', 'Separate multiple numbers by comma, space, or newline')"
+                    />
+                  </div>
+                  <div>
+                    <label class="input-label">{{ localText("满员通知模板 Code", "Full notification template code") }}</label>
+                    <input
+                      v-model="form.carpool_admin_full_sms_template_code"
+                      type="text"
+                      class="input"
+                      placeholder="SMS_508550246"
+                    />
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {{ localText("当前模板无变量，系统也兼容后续带变量模板。", "The current template has no variables; future variable templates are also supported.") }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-700">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">
+                      {{ localText("发车成功通知用户", "Notify users when carpool is active") }}
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {{ localText("管理员完成账号/分组配置并发车后，向本车已付款用户发送短信。", "After admins finish account/group provisioning and activate the carpool, notify paid users by SMS.") }}
+                    </p>
+                  </div>
+                  <Toggle v-model="form.carpool_user_active_sms_notify_enabled" />
+                </div>
+                <div class="mt-4">
+                  <label class="input-label">{{ localText("发车通知模板 Code", "Active notification template code") }}</label>
+                  <input
+                    v-model="form.carpool_user_active_sms_template_code"
+                    type="text"
+                    class="input"
+                    placeholder="SMS_508655235"
+                  />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {{ localText("当前模板无变量，用户手机号来自注册资料。", "The current template has no variables; user phone numbers come from registration profile.") }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /Tab: Carpool Config -->
+
         <!-- Tab: Backup -->
         <div v-show="activeTab === 'backup'">
           <BackupSettings />
@@ -7075,132 +7287,6 @@
         @confirm="handleAffiliateConfirm"
         @cancel="cancelAffiliateConfirm"
       />
-      <BaseDialog
-        :show="showAliyunSmsDialog"
-        :title="localText('阿里云短信配置', 'Aliyun SMS settings')"
-        width="wide"
-        @close="showAliyunSmsDialog = false"
-      >
-        <div class="space-y-5">
-          <div
-            class="rounded-lg border p-4 text-sm"
-            :class="
-              aliyunSmsConfigured
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300'
-                : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300'
-            "
-          >
-            {{
-              aliyunSmsConfigured
-                ? localText("短信基础配置已填写。", "SMS basics are configured.")
-                : localText("短信服务未配置完整，发送手机验证码会失败。", "SMS is incomplete; sending codes will fail.")
-            }}
-          </div>
-
-          <div class="grid gap-4 md:grid-cols-2">
-            <div>
-              <label class="input-label">{{ localText("AccessKey ID", "AccessKey ID") }}</label>
-              <input
-                data-testid="aliyun-sms-access-key-id"
-                v-model="form.aliyun_sms_access_key_id"
-                type="text"
-                class="input"
-                placeholder="LTAI..."
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("AccessKey Secret", "AccessKey Secret") }}</label>
-              <input
-                data-testid="aliyun-sms-access-key-secret"
-                v-model="form.aliyun_sms_access_key_secret"
-                type="password"
-                class="input"
-                :placeholder="
-                  form.aliyun_sms_access_key_secret_configured
-                    ? localText('密钥已配置，留空以保留当前值。', 'Secret configured. Leave blank to keep it.')
-                    : 'AccessKey Secret'
-                "
-                autocomplete="new-password"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("短信签名", "SMS sign name") }}</label>
-              <input
-                data-testid="aliyun-sms-sign-name"
-                v-model="form.aliyun_sms_sign_name"
-                type="text"
-                class="input"
-                :placeholder="localText('阿里云短信签名', 'Aliyun SMS sign name')"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("模板 Code", "Template code") }}</label>
-              <input
-                data-testid="aliyun-sms-template-code"
-                v-model="form.aliyun_sms_template_code"
-                type="text"
-                class="input"
-                placeholder="SMS_123456789"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("验证码变量名", "Code parameter key") }}</label>
-              <input
-                data-testid="aliyun-sms-template-param-key"
-                v-model="form.aliyun_sms_template_param_key"
-                type="text"
-                class="input"
-                placeholder="code"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("SchemeName", "SchemeName") }}</label>
-              <input
-                data-testid="aliyun-sms-scheme-name"
-                v-model="form.aliyun_sms_scheme_name"
-                type="text"
-                class="input"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("验证码有效期（秒）", "Code validity seconds") }}</label>
-              <input
-                data-testid="aliyun-sms-valid-time-seconds"
-                v-model.number="form.aliyun_sms_valid_time_seconds"
-                type="number"
-                min="60"
-                class="input"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ localText("重发间隔（秒）", "Resend interval seconds") }}</label>
-              <input
-                data-testid="aliyun-sms-interval-seconds"
-                v-model.number="form.aliyun_sms_interval_seconds"
-                type="number"
-                min="30"
-                class="input"
-              />
-            </div>
-          </div>
-          <div>
-            <label class="input-label">{{ localText("模板固定参数 JSON", "Template static params JSON") }}</label>
-            <textarea
-              data-testid="aliyun-sms-template-static-params"
-              v-model="form.aliyun_sms_template_static_params"
-              rows="3"
-              class="input font-mono text-sm"
-              placeholder="{}"
-            />
-          </div>
-        </div>
-
-        <template #footer>
-          <button type="button" class="btn btn-secondary" @click="showAliyunSmsDialog = false">
-            {{ localText("关闭", "Close") }}
-          </button>
-        </template>
-      </BaseDialog>
     </div>
   </AppLayout>
 </template>
@@ -7243,7 +7329,6 @@ import type { BalanceRechargeBonusRule, ProviderInstance } from "@/types/payment
 import AppLayout from "@/components/layout/AppLayout.vue";
 import Icon from "@/components/icons/Icon.vue";
 import Select from "@/components/common/Select.vue";
-import BaseDialog from "@/components/common/BaseDialog.vue";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import PaymentProviderList from "@/components/payment/PaymentProviderList.vue";
 import PaymentProviderDialog from "@/components/payment/PaymentProviderDialog.vue";
@@ -7300,6 +7385,8 @@ type SettingsTab =
   | "gateway"
   | "payment"
   | "email"
+  | "sms"
+  | "carpool"
   | "backup"
   | "lottery";
 const settingsTabs = [
@@ -7311,6 +7398,8 @@ const settingsTabs = [
   { key: "gateway" as SettingsTab, icon: "server" as const },
   { key: "payment" as SettingsTab, icon: "creditCard" as const },
   { key: "email" as SettingsTab, icon: "mail" as const },
+  { key: "sms" as SettingsTab, icon: "mail" as const },
+  { key: "carpool" as SettingsTab, icon: "users" as const },
   { key: "backup" as SettingsTab, icon: "database" as const },
   { key: "lottery" as SettingsTab, icon: "gift" as const },
 ];
@@ -7400,7 +7489,6 @@ const saving = ref(false);
 const testingSmtp = ref(false);
 const sendingTestEmail = ref(false);
 const smtpPasswordManuallyEdited = ref(false);
-const showAliyunSmsDialog = ref(false);
 const testEmailAddress = ref("");
 const registrationEmailSuffixWhitelistTags = ref<string[]>([]);
 const registrationEmailSuffixWhitelistDraft = ref("");
@@ -8016,13 +8104,18 @@ const form = reactive<SettingsForm>({
   aliyun_sms_access_key_id: "",
   aliyun_sms_access_key_secret: "",
   aliyun_sms_access_key_secret_configured: false,
-  aliyun_sms_sign_name: "",
-  aliyun_sms_template_code: "",
+  aliyun_sms_sign_name: "兴惠云科技",
+  aliyun_sms_template_code: "SMS_506825188",
   aliyun_sms_template_param_key: "code",
   aliyun_sms_template_static_params: "{}",
   aliyun_sms_scheme_name: "",
   aliyun_sms_valid_time_seconds: 300,
   aliyun_sms_interval_seconds: 60,
+  carpool_admin_full_sms_notify_enabled: false,
+  carpool_admin_full_sms_phones: "",
+  carpool_admin_full_sms_template_code: "SMS_508550246",
+  carpool_user_active_sms_notify_enabled: false,
+  carpool_user_active_sms_template_code: "SMS_508655235",
   // Cloudflare Turnstile
   turnstile_enabled: false,
   turnstile_site_key: "",
@@ -9176,6 +9269,15 @@ async function saveSettings() {
       aliyun_sms_scheme_name: form.aliyun_sms_scheme_name,
       aliyun_sms_valid_time_seconds: form.aliyun_sms_valid_time_seconds,
       aliyun_sms_interval_seconds: form.aliyun_sms_interval_seconds,
+      carpool_admin_full_sms_notify_enabled:
+        form.carpool_admin_full_sms_notify_enabled,
+      carpool_admin_full_sms_phones: form.carpool_admin_full_sms_phones,
+      carpool_admin_full_sms_template_code:
+        form.carpool_admin_full_sms_template_code,
+      carpool_user_active_sms_notify_enabled:
+        form.carpool_user_active_sms_notify_enabled,
+      carpool_user_active_sms_template_code:
+        form.carpool_user_active_sms_template_code,
       turnstile_enabled: form.turnstile_enabled,
       turnstile_site_key: form.turnstile_site_key,
       turnstile_secret_key: form.turnstile_secret_key || undefined,
@@ -10702,6 +10804,7 @@ watch(
   @apply overflow-x-auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  scroll-padding: 0.75rem;
 }
 
 .settings-tabs-scroll::-webkit-scrollbar {
@@ -10709,20 +10812,20 @@ watch(
 }
 
 .settings-tabs {
-  @apply flex min-w-max items-center gap-1;
+  @apply flex w-max min-w-full items-center gap-1;
 }
 
 .settings-tab {
-  @apply relative isolate flex h-10 min-w-[6.75rem] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent px-3 text-sm font-medium text-gray-600 outline-none transition-colors duration-200 ease-out dark:text-gray-300;
+  @apply relative isolate flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent px-3 text-sm font-medium text-gray-600 outline-none transition-colors duration-200 ease-out dark:text-gray-300;
 }
 
 @media (min-width: 768px) {
   .settings-tabs {
-    @apply min-w-full;
+    @apply gap-1.5;
   }
 
   .settings-tab {
-    @apply min-w-0 flex-1 basis-0 overflow-hidden px-2 text-[13px];
+    @apply px-3.5 text-[13px];
   }
 
   .settings-tab-icon {
@@ -10781,7 +10884,7 @@ watch(
 }
 
 .settings-tab-label {
-  @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap leading-none;
+  @apply whitespace-nowrap leading-none;
 }
 </style>
 

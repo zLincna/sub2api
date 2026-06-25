@@ -22,6 +22,11 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/authidentity"
 	"github.com/Wei-Shaw/sub2api/ent/authidentitychannel"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolnoticeversion"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolparticipant"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolsession"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolvehicletype"
+	"github.com/Wei-Shaw/sub2api/ent/carpoolvoucher"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitor"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitordailyrollup"
 	"github.com/Wei-Shaw/sub2api/ent/channelmonitorhistory"
@@ -76,6 +81,16 @@ type Client struct {
 	AuthIdentity *AuthIdentityClient
 	// AuthIdentityChannel is the client for interacting with the AuthIdentityChannel builders.
 	AuthIdentityChannel *AuthIdentityChannelClient
+	// CarpoolNoticeVersion is the client for interacting with the CarpoolNoticeVersion builders.
+	CarpoolNoticeVersion *CarpoolNoticeVersionClient
+	// CarpoolParticipant is the client for interacting with the CarpoolParticipant builders.
+	CarpoolParticipant *CarpoolParticipantClient
+	// CarpoolSession is the client for interacting with the CarpoolSession builders.
+	CarpoolSession *CarpoolSessionClient
+	// CarpoolVehicleType is the client for interacting with the CarpoolVehicleType builders.
+	CarpoolVehicleType *CarpoolVehicleTypeClient
+	// CarpoolVoucher is the client for interacting with the CarpoolVoucher builders.
+	CarpoolVoucher *CarpoolVoucherClient
 	// ChannelMonitor is the client for interacting with the ChannelMonitor builders.
 	ChannelMonitor *ChannelMonitorClient
 	// ChannelMonitorDailyRollup is the client for interacting with the ChannelMonitorDailyRollup builders.
@@ -156,6 +171,11 @@ func (c *Client) init() {
 	c.AnnouncementRead = NewAnnouncementReadClient(c.config)
 	c.AuthIdentity = NewAuthIdentityClient(c.config)
 	c.AuthIdentityChannel = NewAuthIdentityChannelClient(c.config)
+	c.CarpoolNoticeVersion = NewCarpoolNoticeVersionClient(c.config)
+	c.CarpoolParticipant = NewCarpoolParticipantClient(c.config)
+	c.CarpoolSession = NewCarpoolSessionClient(c.config)
+	c.CarpoolVehicleType = NewCarpoolVehicleTypeClient(c.config)
+	c.CarpoolVoucher = NewCarpoolVoucherClient(c.config)
 	c.ChannelMonitor = NewChannelMonitorClient(c.config)
 	c.ChannelMonitorDailyRollup = NewChannelMonitorDailyRollupClient(c.config)
 	c.ChannelMonitorHistory = NewChannelMonitorHistoryClient(c.config)
@@ -286,6 +306,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AnnouncementRead:              NewAnnouncementReadClient(cfg),
 		AuthIdentity:                  NewAuthIdentityClient(cfg),
 		AuthIdentityChannel:           NewAuthIdentityChannelClient(cfg),
+		CarpoolNoticeVersion:          NewCarpoolNoticeVersionClient(cfg),
+		CarpoolParticipant:            NewCarpoolParticipantClient(cfg),
+		CarpoolSession:                NewCarpoolSessionClient(cfg),
+		CarpoolVehicleType:            NewCarpoolVehicleTypeClient(cfg),
+		CarpoolVoucher:                NewCarpoolVoucherClient(cfg),
 		ChannelMonitor:                NewChannelMonitorClient(cfg),
 		ChannelMonitorDailyRollup:     NewChannelMonitorDailyRollupClient(cfg),
 		ChannelMonitorHistory:         NewChannelMonitorHistoryClient(cfg),
@@ -343,6 +368,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AnnouncementRead:              NewAnnouncementReadClient(cfg),
 		AuthIdentity:                  NewAuthIdentityClient(cfg),
 		AuthIdentityChannel:           NewAuthIdentityChannelClient(cfg),
+		CarpoolNoticeVersion:          NewCarpoolNoticeVersionClient(cfg),
+		CarpoolParticipant:            NewCarpoolParticipantClient(cfg),
+		CarpoolSession:                NewCarpoolSessionClient(cfg),
+		CarpoolVehicleType:            NewCarpoolVehicleTypeClient(cfg),
+		CarpoolVoucher:                NewCarpoolVoucherClient(cfg),
 		ChannelMonitor:                NewChannelMonitorClient(cfg),
 		ChannelMonitorDailyRollup:     NewChannelMonitorDailyRollupClient(cfg),
 		ChannelMonitorHistory:         NewChannelMonitorHistoryClient(cfg),
@@ -404,8 +434,9 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.Account, c.AccountGroup, c.Announcement, c.AnnouncementRead,
-		c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
-		c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
+		c.AuthIdentity, c.AuthIdentityChannel, c.CarpoolNoticeVersion,
+		c.CarpoolParticipant, c.CarpoolSession, c.CarpoolVehicleType, c.CarpoolVoucher,
+		c.ChannelMonitor, c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
 		c.ChannelMonitorRequestTemplate, c.ErrorPassthroughRule, c.Group,
 		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.LotteryChance,
 		c.LotteryDrawRecord, c.LotteryPrize, c.PaymentAuditLog, c.PaymentOrder,
@@ -424,8 +455,9 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.Account, c.AccountGroup, c.Announcement, c.AnnouncementRead,
-		c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
-		c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
+		c.AuthIdentity, c.AuthIdentityChannel, c.CarpoolNoticeVersion,
+		c.CarpoolParticipant, c.CarpoolSession, c.CarpoolVehicleType, c.CarpoolVoucher,
+		c.ChannelMonitor, c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
 		c.ChannelMonitorRequestTemplate, c.ErrorPassthroughRule, c.Group,
 		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.LotteryChance,
 		c.LotteryDrawRecord, c.LotteryPrize, c.PaymentAuditLog, c.PaymentOrder,
@@ -456,6 +488,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AuthIdentity.mutate(ctx, m)
 	case *AuthIdentityChannelMutation:
 		return c.AuthIdentityChannel.mutate(ctx, m)
+	case *CarpoolNoticeVersionMutation:
+		return c.CarpoolNoticeVersion.mutate(ctx, m)
+	case *CarpoolParticipantMutation:
+		return c.CarpoolParticipant.mutate(ctx, m)
+	case *CarpoolSessionMutation:
+		return c.CarpoolSession.mutate(ctx, m)
+	case *CarpoolVehicleTypeMutation:
+		return c.CarpoolVehicleType.mutate(ctx, m)
+	case *CarpoolVoucherMutation:
+		return c.CarpoolVoucher.mutate(ctx, m)
 	case *ChannelMonitorMutation:
 		return c.ChannelMonitor.mutate(ctx, m)
 	case *ChannelMonitorDailyRollupMutation:
@@ -1662,6 +1704,863 @@ func (c *AuthIdentityChannelClient) mutate(ctx context.Context, m *AuthIdentityC
 		return (&AuthIdentityChannelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AuthIdentityChannel mutation op: %q", m.Op())
+	}
+}
+
+// CarpoolNoticeVersionClient is a client for the CarpoolNoticeVersion schema.
+type CarpoolNoticeVersionClient struct {
+	config
+}
+
+// NewCarpoolNoticeVersionClient returns a client for the CarpoolNoticeVersion from the given config.
+func NewCarpoolNoticeVersionClient(c config) *CarpoolNoticeVersionClient {
+	return &CarpoolNoticeVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `carpoolnoticeversion.Hooks(f(g(h())))`.
+func (c *CarpoolNoticeVersionClient) Use(hooks ...Hook) {
+	c.hooks.CarpoolNoticeVersion = append(c.hooks.CarpoolNoticeVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `carpoolnoticeversion.Intercept(f(g(h())))`.
+func (c *CarpoolNoticeVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CarpoolNoticeVersion = append(c.inters.CarpoolNoticeVersion, interceptors...)
+}
+
+// Create returns a builder for creating a CarpoolNoticeVersion entity.
+func (c *CarpoolNoticeVersionClient) Create() *CarpoolNoticeVersionCreate {
+	mutation := newCarpoolNoticeVersionMutation(c.config, OpCreate)
+	return &CarpoolNoticeVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CarpoolNoticeVersion entities.
+func (c *CarpoolNoticeVersionClient) CreateBulk(builders ...*CarpoolNoticeVersionCreate) *CarpoolNoticeVersionCreateBulk {
+	return &CarpoolNoticeVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CarpoolNoticeVersionClient) MapCreateBulk(slice any, setFunc func(*CarpoolNoticeVersionCreate, int)) *CarpoolNoticeVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CarpoolNoticeVersionCreateBulk{err: fmt.Errorf("calling to CarpoolNoticeVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CarpoolNoticeVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CarpoolNoticeVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CarpoolNoticeVersion.
+func (c *CarpoolNoticeVersionClient) Update() *CarpoolNoticeVersionUpdate {
+	mutation := newCarpoolNoticeVersionMutation(c.config, OpUpdate)
+	return &CarpoolNoticeVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CarpoolNoticeVersionClient) UpdateOne(_m *CarpoolNoticeVersion) *CarpoolNoticeVersionUpdateOne {
+	mutation := newCarpoolNoticeVersionMutation(c.config, OpUpdateOne, withCarpoolNoticeVersion(_m))
+	return &CarpoolNoticeVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CarpoolNoticeVersionClient) UpdateOneID(id int64) *CarpoolNoticeVersionUpdateOne {
+	mutation := newCarpoolNoticeVersionMutation(c.config, OpUpdateOne, withCarpoolNoticeVersionID(id))
+	return &CarpoolNoticeVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CarpoolNoticeVersion.
+func (c *CarpoolNoticeVersionClient) Delete() *CarpoolNoticeVersionDelete {
+	mutation := newCarpoolNoticeVersionMutation(c.config, OpDelete)
+	return &CarpoolNoticeVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CarpoolNoticeVersionClient) DeleteOne(_m *CarpoolNoticeVersion) *CarpoolNoticeVersionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CarpoolNoticeVersionClient) DeleteOneID(id int64) *CarpoolNoticeVersionDeleteOne {
+	builder := c.Delete().Where(carpoolnoticeversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CarpoolNoticeVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for CarpoolNoticeVersion.
+func (c *CarpoolNoticeVersionClient) Query() *CarpoolNoticeVersionQuery {
+	return &CarpoolNoticeVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCarpoolNoticeVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CarpoolNoticeVersion entity by its id.
+func (c *CarpoolNoticeVersionClient) Get(ctx context.Context, id int64) (*CarpoolNoticeVersion, error) {
+	return c.Query().Where(carpoolnoticeversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CarpoolNoticeVersionClient) GetX(ctx context.Context, id int64) *CarpoolNoticeVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryParticipants queries the participants edge of a CarpoolNoticeVersion.
+func (c *CarpoolNoticeVersionClient) QueryParticipants(_m *CarpoolNoticeVersion) *CarpoolParticipantQuery {
+	query := (&CarpoolParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolnoticeversion.Table, carpoolnoticeversion.FieldID, id),
+			sqlgraph.To(carpoolparticipant.Table, carpoolparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, carpoolnoticeversion.ParticipantsTable, carpoolnoticeversion.ParticipantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CarpoolNoticeVersionClient) Hooks() []Hook {
+	return c.hooks.CarpoolNoticeVersion
+}
+
+// Interceptors returns the client interceptors.
+func (c *CarpoolNoticeVersionClient) Interceptors() []Interceptor {
+	return c.inters.CarpoolNoticeVersion
+}
+
+func (c *CarpoolNoticeVersionClient) mutate(ctx context.Context, m *CarpoolNoticeVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CarpoolNoticeVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CarpoolNoticeVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CarpoolNoticeVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CarpoolNoticeVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CarpoolNoticeVersion mutation op: %q", m.Op())
+	}
+}
+
+// CarpoolParticipantClient is a client for the CarpoolParticipant schema.
+type CarpoolParticipantClient struct {
+	config
+}
+
+// NewCarpoolParticipantClient returns a client for the CarpoolParticipant from the given config.
+func NewCarpoolParticipantClient(c config) *CarpoolParticipantClient {
+	return &CarpoolParticipantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `carpoolparticipant.Hooks(f(g(h())))`.
+func (c *CarpoolParticipantClient) Use(hooks ...Hook) {
+	c.hooks.CarpoolParticipant = append(c.hooks.CarpoolParticipant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `carpoolparticipant.Intercept(f(g(h())))`.
+func (c *CarpoolParticipantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CarpoolParticipant = append(c.inters.CarpoolParticipant, interceptors...)
+}
+
+// Create returns a builder for creating a CarpoolParticipant entity.
+func (c *CarpoolParticipantClient) Create() *CarpoolParticipantCreate {
+	mutation := newCarpoolParticipantMutation(c.config, OpCreate)
+	return &CarpoolParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CarpoolParticipant entities.
+func (c *CarpoolParticipantClient) CreateBulk(builders ...*CarpoolParticipantCreate) *CarpoolParticipantCreateBulk {
+	return &CarpoolParticipantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CarpoolParticipantClient) MapCreateBulk(slice any, setFunc func(*CarpoolParticipantCreate, int)) *CarpoolParticipantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CarpoolParticipantCreateBulk{err: fmt.Errorf("calling to CarpoolParticipantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CarpoolParticipantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CarpoolParticipantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CarpoolParticipant.
+func (c *CarpoolParticipantClient) Update() *CarpoolParticipantUpdate {
+	mutation := newCarpoolParticipantMutation(c.config, OpUpdate)
+	return &CarpoolParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CarpoolParticipantClient) UpdateOne(_m *CarpoolParticipant) *CarpoolParticipantUpdateOne {
+	mutation := newCarpoolParticipantMutation(c.config, OpUpdateOne, withCarpoolParticipant(_m))
+	return &CarpoolParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CarpoolParticipantClient) UpdateOneID(id int64) *CarpoolParticipantUpdateOne {
+	mutation := newCarpoolParticipantMutation(c.config, OpUpdateOne, withCarpoolParticipantID(id))
+	return &CarpoolParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CarpoolParticipant.
+func (c *CarpoolParticipantClient) Delete() *CarpoolParticipantDelete {
+	mutation := newCarpoolParticipantMutation(c.config, OpDelete)
+	return &CarpoolParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CarpoolParticipantClient) DeleteOne(_m *CarpoolParticipant) *CarpoolParticipantDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CarpoolParticipantClient) DeleteOneID(id int64) *CarpoolParticipantDeleteOne {
+	builder := c.Delete().Where(carpoolparticipant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CarpoolParticipantDeleteOne{builder}
+}
+
+// Query returns a query builder for CarpoolParticipant.
+func (c *CarpoolParticipantClient) Query() *CarpoolParticipantQuery {
+	return &CarpoolParticipantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCarpoolParticipant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CarpoolParticipant entity by its id.
+func (c *CarpoolParticipantClient) Get(ctx context.Context, id int64) (*CarpoolParticipant, error) {
+	return c.Query().Where(carpoolparticipant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CarpoolParticipantClient) GetX(ctx context.Context, id int64) *CarpoolParticipant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySession queries the session edge of a CarpoolParticipant.
+func (c *CarpoolParticipantClient) QuerySession(_m *CarpoolParticipant) *CarpoolSessionQuery {
+	query := (&CarpoolSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolparticipant.Table, carpoolparticipant.FieldID, id),
+			sqlgraph.To(carpoolsession.Table, carpoolsession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolparticipant.SessionTable, carpoolparticipant.SessionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVehicleType queries the vehicle_type edge of a CarpoolParticipant.
+func (c *CarpoolParticipantClient) QueryVehicleType(_m *CarpoolParticipant) *CarpoolVehicleTypeQuery {
+	query := (&CarpoolVehicleTypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolparticipant.Table, carpoolparticipant.FieldID, id),
+			sqlgraph.To(carpoolvehicletype.Table, carpoolvehicletype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolparticipant.VehicleTypeTable, carpoolparticipant.VehicleTypeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a CarpoolParticipant.
+func (c *CarpoolParticipantClient) QueryUser(_m *CarpoolParticipant) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolparticipant.Table, carpoolparticipant.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolparticipant.UserTable, carpoolparticipant.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPaymentOrder queries the payment_order edge of a CarpoolParticipant.
+func (c *CarpoolParticipantClient) QueryPaymentOrder(_m *CarpoolParticipant) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolparticipant.Table, carpoolparticipant.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolparticipant.PaymentOrderTable, carpoolparticipant.PaymentOrderColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNoticeVersion queries the notice_version edge of a CarpoolParticipant.
+func (c *CarpoolParticipantClient) QueryNoticeVersion(_m *CarpoolParticipant) *CarpoolNoticeVersionQuery {
+	query := (&CarpoolNoticeVersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolparticipant.Table, carpoolparticipant.FieldID, id),
+			sqlgraph.To(carpoolnoticeversion.Table, carpoolnoticeversion.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolparticipant.NoticeVersionTable, carpoolparticipant.NoticeVersionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CarpoolParticipantClient) Hooks() []Hook {
+	return c.hooks.CarpoolParticipant
+}
+
+// Interceptors returns the client interceptors.
+func (c *CarpoolParticipantClient) Interceptors() []Interceptor {
+	return c.inters.CarpoolParticipant
+}
+
+func (c *CarpoolParticipantClient) mutate(ctx context.Context, m *CarpoolParticipantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CarpoolParticipantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CarpoolParticipantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CarpoolParticipantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CarpoolParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CarpoolParticipant mutation op: %q", m.Op())
+	}
+}
+
+// CarpoolSessionClient is a client for the CarpoolSession schema.
+type CarpoolSessionClient struct {
+	config
+}
+
+// NewCarpoolSessionClient returns a client for the CarpoolSession from the given config.
+func NewCarpoolSessionClient(c config) *CarpoolSessionClient {
+	return &CarpoolSessionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `carpoolsession.Hooks(f(g(h())))`.
+func (c *CarpoolSessionClient) Use(hooks ...Hook) {
+	c.hooks.CarpoolSession = append(c.hooks.CarpoolSession, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `carpoolsession.Intercept(f(g(h())))`.
+func (c *CarpoolSessionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CarpoolSession = append(c.inters.CarpoolSession, interceptors...)
+}
+
+// Create returns a builder for creating a CarpoolSession entity.
+func (c *CarpoolSessionClient) Create() *CarpoolSessionCreate {
+	mutation := newCarpoolSessionMutation(c.config, OpCreate)
+	return &CarpoolSessionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CarpoolSession entities.
+func (c *CarpoolSessionClient) CreateBulk(builders ...*CarpoolSessionCreate) *CarpoolSessionCreateBulk {
+	return &CarpoolSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CarpoolSessionClient) MapCreateBulk(slice any, setFunc func(*CarpoolSessionCreate, int)) *CarpoolSessionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CarpoolSessionCreateBulk{err: fmt.Errorf("calling to CarpoolSessionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CarpoolSessionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CarpoolSessionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CarpoolSession.
+func (c *CarpoolSessionClient) Update() *CarpoolSessionUpdate {
+	mutation := newCarpoolSessionMutation(c.config, OpUpdate)
+	return &CarpoolSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CarpoolSessionClient) UpdateOne(_m *CarpoolSession) *CarpoolSessionUpdateOne {
+	mutation := newCarpoolSessionMutation(c.config, OpUpdateOne, withCarpoolSession(_m))
+	return &CarpoolSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CarpoolSessionClient) UpdateOneID(id int64) *CarpoolSessionUpdateOne {
+	mutation := newCarpoolSessionMutation(c.config, OpUpdateOne, withCarpoolSessionID(id))
+	return &CarpoolSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CarpoolSession.
+func (c *CarpoolSessionClient) Delete() *CarpoolSessionDelete {
+	mutation := newCarpoolSessionMutation(c.config, OpDelete)
+	return &CarpoolSessionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CarpoolSessionClient) DeleteOne(_m *CarpoolSession) *CarpoolSessionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CarpoolSessionClient) DeleteOneID(id int64) *CarpoolSessionDeleteOne {
+	builder := c.Delete().Where(carpoolsession.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CarpoolSessionDeleteOne{builder}
+}
+
+// Query returns a query builder for CarpoolSession.
+func (c *CarpoolSessionClient) Query() *CarpoolSessionQuery {
+	return &CarpoolSessionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCarpoolSession},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CarpoolSession entity by its id.
+func (c *CarpoolSessionClient) Get(ctx context.Context, id int64) (*CarpoolSession, error) {
+	return c.Query().Where(carpoolsession.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CarpoolSessionClient) GetX(ctx context.Context, id int64) *CarpoolSession {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryVehicleType queries the vehicle_type edge of a CarpoolSession.
+func (c *CarpoolSessionClient) QueryVehicleType(_m *CarpoolSession) *CarpoolVehicleTypeQuery {
+	query := (&CarpoolVehicleTypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolsession.Table, carpoolsession.FieldID, id),
+			sqlgraph.To(carpoolvehicletype.Table, carpoolvehicletype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolsession.VehicleTypeTable, carpoolsession.VehicleTypeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParticipants queries the participants edge of a CarpoolSession.
+func (c *CarpoolSessionClient) QueryParticipants(_m *CarpoolSession) *CarpoolParticipantQuery {
+	query := (&CarpoolParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolsession.Table, carpoolsession.FieldID, id),
+			sqlgraph.To(carpoolparticipant.Table, carpoolparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, carpoolsession.ParticipantsTable, carpoolsession.ParticipantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVouchers queries the vouchers edge of a CarpoolSession.
+func (c *CarpoolSessionClient) QueryVouchers(_m *CarpoolSession) *CarpoolVoucherQuery {
+	query := (&CarpoolVoucherClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolsession.Table, carpoolsession.FieldID, id),
+			sqlgraph.To(carpoolvoucher.Table, carpoolvoucher.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, carpoolsession.VouchersTable, carpoolsession.VouchersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CarpoolSessionClient) Hooks() []Hook {
+	return c.hooks.CarpoolSession
+}
+
+// Interceptors returns the client interceptors.
+func (c *CarpoolSessionClient) Interceptors() []Interceptor {
+	return c.inters.CarpoolSession
+}
+
+func (c *CarpoolSessionClient) mutate(ctx context.Context, m *CarpoolSessionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CarpoolSessionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CarpoolSessionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CarpoolSessionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CarpoolSessionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CarpoolSession mutation op: %q", m.Op())
+	}
+}
+
+// CarpoolVehicleTypeClient is a client for the CarpoolVehicleType schema.
+type CarpoolVehicleTypeClient struct {
+	config
+}
+
+// NewCarpoolVehicleTypeClient returns a client for the CarpoolVehicleType from the given config.
+func NewCarpoolVehicleTypeClient(c config) *CarpoolVehicleTypeClient {
+	return &CarpoolVehicleTypeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `carpoolvehicletype.Hooks(f(g(h())))`.
+func (c *CarpoolVehicleTypeClient) Use(hooks ...Hook) {
+	c.hooks.CarpoolVehicleType = append(c.hooks.CarpoolVehicleType, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `carpoolvehicletype.Intercept(f(g(h())))`.
+func (c *CarpoolVehicleTypeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CarpoolVehicleType = append(c.inters.CarpoolVehicleType, interceptors...)
+}
+
+// Create returns a builder for creating a CarpoolVehicleType entity.
+func (c *CarpoolVehicleTypeClient) Create() *CarpoolVehicleTypeCreate {
+	mutation := newCarpoolVehicleTypeMutation(c.config, OpCreate)
+	return &CarpoolVehicleTypeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CarpoolVehicleType entities.
+func (c *CarpoolVehicleTypeClient) CreateBulk(builders ...*CarpoolVehicleTypeCreate) *CarpoolVehicleTypeCreateBulk {
+	return &CarpoolVehicleTypeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CarpoolVehicleTypeClient) MapCreateBulk(slice any, setFunc func(*CarpoolVehicleTypeCreate, int)) *CarpoolVehicleTypeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CarpoolVehicleTypeCreateBulk{err: fmt.Errorf("calling to CarpoolVehicleTypeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CarpoolVehicleTypeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CarpoolVehicleTypeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CarpoolVehicleType.
+func (c *CarpoolVehicleTypeClient) Update() *CarpoolVehicleTypeUpdate {
+	mutation := newCarpoolVehicleTypeMutation(c.config, OpUpdate)
+	return &CarpoolVehicleTypeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CarpoolVehicleTypeClient) UpdateOne(_m *CarpoolVehicleType) *CarpoolVehicleTypeUpdateOne {
+	mutation := newCarpoolVehicleTypeMutation(c.config, OpUpdateOne, withCarpoolVehicleType(_m))
+	return &CarpoolVehicleTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CarpoolVehicleTypeClient) UpdateOneID(id int64) *CarpoolVehicleTypeUpdateOne {
+	mutation := newCarpoolVehicleTypeMutation(c.config, OpUpdateOne, withCarpoolVehicleTypeID(id))
+	return &CarpoolVehicleTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CarpoolVehicleType.
+func (c *CarpoolVehicleTypeClient) Delete() *CarpoolVehicleTypeDelete {
+	mutation := newCarpoolVehicleTypeMutation(c.config, OpDelete)
+	return &CarpoolVehicleTypeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CarpoolVehicleTypeClient) DeleteOne(_m *CarpoolVehicleType) *CarpoolVehicleTypeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CarpoolVehicleTypeClient) DeleteOneID(id int64) *CarpoolVehicleTypeDeleteOne {
+	builder := c.Delete().Where(carpoolvehicletype.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CarpoolVehicleTypeDeleteOne{builder}
+}
+
+// Query returns a query builder for CarpoolVehicleType.
+func (c *CarpoolVehicleTypeClient) Query() *CarpoolVehicleTypeQuery {
+	return &CarpoolVehicleTypeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCarpoolVehicleType},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CarpoolVehicleType entity by its id.
+func (c *CarpoolVehicleTypeClient) Get(ctx context.Context, id int64) (*CarpoolVehicleType, error) {
+	return c.Query().Where(carpoolvehicletype.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CarpoolVehicleTypeClient) GetX(ctx context.Context, id int64) *CarpoolVehicleType {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySessions queries the sessions edge of a CarpoolVehicleType.
+func (c *CarpoolVehicleTypeClient) QuerySessions(_m *CarpoolVehicleType) *CarpoolSessionQuery {
+	query := (&CarpoolSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolvehicletype.Table, carpoolvehicletype.FieldID, id),
+			sqlgraph.To(carpoolsession.Table, carpoolsession.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, carpoolvehicletype.SessionsTable, carpoolvehicletype.SessionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParticipants queries the participants edge of a CarpoolVehicleType.
+func (c *CarpoolVehicleTypeClient) QueryParticipants(_m *CarpoolVehicleType) *CarpoolParticipantQuery {
+	query := (&CarpoolParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolvehicletype.Table, carpoolvehicletype.FieldID, id),
+			sqlgraph.To(carpoolparticipant.Table, carpoolparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, carpoolvehicletype.ParticipantsTable, carpoolvehicletype.ParticipantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CarpoolVehicleTypeClient) Hooks() []Hook {
+	return c.hooks.CarpoolVehicleType
+}
+
+// Interceptors returns the client interceptors.
+func (c *CarpoolVehicleTypeClient) Interceptors() []Interceptor {
+	return c.inters.CarpoolVehicleType
+}
+
+func (c *CarpoolVehicleTypeClient) mutate(ctx context.Context, m *CarpoolVehicleTypeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CarpoolVehicleTypeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CarpoolVehicleTypeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CarpoolVehicleTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CarpoolVehicleTypeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CarpoolVehicleType mutation op: %q", m.Op())
+	}
+}
+
+// CarpoolVoucherClient is a client for the CarpoolVoucher schema.
+type CarpoolVoucherClient struct {
+	config
+}
+
+// NewCarpoolVoucherClient returns a client for the CarpoolVoucher from the given config.
+func NewCarpoolVoucherClient(c config) *CarpoolVoucherClient {
+	return &CarpoolVoucherClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `carpoolvoucher.Hooks(f(g(h())))`.
+func (c *CarpoolVoucherClient) Use(hooks ...Hook) {
+	c.hooks.CarpoolVoucher = append(c.hooks.CarpoolVoucher, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `carpoolvoucher.Intercept(f(g(h())))`.
+func (c *CarpoolVoucherClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CarpoolVoucher = append(c.inters.CarpoolVoucher, interceptors...)
+}
+
+// Create returns a builder for creating a CarpoolVoucher entity.
+func (c *CarpoolVoucherClient) Create() *CarpoolVoucherCreate {
+	mutation := newCarpoolVoucherMutation(c.config, OpCreate)
+	return &CarpoolVoucherCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CarpoolVoucher entities.
+func (c *CarpoolVoucherClient) CreateBulk(builders ...*CarpoolVoucherCreate) *CarpoolVoucherCreateBulk {
+	return &CarpoolVoucherCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CarpoolVoucherClient) MapCreateBulk(slice any, setFunc func(*CarpoolVoucherCreate, int)) *CarpoolVoucherCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CarpoolVoucherCreateBulk{err: fmt.Errorf("calling to CarpoolVoucherClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CarpoolVoucherCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CarpoolVoucherCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CarpoolVoucher.
+func (c *CarpoolVoucherClient) Update() *CarpoolVoucherUpdate {
+	mutation := newCarpoolVoucherMutation(c.config, OpUpdate)
+	return &CarpoolVoucherUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CarpoolVoucherClient) UpdateOne(_m *CarpoolVoucher) *CarpoolVoucherUpdateOne {
+	mutation := newCarpoolVoucherMutation(c.config, OpUpdateOne, withCarpoolVoucher(_m))
+	return &CarpoolVoucherUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CarpoolVoucherClient) UpdateOneID(id int64) *CarpoolVoucherUpdateOne {
+	mutation := newCarpoolVoucherMutation(c.config, OpUpdateOne, withCarpoolVoucherID(id))
+	return &CarpoolVoucherUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CarpoolVoucher.
+func (c *CarpoolVoucherClient) Delete() *CarpoolVoucherDelete {
+	mutation := newCarpoolVoucherMutation(c.config, OpDelete)
+	return &CarpoolVoucherDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CarpoolVoucherClient) DeleteOne(_m *CarpoolVoucher) *CarpoolVoucherDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CarpoolVoucherClient) DeleteOneID(id int64) *CarpoolVoucherDeleteOne {
+	builder := c.Delete().Where(carpoolvoucher.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CarpoolVoucherDeleteOne{builder}
+}
+
+// Query returns a query builder for CarpoolVoucher.
+func (c *CarpoolVoucherClient) Query() *CarpoolVoucherQuery {
+	return &CarpoolVoucherQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCarpoolVoucher},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CarpoolVoucher entity by its id.
+func (c *CarpoolVoucherClient) Get(ctx context.Context, id int64) (*CarpoolVoucher, error) {
+	return c.Query().Where(carpoolvoucher.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CarpoolVoucherClient) GetX(ctx context.Context, id int64) *CarpoolVoucher {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySession queries the session edge of a CarpoolVoucher.
+func (c *CarpoolVoucherClient) QuerySession(_m *CarpoolVoucher) *CarpoolSessionQuery {
+	query := (&CarpoolSessionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(carpoolvoucher.Table, carpoolvoucher.FieldID, id),
+			sqlgraph.To(carpoolsession.Table, carpoolsession.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, carpoolvoucher.SessionTable, carpoolvoucher.SessionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CarpoolVoucherClient) Hooks() []Hook {
+	return c.hooks.CarpoolVoucher
+}
+
+// Interceptors returns the client interceptors.
+func (c *CarpoolVoucherClient) Interceptors() []Interceptor {
+	return c.inters.CarpoolVoucher
+}
+
+func (c *CarpoolVoucherClient) mutate(ctx context.Context, m *CarpoolVoucherMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CarpoolVoucherCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CarpoolVoucherUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CarpoolVoucherUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CarpoolVoucherDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CarpoolVoucher mutation op: %q", m.Op())
 	}
 }
 
@@ -3732,6 +4631,22 @@ func (c *PaymentOrderClient) QueryUser(_m *PaymentOrder) *UserQuery {
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.UserTable, paymentorder.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCarpoolParticipants queries the carpool_participants edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryCarpoolParticipants(_m *PaymentOrder) *CarpoolParticipantQuery {
+	query := (&CarpoolParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(carpoolparticipant.Table, carpoolparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.CarpoolParticipantsTable, paymentorder.CarpoolParticipantsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -5934,6 +6849,22 @@ func (c *UserClient) QueryLotteryDrawRecords(_m *User) *LotteryDrawRecordQuery {
 	return query
 }
 
+// QueryCarpoolParticipants queries the carpool_participants edge of a User.
+func (c *UserClient) QueryCarpoolParticipants(_m *User) *CarpoolParticipantQuery {
+	query := (&CarpoolParticipantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(carpoolparticipant.Table, carpoolparticipant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CarpoolParticipantsTable, user.CarpoolParticipantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserAllowedGroups queries the user_allowed_groups edge of a User.
 func (c *UserClient) QueryUserAllowedGroups(_m *User) *UserAllowedGroupQuery {
 	query := (&UserAllowedGroupClient{config: c.config}).Query()
@@ -6763,7 +7694,8 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 type (
 	hooks struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
-		AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
+		AuthIdentityChannel, CarpoolNoticeVersion, CarpoolParticipant, CarpoolSession,
+		CarpoolVehicleType, CarpoolVoucher, ChannelMonitor, ChannelMonitorDailyRollup,
 		ChannelMonitorHistory, ChannelMonitorRequestTemplate, ErrorPassthroughRule,
 		Group, IdempotencyRecord, IdentityAdoptionDecision, LotteryChance,
 		LotteryDrawRecord, LotteryPrize, PaymentAuditLog, PaymentOrder,
@@ -6774,7 +7706,8 @@ type (
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
-		AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
+		AuthIdentityChannel, CarpoolNoticeVersion, CarpoolParticipant, CarpoolSession,
+		CarpoolVehicleType, CarpoolVoucher, ChannelMonitor, ChannelMonitorDailyRollup,
 		ChannelMonitorHistory, ChannelMonitorRequestTemplate, ErrorPassthroughRule,
 		Group, IdempotencyRecord, IdentityAdoptionDecision, LotteryChance,
 		LotteryDrawRecord, LotteryPrize, PaymentAuditLog, PaymentOrder,

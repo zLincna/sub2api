@@ -232,6 +232,10 @@ func (s *apiKeyCacheStub) SubscribeAuthCacheInvalidation(ctx context.Context, ha
 	return nil
 }
 
+func (s *apiKeyRepoStub) ListDistinctGroupIDsByUserID(context.Context, int64) ([]int64, error) {
+	panic("unexpected ListDistinctGroupIDsByUserID call")
+}
+
 // TestApiKeyService_Delete_OwnerMismatch 测试非所有者尝试删除时返回权限错误。
 // 预期行为：
 //   - GetKeyAndOwnerID 返回所有者 ID 为 1

@@ -27,6 +27,21 @@ type AuthIdentity func(*sql.Selector)
 // AuthIdentityChannel is the predicate function for authidentitychannel builders.
 type AuthIdentityChannel func(*sql.Selector)
 
+// CarpoolNoticeVersion is the predicate function for carpoolnoticeversion builders.
+type CarpoolNoticeVersion func(*sql.Selector)
+
+// CarpoolParticipant is the predicate function for carpoolparticipant builders.
+type CarpoolParticipant func(*sql.Selector)
+
+// CarpoolSession is the predicate function for carpoolsession builders.
+type CarpoolSession func(*sql.Selector)
+
+// CarpoolVehicleType is the predicate function for carpoolvehicletype builders.
+type CarpoolVehicleType func(*sql.Selector)
+
+// CarpoolVoucher is the predicate function for carpoolvoucher builders.
+type CarpoolVoucher func(*sql.Selector)
+
 // ChannelMonitor is the predicate function for channelmonitor builders.
 type ChannelMonitor func(*sql.Selector)
 

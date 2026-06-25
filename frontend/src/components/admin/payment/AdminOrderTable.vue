@@ -219,6 +219,7 @@ const orderTypeFilterOptions = computed(() => [
   { value: '', label: t('payment.admin.allOrderTypes') },
   { value: 'balance', label: t('payment.admin.balanceOrder') },
   { value: 'subscription', label: t('payment.admin.subscriptionOrder') },
+  { value: 'carpool', label: '拼车订单' },
 ])
 
 function canRefundRow(order: PaymentOrder): boolean {

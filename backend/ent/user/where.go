@@ -1810,6 +1810,29 @@ func HasLotteryDrawRecordsWith(preds ...predicate.LotteryDrawRecord) predicate.U
 	})
 }
 
+// HasCarpoolParticipants applies the HasEdge predicate on the "carpool_participants" edge.
+func HasCarpoolParticipants() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CarpoolParticipantsTable, CarpoolParticipantsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCarpoolParticipantsWith applies the HasEdge predicate on the "carpool_participants" edge with a given conditions (other predicates).
+func HasCarpoolParticipantsWith(preds ...predicate.CarpoolParticipant) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCarpoolParticipantsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUserAllowedGroups applies the HasEdge predicate on the "user_allowed_groups" edge.
 func HasUserAllowedGroups() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

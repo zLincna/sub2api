@@ -1812,6 +1812,11 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	}
 	updates[SettingKeyAliyunSMSValidTimeSeconds] = strconv.Itoa(validSeconds)
 	updates[SettingKeyAliyunSMSIntervalSeconds] = strconv.Itoa(intervalSeconds)
+	updates[SettingKeyCarpoolAdminFullSMSNotifyEnabled] = strconv.FormatBool(settings.CarpoolAdminFullSMSNotifyEnabled)
+	updates[SettingKeyCarpoolAdminFullSMSPhones] = strings.TrimSpace(settings.CarpoolAdminFullSMSPhones)
+	updates[SettingKeyCarpoolAdminFullSMSTemplateCode] = strings.TrimSpace(settings.CarpoolAdminFullSMSTemplateCode)
+	updates[SettingKeyCarpoolUserActiveSMSNotifyEnabled] = strconv.FormatBool(settings.CarpoolUserActiveSMSNotifyEnabled)
+	updates[SettingKeyCarpoolUserActiveSMSTemplateCode] = strings.TrimSpace(settings.CarpoolUserActiveSMSTemplateCode)
 
 	// Cloudflare Turnstile 设置（只有非空才更新密钥）
 	updates[SettingKeyTurnstileEnabled] = strconv.FormatBool(settings.TurnstileEnabled)
@@ -2961,13 +2966,18 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeySMTPUseTLS:                                "false",
 		SettingKeyAliyunSMSAccessKeyID:                      "",
 		SettingKeyAliyunSMSAccessKeySecret:                  "",
-		SettingKeyAliyunSMSSignName:                         "",
-		SettingKeyAliyunSMSTemplateCode:                     "",
+		SettingKeyAliyunSMSSignName:                         "兴惠云科技",
+		SettingKeyAliyunSMSTemplateCode:                     "SMS_506825188",
 		SettingKeyAliyunSMSTemplateParamKey:                 "code",
 		SettingKeyAliyunSMSTemplateStaticJSON:               "{}",
 		SettingKeyAliyunSMSSchemeName:                       "",
 		SettingKeyAliyunSMSValidTimeSeconds:                 "300",
 		SettingKeyAliyunSMSIntervalSeconds:                  "60",
+		SettingKeyCarpoolAdminFullSMSNotifyEnabled:          "false",
+		SettingKeyCarpoolAdminFullSMSPhones:                 "",
+		SettingKeyCarpoolAdminFullSMSTemplateCode:           "SMS_508550246",
+		SettingKeyCarpoolUserActiveSMSNotifyEnabled:         "false",
+		SettingKeyCarpoolUserActiveSMSTemplateCode:          "SMS_508655235",
 		// Model fallback defaults
 		SettingKeyEnableModelFallback:      "false",
 		SettingKeyFallbackModelAnthropic:   "claude-3-5-sonnet-20241022",
@@ -3066,6 +3076,11 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		AliyunSMSSchemeName:                strings.TrimSpace(settings[SettingKeyAliyunSMSSchemeName]),
 		AliyunSMSValidTimeSeconds:          parsePositiveIntOrDefault(settings[SettingKeyAliyunSMSValidTimeSeconds], 300),
 		AliyunSMSIntervalSeconds:           parsePositiveIntOrDefault(settings[SettingKeyAliyunSMSIntervalSeconds], 60),
+		CarpoolAdminFullSMSNotifyEnabled:   settings[SettingKeyCarpoolAdminFullSMSNotifyEnabled] == "true",
+		CarpoolAdminFullSMSPhones:          strings.TrimSpace(settings[SettingKeyCarpoolAdminFullSMSPhones]),
+		CarpoolAdminFullSMSTemplateCode:    strings.TrimSpace(settings[SettingKeyCarpoolAdminFullSMSTemplateCode]),
+		CarpoolUserActiveSMSNotifyEnabled:  settings[SettingKeyCarpoolUserActiveSMSNotifyEnabled] == "true",
+		CarpoolUserActiveSMSTemplateCode:   strings.TrimSpace(settings[SettingKeyCarpoolUserActiveSMSTemplateCode]),
 		TurnstileEnabled:                   settings[SettingKeyTurnstileEnabled] == "true",
 		TurnstileSiteKey:                   settings[SettingKeyTurnstileSiteKey],
 		TurnstileSecretKeyConfigured:       settings[SettingKeyTurnstileSecretKey] != "",

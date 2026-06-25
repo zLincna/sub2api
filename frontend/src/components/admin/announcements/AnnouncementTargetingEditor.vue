@@ -104,9 +104,89 @@
               <div v-if="cond.type === 'subscription'" class="flex-1">
                 <label class="input-label">{{ t('admin.announcements.form.selectPackages') }}</label>
                 <GroupSelector
-                  v-model="subscriptionSelections[groupIndex][condIndex]"
+                  v-model="groupSelections[groupIndex][condIndex]"
+                  :groups="subscriptionGroups"
+                />
+              </div>
+
+              <div v-else-if="cond.type === 'group'" class="flex-1">
+                <label class="input-label">{{ t('admin.announcements.form.selectAPIKeyGroups') }}</label>
+                <GroupSelector
+                  v-model="groupSelections[groupIndex][condIndex]"
                   :groups="groups"
                 />
+                <p class="input-hint">{{ t('admin.announcements.form.apiKeyGroupsHint') }}</p>
+              </div>
+
+              <div v-else-if="cond.type === 'user'" class="flex-1">
+                <label class="input-label">{{ t('admin.announcements.form.selectUsers') }}</label>
+                <div class="space-y-2">
+                  <div class="relative">
+                    <Icon name="search" size="sm" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      v-model="userSearch"
+                      type="text"
+                      class="input pl-9"
+                      :placeholder="t('admin.announcements.searchUsers')"
+                    />
+                  </div>
+                  <div class="flex gap-2">
+                    <input
+                      v-model="manualUserID"
+                      type="number"
+                      min="1"
+                      class="input"
+                      :placeholder="t('admin.announcements.form.addUserIDPlaceholder')"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-secondary shrink-0"
+                      @click="addManualUserID(groupIndex, condIndex)"
+                    >
+                      <Icon name="plus" size="sm" class="mr-1" />
+                      {{ t('admin.announcements.form.addUserID') }}
+                    </button>
+                  </div>
+                  <div class="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 dark:border-dark-600 dark:bg-dark-800">
+                    <label
+                      v-for="user in filteredUsers"
+                      :key="user.id"
+                      class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-white dark:hover:bg-dark-700"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="(userSelections[groupIndex]?.[condIndex] ?? []).includes(user.id)"
+                        @change="setUserSelected(groupIndex, condIndex, user.id, ($event.target as HTMLInputElement).checked)"
+                        class="h-3.5 w-3.5 shrink-0 rounded border-gray-300 text-primary-500 focus:ring-primary-500 dark:border-dark-500"
+                      />
+                      <span class="min-w-0 flex-1 truncate text-gray-900 dark:text-white">
+                        {{ user.email || user.username || `#${user.id}` }}
+                      </span>
+                      <span class="shrink-0 text-xs text-gray-500 dark:text-dark-400">#{{ user.id }}</span>
+                    </label>
+                    <div v-if="filteredUsers.length === 0" class="py-2 text-center text-sm text-gray-500 dark:text-dark-400">
+                      {{ t('empty.noData') }}
+                    </div>
+                  </div>
+                  <p class="input-hint">
+                    {{ t('common.selectedCount', { count: (userSelections[groupIndex]?.[condIndex] ?? []).length }) }}
+                  </p>
+                  <div
+                    v-if="(userSelections[groupIndex]?.[condIndex] ?? []).length > 0"
+                    class="flex flex-wrap gap-2"
+                  >
+                    <button
+                      v-for="userID in userSelections[groupIndex][condIndex]"
+                      :key="userID"
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 dark:border-dark-600 dark:bg-dark-700 dark:text-dark-200"
+                      @click="setUserSelected(groupIndex, condIndex, userID, false)"
+                    >
+                      #{{ userID }}
+                      <Icon name="x" size="xs" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div v-else class="flex flex-1 flex-col gap-3 sm:flex-row">
@@ -165,10 +245,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
   AdminGroup,
+  AdminUser,
   AnnouncementTargeting,
   AnnouncementCondition,
   AnnouncementConditionGroup,
@@ -185,6 +266,7 @@ const { t } = useI18n()
 const props = defineProps<{
   modelValue: AnnouncementTargeting
   groups: AdminGroup[]
+  users: AdminUser[]
 }>()
 
 const emit = defineEmits<{
@@ -198,8 +280,12 @@ const mode = computed<Mode>(() => (anyOf.value.length === 0 ? 'all' : 'custom'))
 
 const conditionTypeOptions = computed(() => [
   { value: 'subscription', label: t('admin.announcements.form.conditionSubscription') },
-  { value: 'balance', label: t('admin.announcements.form.conditionBalance') }
+  { value: 'balance', label: t('admin.announcements.form.conditionBalance') },
+  { value: 'group', label: t('admin.announcements.form.conditionAPIKeyGroup') },
+  { value: 'user', label: t('admin.announcements.form.conditionUser') }
 ])
+
+const subscriptionGroups = computed(() => props.groups.filter((g) => g.subscription_type === 'subscription'))
 
 const balanceOperatorOptions = computed(() => [
   { value: 'gt', label: t('admin.announcements.operators.gt') },
@@ -232,6 +318,22 @@ function defaultBalanceCondition(): AnnouncementCondition {
     type: 'balance' as AnnouncementConditionType,
     operator: 'gte' as AnnouncementOperator,
     value: 0
+  }
+}
+
+function defaultGroupCondition(): AnnouncementCondition {
+  return {
+    type: 'group' as AnnouncementConditionType,
+    operator: 'in' as AnnouncementOperator,
+    group_ids: []
+  }
+}
+
+function defaultUserCondition(): AnnouncementCondition {
+  return {
+    type: 'user' as AnnouncementConditionType,
+    operator: 'in' as AnnouncementOperator,
+    user_ids: []
   }
 }
 
@@ -283,6 +385,10 @@ function setConditionType(groupIndex: number, condIndex: number, nextType: Annou
 
     if (nextType === 'subscription') {
       group.all_of[condIndex] = defaultSubscriptionCondition()
+    } else if (nextType === 'group') {
+      group.all_of[condIndex] = defaultGroupCondition()
+    } else if (nextType === 'user') {
+      group.all_of[condIndex] = defaultUserCondition()
     } else {
       group.all_of[condIndex] = defaultBalanceCondition()
     }
@@ -314,13 +420,29 @@ function setBalanceValue(groupIndex: number, condIndex: number, raw: string) {
   })
 }
 
-// We keep group_ids selection in a parallel reactive map because GroupSelector is numeric list.
-// Then we mirror it back to targeting.group_ids via a watcher.
-const subscriptionSelections = reactive<Record<number, Record<number, number[]>>>({})
+const groupSelections = reactive<Record<number, Record<number, number[]>>>({})
+const userSelections = reactive<Record<number, Record<number, number[]>>>({})
+const userSearch = ref('')
+const manualUserID = ref('')
 
-function ensureSelectionPath(groupIndex: number, condIndex: number) {
-  if (!subscriptionSelections[groupIndex]) subscriptionSelections[groupIndex] = {}
-  if (!subscriptionSelections[groupIndex][condIndex]) subscriptionSelections[groupIndex][condIndex] = []
+const filteredUsers = computed(() => {
+  const q = userSearch.value.trim().toLowerCase()
+  if (!q) return props.users.slice(0, 100)
+  return props.users.filter((user) => {
+    const email = user.email?.toLowerCase() ?? ''
+    const username = user.username?.toLowerCase() ?? ''
+    return email.includes(q) || username.includes(q) || String(user.id).includes(q)
+  }).slice(0, 100)
+})
+
+function ensureGroupSelectionPath(groupIndex: number, condIndex: number) {
+  if (!groupSelections[groupIndex]) groupSelections[groupIndex] = {}
+  if (!groupSelections[groupIndex][condIndex]) groupSelections[groupIndex][condIndex] = []
+}
+
+function ensureUserSelectionPath(groupIndex: number, condIndex: number) {
+  if (!userSelections[groupIndex]) userSelections[groupIndex] = {}
+  if (!userSelections[groupIndex][condIndex]) userSelections[groupIndex][condIndex] = []
 }
 
 // Sync from modelValue to subscriptionSelections (one-way: model -> local state)
@@ -332,13 +454,20 @@ watch(
       const allOf = groups[gi]?.all_of ?? []
       for (let ci = 0; ci < allOf.length; ci++) {
         const c = allOf[ci]
-        if (c?.type === 'subscription') {
-          ensureSelectionPath(gi, ci)
+        if (c?.type === 'subscription' || c?.type === 'group') {
+          ensureGroupSelectionPath(gi, ci)
           // Only update if different to avoid triggering unnecessary updates
           const newIds = (c.group_ids ?? []).slice()
-          const currentIds = subscriptionSelections[gi]?.[ci] ?? []
+          const currentIds = groupSelections[gi]?.[ci] ?? []
           if (JSON.stringify(newIds.sort()) !== JSON.stringify(currentIds.sort())) {
-            subscriptionSelections[gi][ci] = newIds
+            groupSelections[gi][ci] = newIds
+          }
+        } else if (c?.type === 'user') {
+          ensureUserSelectionPath(gi, ci)
+          const newIds = (c.user_ids ?? []).slice()
+          const currentIds = userSelections[gi]?.[ci] ?? []
+          if (JSON.stringify(newIds.sort()) !== JSON.stringify(currentIds.sort())) {
+            userSelections[gi][ci] = newIds
           }
         }
       }
@@ -350,38 +479,65 @@ watch(
 // Sync from subscriptionSelections to modelValue (one-way: local state -> model)
 // Use a debounced approach to avoid infinite loops
 let syncTimeout: ReturnType<typeof setTimeout> | null = null
-watch(
-  () => subscriptionSelections,
-  () => {
-    // Debounce the sync to avoid rapid fire updates
-    if (syncTimeout) clearTimeout(syncTimeout)
+function syncSelectionsToModel() {
+  // Debounce the sync to avoid rapid fire updates
+  if (syncTimeout) clearTimeout(syncTimeout)
 
-    syncTimeout = setTimeout(() => {
-      // Build the new targeting state
-      const newTargeting: TargetingDraft = JSON.parse(JSON.stringify(props.modelValue ?? { any_of: [] }))
-      if (!newTargeting.any_of) newTargeting.any_of = []
+  syncTimeout = setTimeout(() => {
+    // Build the new targeting state
+    const newTargeting: TargetingDraft = JSON.parse(JSON.stringify(props.modelValue ?? { any_of: [] }))
+    if (!newTargeting.any_of) newTargeting.any_of = []
 
-      const groups = newTargeting.any_of ?? []
-      for (let gi = 0; gi < groups.length; gi++) {
-        const allOf = groups[gi]?.all_of ?? []
-        for (let ci = 0; ci < allOf.length; ci++) {
-          const c = allOf[ci]
-          if (c?.type === 'subscription') {
-            ensureSelectionPath(gi, ci)
-            c.operator = 'in' as AnnouncementOperator
-            c.group_ids = (subscriptionSelections[gi]?.[ci] ?? []).slice()
-          }
+    const groups = newTargeting.any_of ?? []
+    for (let gi = 0; gi < groups.length; gi++) {
+      const allOf = groups[gi]?.all_of ?? []
+      for (let ci = 0; ci < allOf.length; ci++) {
+        const c = allOf[ci]
+        if (c?.type === 'subscription' || c?.type === 'group') {
+          ensureGroupSelectionPath(gi, ci)
+          c.operator = 'in' as AnnouncementOperator
+          c.group_ids = (groupSelections[gi]?.[ci] ?? []).slice()
+        } else if (c?.type === 'user') {
+          ensureUserSelectionPath(gi, ci)
+          c.operator = 'in' as AnnouncementOperator
+          c.user_ids = (userSelections[gi]?.[ci] ?? []).slice()
         }
       }
+    }
 
-      // Only emit if there's an actual change (deep comparison)
-      if (JSON.stringify(props.modelValue) !== JSON.stringify(newTargeting)) {
-        emit('update:modelValue', newTargeting)
-      }
-    }, 0)
-  },
+    // Only emit if there's an actual change (deep comparison)
+    if (JSON.stringify(props.modelValue) !== JSON.stringify(newTargeting)) {
+      emit('update:modelValue', newTargeting)
+    }
+  }, 0)
+}
+
+watch(
+  () => groupSelections,
+  syncSelectionsToModel,
   { deep: true }
 )
+
+watch(
+  () => userSelections,
+  syncSelectionsToModel,
+  { deep: true }
+)
+
+function setUserSelected(groupIndex: number, condIndex: number, userID: number, checked: boolean) {
+  ensureUserSelectionPath(groupIndex, condIndex)
+  const current = userSelections[groupIndex][condIndex] ?? []
+  userSelections[groupIndex][condIndex] = checked
+    ? Array.from(new Set([...current, userID]))
+    : current.filter((id) => id !== userID)
+}
+
+function addManualUserID(groupIndex: number, condIndex: number) {
+  const userID = Number(manualUserID.value)
+  if (!Number.isInteger(userID) || userID <= 0) return
+  setUserSelected(groupIndex, condIndex, userID, true)
+  manualUserID.value = ''
+}
 
 const validationError = computed(() => {
   if (mode.value !== 'custom') return ''
@@ -399,6 +555,10 @@ const validationError = computed(() => {
     for (const c of allOf) {
       if (c.type === 'subscription') {
         if (!c.group_ids || c.group_ids.length === 0) return t('admin.announcements.form.selectPackages')
+      } else if (c.type === 'group') {
+        if (!c.group_ids || c.group_ids.length === 0) return t('admin.announcements.form.selectAPIKeyGroups')
+      } else if (c.type === 'user') {
+        if (!c.user_ids || c.user_ids.length === 0) return t('admin.announcements.form.selectUsers')
       }
     }
   }

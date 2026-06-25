@@ -29,6 +29,10 @@ func NewAPIKeyRepository(client *dbent.Client, sqlDB *sql.DB) service.APIKeyRepo
 	return newAPIKeyRepositoryWithSQL(client, sqlDB)
 }
 
+func NewAnnouncementAPIKeyGroupReader(client *dbent.Client, sqlDB *sql.DB) service.AnnouncementAPIKeyGroupReader {
+	return newAPIKeyRepositoryWithSQL(client, sqlDB)
+}
+
 func newAPIKeyRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor) *apiKeyRepository {
 	return &apiKeyRepository{client: client, sql: sqlq}
 }
@@ -566,6 +570,36 @@ func (r *apiKeyRepository) ListKeysByUserID(ctx context.Context, userID int64) (
 		return nil, err
 	}
 	return keys, nil
+}
+
+func (r *apiKeyRepository) ListDistinctGroupIDsByUserID(ctx context.Context, userID int64) ([]int64, error) {
+	rows, err := r.sql.QueryContext(ctx, `
+		SELECT DISTINCT group_id
+		FROM api_keys
+		WHERE user_id = $1
+		  AND group_id IS NOT NULL
+		  AND deleted_at IS NULL
+		ORDER BY group_id
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]int64, 0)
+	for rows.Next() {
+		var groupID int64
+		if err := rows.Scan(&groupID); err != nil {
+			return nil, err
+		}
+		if groupID > 0 {
+			result = append(result, groupID)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (r *apiKeyRepository) ListKeysByGroupID(ctx context.Context, groupID int64) ([]string, error) {

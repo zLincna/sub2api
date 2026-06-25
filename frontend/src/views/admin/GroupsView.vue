@@ -3280,8 +3280,8 @@ const capacityMap = ref<
 const searchQuery = ref("");
 const filters = reactive({
   platform: "",
-  status: "",
-  is_exclusive: "",
+  status: "active",
+  is_exclusive: "false",
 });
 const pagination = reactive({
   page: 1,

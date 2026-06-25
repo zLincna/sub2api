@@ -206,7 +206,8 @@
 
         <AnnouncementTargetingEditor
           v-model="form.targeting"
-          :groups="subscriptionGroups"
+          :groups="allGroups"
+          :users="targetingUsers"
         />
       </form>
 
@@ -250,7 +251,7 @@ import { useAppStore } from '@/stores/app'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { adminAPI } from '@/api/admin'
 import { formatDateTime, formatDateTimeLocalInput, parseDateTimeLocalInput } from '@/utils/format'
-import type { AdminGroup, Announcement, AnnouncementTargeting } from '@/types'
+import type { AdminGroup, AdminUser, Announcement, AnnouncementTargeting } from '@/types'
 import type { Column } from '@/components/common/types'
 
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -423,14 +424,23 @@ const form = reactive({
   targeting: { any_of: [] } as AnnouncementTargeting
 })
 
-const subscriptionGroups = ref<AdminGroup[]>([])
+const allGroups = ref<AdminGroup[]>([])
+const targetingUsers = ref<AdminUser[]>([])
 
-async function loadSubscriptionGroups() {
+async function loadTargetingOptions() {
   try {
-    const all = await adminAPI.groups.getAll()
-    subscriptionGroups.value = (all || []).filter((g) => g.subscription_type === 'subscription')
+    const [groups, users] = await Promise.all([
+      adminAPI.groups.getAll(),
+      adminAPI.users.list(1, 100, {
+        status: 'active',
+        sort_by: 'id',
+        sort_order: 'desc'
+      })
+    ])
+    allGroups.value = groups || []
+    targetingUsers.value = users.items || []
   } catch (error: any) {
-    console.error('Error loading groups:', error)
+    console.error('Error loading announcement targeting options:', error)
     // not fatal
   }
 }
@@ -595,7 +605,7 @@ function openReadStatus(row: Announcement) {
 }
 
 onMounted(async () => {
-  await loadSubscriptionGroups()
+  await loadTargetingOptions()
   await loadAnnouncements()
 })
 
