@@ -516,12 +516,7 @@
               </div>
             </div>
             <div ref="noticeBox" class="h-44 overflow-y-auto bg-gray-50 p-4 text-sm leading-7 text-gray-700 dark:bg-dark-800 dark:text-dark-200" @scroll="onNoticeScroll">
-              <ol class="space-y-2">
-                <li v-for="(line, index) in noticeLines" :key="`${index}-${line}`" class="flex gap-3">
-                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-xs font-semibold text-teal-700 dark:border-teal-800 dark:bg-teal-900/30 dark:text-teal-200">{{ index + 1 }}</span>
-                  <span>{{ line }}</span>
-                </li>
-              </ol>
+              <div class="carpool-notice-markdown" v-html="renderedNoticeHtml"></div>
             </div>
             <label class="mt-4 flex items-center gap-2 px-4 text-sm text-gray-700 dark:text-dark-200">
               <input v-model="noticeAccepted" type="checkbox" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500" :disabled="!noticeScrolled" />
@@ -579,6 +574,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PaymentStatusPanel from '@/components/payment/PaymentStatusPanel.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -646,6 +643,11 @@ const refundForm = reactive({
   refund_method: 'balance',
 })
 
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+})
+
 const groupedCards = computed(() => {
   const map = new Map<string, { key: string; label: string; cards: CarpoolCard[] }>()
   for (const card of cards.value) {
@@ -690,23 +692,18 @@ const accountWindowPairs = computed(() => {
   }))
 })
 
-const noticeLines = computed(() => {
-  const raw = notice.value?.content_md || ''
-  const lines = raw
-    .split('\n')
-    .map((line) => line.trim())
-    .map((line) => line.replace(/^#+\s*/, ''))
-    .map((line) => line.replace(/^[-*]\s*/, ''))
-    .map((line) => line.replace(/^\d+[.)、]\s*/, ''))
-    .filter((line) => line && !/^拼车用户须知$/i.test(line))
-  return lines.length > 0
-    ? lines
-    : [
-        '拼车为多人共同等待成团，人满后由管理员采购和交付。',
-        '如果未在等待时间内成团，系统将按照规则支持发起退款。',
-        '发车后的账号、代理、使用方式和沟通方式以管理员交付信息为准。',
-        '付款成功即视为您已阅读并同意《拼车用户须知》，并同意遵守相关规则。',
-      ]
+const renderedNoticeHtml = computed(() => {
+  const content = notice.value?.content_md?.trim() || [
+    '拼车为多人共同等待成团，人满后由管理员采购和交付。',
+    '',
+    '如果未在等待时间内成团，系统将按照规则支持发起退款。',
+    '',
+    '发车后的账号、代理、使用方式和沟通方式以管理员交付信息为准。',
+    '',
+    '付款成功即视为您已阅读并同意《拼车用户须知》，并同意遵守相关规则。',
+  ].join('\n')
+  const html = marked.parse(content) as string
+  return DOMPurify.sanitize(html)
 })
 
 function progress(card: CarpoolCard) {
@@ -1124,3 +1121,69 @@ function formatTime(value?: string) {
 
 onMounted(loadAll)
 </script>
+
+<style scoped>
+.carpool-notice-markdown :deep(*) {
+  max-width: 100%;
+}
+
+.carpool-notice-markdown :deep(p) {
+  margin: 0 0 0.65rem;
+}
+
+.carpool-notice-markdown :deep(p:last-child),
+.carpool-notice-markdown :deep(ul:last-child),
+.carpool-notice-markdown :deep(ol:last-child),
+.carpool-notice-markdown :deep(blockquote:last-child) {
+  margin-bottom: 0;
+}
+
+.carpool-notice-markdown :deep(ul),
+.carpool-notice-markdown :deep(ol) {
+  margin: 0 0 0.75rem 1.25rem;
+  padding-left: 0.75rem;
+}
+
+.carpool-notice-markdown :deep(ul) {
+  list-style: disc;
+}
+
+.carpool-notice-markdown :deep(ol) {
+  list-style: decimal;
+}
+
+.carpool-notice-markdown :deep(li) {
+  margin: 0.25rem 0;
+  padding-left: 0.15rem;
+}
+
+.carpool-notice-markdown :deep(strong) {
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .carpool-notice-markdown :deep(strong) {
+  color: rgb(243 244 246);
+}
+
+.carpool-notice-markdown :deep(a) {
+  color: rgb(13 148 136);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.carpool-notice-markdown :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.carpool-notice-markdown :deep(blockquote) {
+  margin: 0.75rem 0;
+  border-left: 3px solid rgb(45 212 191);
+  padding-left: 0.75rem;
+  color: rgb(75 85 99);
+}
+
+.dark .carpool-notice-markdown :deep(blockquote) {
+  color: rgb(209 213 219);
+}
+</style>
