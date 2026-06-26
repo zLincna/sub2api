@@ -133,6 +133,24 @@ func (s *AuthService) SendPhoneVerifyCode(ctx context.Context, phone string) (*S
 }
 
 func (s *AuthService) VerifyPhoneRegistrationCode(ctx context.Context, phone, code string) error {
+	return s.verifyPhoneRegistrationCode(ctx, phone, code, true)
+}
+
+func (s *AuthService) CheckPhoneRegistrationCode(ctx context.Context, phone, code string) error {
+	return s.verifyPhoneRegistrationCode(ctx, phone, code, false)
+}
+
+func (s *AuthService) ConsumePhoneRegistrationCode(ctx context.Context, phone string) {
+	normalizedPhone, err := NormalizeMainlandPhone(phone)
+	if err != nil {
+		return
+	}
+	s.smsChallengeMu.Lock()
+	delete(s.smsChallenges, normalizedPhone)
+	s.smsChallengeMu.Unlock()
+}
+
+func (s *AuthService) verifyPhoneRegistrationCode(ctx context.Context, phone, code string, consume bool) error {
 	normalizedPhone, err := NormalizeMainlandPhone(phone)
 	if err != nil {
 		return err
@@ -157,9 +175,11 @@ func (s *AuthService) VerifyPhoneRegistrationCode(ctx context.Context, phone, co
 		return ErrPhoneVerifyInvalid
 	}
 
-	s.smsChallengeMu.Lock()
-	delete(s.smsChallenges, normalizedPhone)
-	s.smsChallengeMu.Unlock()
+	if consume {
+		s.smsChallengeMu.Lock()
+		delete(s.smsChallenges, normalizedPhone)
+		s.smsChallengeMu.Unlock()
+	}
 	return nil
 }
 

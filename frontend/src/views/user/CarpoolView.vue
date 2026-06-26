@@ -422,20 +422,16 @@
           <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ segmentLabel(selected.vehicle_type) }} · 支付 ¥{{ money(selected.vehicle_type.unit_price) }} 后进入当前排队队列。</p>
         </div>
         <div class="max-h-[74vh] space-y-4 overflow-y-auto p-5">
-          <div class="grid gap-3 lg:grid-cols-3">
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-dark-700 dark:bg-dark-800">
-              <span class="text-xs font-medium text-gray-500 dark:text-dark-400">可申请退款时间</span>
-              <div class="mt-2 flex h-11 items-center rounded-md border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-900 dark:border-dark-700 dark:bg-dark-900 dark:text-white">
-                支付后 {{ refundWaitLabel(selected.vehicle_type) }}
-              </div>
-              <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">时间到后可在“我的拼车”发起退款；不发起则继续等待成团。</p>
-            </div>
-            <div class="rounded-lg border border-primary-200 bg-primary-50 p-3 ring-1 ring-primary-100 dark:border-primary-800 dark:bg-primary-900/20 dark:ring-primary-900/40">
+          <div class="rounded-lg border border-primary-200 bg-primary-50 p-3 ring-1 ring-primary-100 dark:border-primary-800 dark:bg-primary-900/20 dark:ring-primary-900/40">
+            <div class="max-w-xl">
               <span class="text-xs font-medium text-primary-700 dark:text-primary-200">支付方式</span>
               <div class="mt-2 flex h-11 items-center justify-between rounded-md border border-primary-200 bg-white px-3 text-sm font-semibold text-gray-900 dark:border-primary-800 dark:bg-dark-900 dark:text-white">
                 <span>支付宝</span>
                 <span class="rounded bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">当前支持</span>
               </div>
+              <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
+                可申请退款时间：支付后 {{ refundWaitLabel(selected.vehicle_type) }}，到时可在“我的拼车”发起退款；不发起则继续等待成团。
+              </p>
             </div>
           </div>
 

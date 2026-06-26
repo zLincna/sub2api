@@ -264,7 +264,7 @@ func (s *AuthService) registerWithVerificationOptions(ctx context.Context, opts 
 		if strings.TrimSpace(opts.phoneVerifyCode) == "" {
 			return "", nil, ErrPhoneVerifyRequired
 		}
-		if err := s.VerifyPhoneRegistrationCode(ctx, normalizedPhone, opts.phoneVerifyCode); err != nil {
+		if err := s.CheckPhoneRegistrationCode(ctx, normalizedPhone, opts.phoneVerifyCode); err != nil {
 			return "", nil, err
 		}
 	}
@@ -329,6 +329,9 @@ func (s *AuthService) registerWithVerificationOptions(ctx context.Context, opts 
 		}
 		logger.LegacyPrintf("service.auth", "[Auth] Database error creating user: %v", err)
 		return "", nil, ErrServiceUnavailable
+	}
+	if opts.requirePhone && phoneVerifyEnabled {
+		s.ConsumePhoneRegistrationCode(ctx, normalizedPhone)
 	}
 	s.postAuthUserBootstrap(ctx, user, "email", true)
 	s.assignSubscriptions(ctx, user.ID, grantPlan.Subscriptions, "auto assigned by signup defaults")
