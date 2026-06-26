@@ -415,44 +415,125 @@
       </div>
     </div>
 
-    <div v-if="selected" class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
-      <div class="max-h-[94vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-dark-900">
-        <div class="border-b border-gray-100 px-5 py-4 dark:border-dark-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ selected.vehicle_type.name }} 确认拼车</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ segmentLabel(selected.vehicle_type) }} · 支付 ¥{{ money(selected.vehicle_type.unit_price) }} 后进入当前排队队列。</p>
+    <div v-if="selected" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 p-4 backdrop-blur-md">
+      <div class="max-h-[94vh] w-full max-w-[860px] overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-gray-900/10 dark:bg-dark-900 dark:ring-white/10">
+        <div class="flex items-start justify-between gap-4 px-6 pb-5 pt-7 sm:px-9">
+          <div>
+            <h3 class="text-2xl font-semibold text-gray-950 dark:text-white">{{ selected.vehicle_type.name }} · 确认拼车</h3>
+            <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-dark-300">{{ segmentLabel(selected.vehicle_type) }}，支付 ¥{{ money(selected.vehicle_type.unit_price) }} 后进入当前拼车队列。</p>
+          </div>
+          <button
+            type="button"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-700 transition hover:bg-gray-100 hover:text-gray-950 dark:text-dark-300 dark:hover:bg-dark-800 dark:hover:text-white"
+            aria-label="关闭"
+            @click="selected = null"
+          >
+            <Icon name="x" size="lg" :stroke-width="1.8" />
+          </button>
         </div>
-        <div class="max-h-[74vh] space-y-4 overflow-y-auto p-5">
-          <div class="rounded-lg border border-primary-200 bg-primary-50 p-3 ring-1 ring-primary-100 dark:border-primary-800 dark:bg-primary-900/20 dark:ring-primary-900/40">
-            <div class="max-w-xl">
-              <span class="text-xs font-medium text-primary-700 dark:text-primary-200">支付方式</span>
-              <div class="mt-2 flex h-11 items-center justify-between rounded-md border border-primary-200 bg-white px-3 text-sm font-semibold text-gray-900 dark:border-primary-800 dark:bg-dark-900 dark:text-white">
-                <span>支付宝</span>
-                <span class="rounded bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">当前支持</span>
+
+        <div class="max-h-[68vh] space-y-6 overflow-y-auto px-6 pb-6 sm:px-9">
+          <div class="grid overflow-hidden rounded-lg border border-teal-100 bg-gradient-to-r from-teal-50/80 to-cyan-50/50 shadow-sm dark:border-teal-900/50 dark:from-teal-950/30 dark:to-cyan-950/20 sm:grid-cols-3">
+            <div class="flex items-center gap-4 border-b border-teal-100 px-5 py-5 dark:border-teal-900/50 sm:border-b-0 sm:border-r">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center text-teal-500 dark:text-teal-300">
+                <Icon name="users" size="xl" :stroke-width="1.8" />
               </div>
-              <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
-                可申请退款时间：支付后 {{ refundWaitLabel(selected.vehicle_type) }}，到时可在“我的拼车”发起退款；不发起则继续等待成团。
-              </p>
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-dark-300">拼车人数</p>
+                <p class="mt-1 text-xl font-semibold text-gray-950 dark:text-white">{{ selected.seat_count }} 人</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 border-b border-teal-100 px-5 py-5 dark:border-teal-900/50 sm:border-b-0 sm:border-r">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center text-teal-500 dark:text-teal-300">
+                <Icon name="tag" size="xl" :stroke-width="1.8" />
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-dark-300">单人价格</p>
+                <p class="mt-1 text-xl font-semibold text-gray-950 dark:text-white">¥{{ money(selected.vehicle_type.unit_price) }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 px-5 py-5">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center text-teal-500 dark:text-teal-300">
+                <Icon name="wallet" size="xl" :stroke-width="1.8" />
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-dark-300">合计金额</p>
+                <p class="mt-1 text-2xl font-bold text-teal-600 dark:text-teal-300">¥{{ money(selected.vehicle_type.total_price) }}</p>
+              </div>
             </div>
           </div>
 
-          <div>
-            <div class="mb-2 flex items-center justify-between">
-              <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ notice?.title || '拼车用户须知' }}</h4>
-              <span class="text-xs text-gray-400">v{{ notice?.version || 1 }}</span>
+          <section>
+            <h4 class="mb-3 text-sm font-semibold text-gray-950 dark:text-white">支付方式</h4>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <button
+                type="button"
+                class="flex min-h-[96px] items-center justify-between rounded-lg border border-teal-500 bg-white p-5 text-left shadow-sm ring-1 ring-teal-100 transition hover:bg-teal-50/40 dark:bg-dark-900 dark:ring-teal-900/40 dark:hover:bg-teal-950/20"
+                @click="joinForm.payment_type = 'alipay'"
+              >
+                <span class="flex items-center gap-4">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-[#1677ff] text-2xl font-bold text-white">支</span>
+                  <span>
+                    <span class="flex items-center gap-2 text-base font-semibold text-gray-950 dark:text-white">
+                      支付宝
+                      <span class="rounded bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-200">推荐</span>
+                    </span>
+                    <span class="mt-2 block text-sm text-gray-500 dark:text-dark-300">当前支持</span>
+                  </span>
+                </span>
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-white">
+                  <Icon name="check" size="xs" :stroke-width="2.5" />
+                </span>
+              </button>
+
+              <div class="flex min-h-[96px] items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-5 text-left opacity-75 dark:border-dark-700 dark:bg-dark-800">
+                <span class="flex items-center gap-4">
+                  <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gray-300 text-white dark:bg-dark-600">
+                    <Icon name="chat" size="lg" />
+                  </span>
+                  <span>
+                    <span class="flex items-center gap-2 text-base font-semibold text-gray-500 dark:text-dark-300">
+                      微信支付
+                      <span class="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-dark-700 dark:text-dark-300">即将支持</span>
+                    </span>
+                    <span class="mt-2 block text-sm text-gray-400 dark:text-dark-400">敬请期待</span>
+                  </span>
+                </span>
+              </div>
             </div>
-            <div ref="noticeBox" class="h-56 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-4 text-sm leading-6 text-gray-700 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200" @scroll="onNoticeScroll">
-              <pre class="whitespace-pre-wrap font-sans">{{ notice?.content_md || '' }}</pre>
+            <p class="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+              <Icon name="shield" size="sm" class="text-teal-600 dark:text-teal-300" />
+              支付后 {{ refundWaitLabel(selected.vehicle_type) }} 内可申请退款，可在“我的拼车”中发起。
+            </p>
+          </section>
+
+          <section class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900">
+            <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-700">
+              <h4 class="text-sm font-semibold text-gray-950 dark:text-white">{{ notice?.title || '拼车用户须知' }}</h4>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-400">v{{ notice?.version || 1 }}</span>
+                <Icon name="chevronUp" size="sm" class="text-gray-500 dark:text-dark-300" />
+              </div>
             </div>
-            <label class="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-dark-200">
-              <input v-model="noticeAccepted" type="checkbox" class="rounded border-gray-300" :disabled="!noticeScrolled" />
-              我已完整阅读并理解拼车规则
+            <div ref="noticeBox" class="h-44 overflow-y-auto bg-gray-50 p-4 text-sm leading-7 text-gray-700 dark:bg-dark-800 dark:text-dark-200" @scroll="onNoticeScroll">
+              <ol class="space-y-2">
+                <li v-for="(line, index) in noticeLines" :key="`${index}-${line}`" class="flex gap-3">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-xs font-semibold text-teal-700 dark:border-teal-800 dark:bg-teal-900/30 dark:text-teal-200">{{ index + 1 }}</span>
+                  <span>{{ line }}</span>
+                </li>
+              </ol>
+            </div>
+            <label class="mt-4 flex items-center gap-2 px-4 text-sm text-gray-700 dark:text-dark-200">
+              <input v-model="noticeAccepted" type="checkbox" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500" :disabled="!noticeScrolled" />
+              <span>我已阅读并同意 <span class="font-medium text-teal-600 dark:text-teal-300">《拼车用户须知》</span></span>
             </label>
-            <p v-if="!noticeScrolled" class="mt-1 text-xs text-amber-600 dark:text-amber-300">请先滚动阅读到须知底部。</p>
-          </div>
+            <p v-if="!noticeScrolled" class="mb-4 ml-11 mt-1 text-xs text-orange-500 dark:text-orange-300">请先滚动阅读到须知底部</p>
+            <p v-else-if="!noticeAccepted" class="mb-4 ml-11 mt-1 text-xs text-orange-500 dark:text-orange-300">请先勾选协议后再支付</p>
+          </section>
         </div>
-        <div class="flex justify-end gap-2 border-t border-gray-100 px-5 py-4 dark:border-dark-700">
-          <button type="button" class="btn btn-secondary" @click="selected = null">取消</button>
-          <button type="button" class="btn btn-primary" :disabled="joining || !noticeAccepted" @click="joinSelected">
+        <div class="flex justify-end gap-4 px-6 pb-7 pt-3 sm:px-9">
+          <button type="button" class="rounded-lg border border-gray-200 bg-white px-8 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-50 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-100 dark:hover:bg-dark-800" @click="selected = null">取消</button>
+          <button type="button" class="rounded-lg bg-teal-600 px-9 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60" :disabled="joining || !noticeAccepted" @click="joinSelected">
             {{ joining ? '处理中...' : '确认并支付' }}
           </button>
         </div>
@@ -500,6 +581,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PaymentStatusPanel from '@/components/payment/PaymentStatusPanel.vue'
+import Icon from '@/components/icons/Icon.vue'
 import { carpoolAPI } from '@/api/carpool'
 import type { CarpoolAccountWindowUsage, CarpoolCard, CarpoolNoticeVersion, CarpoolParticipant, CarpoolUserDetail, CarpoolVehicleType, CarpoolVoucher } from '@/types/carpool'
 import type { CreateOrderResult } from '@/types/payment'
@@ -606,6 +688,25 @@ const accountWindowPairs = computed(() => {
     ...item,
     windows: item.windows.sort((a, b) => windowSort(a.window) - windowSort(b.window)),
   }))
+})
+
+const noticeLines = computed(() => {
+  const raw = notice.value?.content_md || ''
+  const lines = raw
+    .split('\n')
+    .map((line) => line.trim())
+    .map((line) => line.replace(/^#+\s*/, ''))
+    .map((line) => line.replace(/^[-*]\s*/, ''))
+    .map((line) => line.replace(/^\d+[.)、]\s*/, ''))
+    .filter((line) => line && !/^拼车用户须知$/i.test(line))
+  return lines.length > 0
+    ? lines
+    : [
+        '拼车为多人共同等待成团，人满后由管理员采购和交付。',
+        '如果未在等待时间内成团，系统将按照规则支持发起退款。',
+        '发车后的账号、代理、使用方式和沟通方式以管理员交付信息为准。',
+        '付款成功即视为您已阅读并同意《拼车用户须知》，并同意遵守相关规则。',
+      ]
 })
 
 function progress(card: CarpoolCard) {
