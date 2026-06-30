@@ -86,6 +86,9 @@ func (f fakeAPIKeyRepo) CountByGroupID(ctx context.Context, groupID int64) (int6
 func (f fakeAPIKeyRepo) ListKeysByUserID(ctx context.Context, userID int64) ([]string, error) {
 	return nil, errors.New("not implemented")
 }
+func (f fakeAPIKeyRepo) ListDistinctGroupIDsByUserID(ctx context.Context, userID int64) ([]int64, error) {
+	return nil, nil
+}
 func (f fakeAPIKeyRepo) ListKeysByGroupID(ctx context.Context, groupID int64) ([]string, error) {
 	return nil, errors.New("not implemented")
 }
