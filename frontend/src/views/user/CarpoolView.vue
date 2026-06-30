@@ -628,7 +628,7 @@ const groupedCards = computed(() => {
   const map = new Map<string, { key: string; label: string; cards: CarpoolCard[] }>()
   for (const card of cards.value) {
     const vt = card.vehicle_type
-    const key = `${vt.product || 'openai'}:${vt.plan_tier || 'pro'}:${vt.multiplier || '20x'}`
+    const key = `${normalizeCarpoolCode(vt.product, 'custom')}:${normalizeCarpoolCode(vt.plan_tier, 'custom')}:${normalizeCarpoolCode(vt.multiplier, 'custom')}`
     if (!map.has(key)) {
       map.set(key, { key, label: segmentLabel(vt), cards: [] })
     }
@@ -916,16 +916,32 @@ function productLabel(value?: string) {
     openai: 'OpenAI',
     claudecode: 'ClaudeCode',
     claude_code: 'ClaudeCode',
+    glm: 'GLM',
+    volcengine: '火山方舟',
+    volcano: '火山方舟',
+    doubao: '豆包',
+    qwen: '通义千问',
+    custom: '自定义产品',
   }
-  return labels[String(value || '').toLowerCase()] || value || 'OpenAI'
+  const normalized = normalizeCarpoolCode(value, '')
+  return labels[normalized] || value?.trim() || '自定义产品'
 }
 
 function tierLabel(value?: string) {
   const labels: Record<string, string> = {
     pro: 'Pro',
     plus: 'Plus',
+    standard: 'Standard',
+    enterprise: 'Enterprise',
+    custom: '自定义套餐',
   }
-  return labels[String(value || '').toLowerCase()] || value || 'Pro'
+  const normalized = normalizeCarpoolCode(value, '')
+  return labels[normalized] || value?.trim() || '自定义套餐'
+}
+
+function normalizeCarpoolCode(value: string | undefined, fallback: string) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/\s+/g, '_')
+  return normalized || fallback
 }
 
 function refundLabel(method: string) {

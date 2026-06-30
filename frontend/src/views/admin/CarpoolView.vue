@@ -411,17 +411,17 @@
           <div class="grid gap-3 md:grid-cols-3">
             <label class="space-y-1">
               <span class="text-sm text-gray-500">产品</span>
-              <select v-model="editingType.product" class="input">
-                <option value="openai">OpenAI</option>
-                <option value="claudecode">ClaudeCode</option>
-              </select>
+              <input v-model="editingType.product" list="carpool-product-options" class="input" placeholder="openai / claudecode / glm / volcengine" />
+              <datalist id="carpool-product-options">
+                <option v-for="option in carpoolProductOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+              </datalist>
             </label>
             <label class="space-y-1">
               <span class="text-sm text-gray-500">套餐</span>
-              <select v-model="editingType.plan_tier" class="input">
-                <option value="pro">Pro</option>
-                <option value="plus">Plus</option>
-              </select>
+              <input v-model="editingType.plan_tier" list="carpool-tier-options" class="input" placeholder="pro / plus / standard / enterprise" />
+              <datalist id="carpool-tier-options">
+                <option v-for="option in carpoolTierOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+              </datalist>
             </label>
             <label class="space-y-1">
               <span class="text-sm text-gray-500">倍率</span>
@@ -781,6 +781,20 @@ const noticeForm = reactive({
   content_md: '',
   active: true,
 })
+const carpoolProductOptions = [
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'claudecode', label: 'ClaudeCode' },
+  { value: 'glm', label: 'GLM' },
+  { value: 'volcengine', label: '火山方舟' },
+  { value: 'doubao', label: '豆包' },
+  { value: 'qwen', label: '通义千问' },
+]
+const carpoolTierOptions = [
+  { value: 'pro', label: 'Pro' },
+  { value: 'plus', label: 'Plus' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'enterprise', label: 'Enterprise' },
+]
 
 const overviewCards = computed(() => {
   const sessionsMap = (overview.value.sessions || {}) as Record<string, number>
@@ -795,7 +809,7 @@ const overviewCards = computed(() => {
 const groupedTypes = computed(() => {
   const map = new Map<string, { key: string; label: string; items: CarpoolVehicleType[] }>()
   for (const item of types.value) {
-    const key = `${item.product || 'openai'}:${item.plan_tier || 'pro'}:${item.multiplier || '20x'}`
+    const key = `${normalizeCarpoolCode(item.product, 'custom')}:${normalizeCarpoolCode(item.plan_tier, 'custom')}:${normalizeCarpoolCode(item.multiplier, 'custom')}`
     if (!map.has(key)) map.set(key, { key, label: segmentLabel(item), items: [] })
     map.get(key)!.items.push(item)
   }
@@ -984,9 +998,9 @@ async function saveEditingType() {
 
 async function saveType(item: CarpoolVehicleType) {
   const payload = {
-    product: item.product || 'openai',
-    plan_tier: item.plan_tier || 'pro',
-    multiplier: item.multiplier || '20x',
+    product: normalizeCarpoolCode(item.product, 'custom'),
+    plan_tier: normalizeCarpoolCode(item.plan_tier, 'custom'),
+    multiplier: normalizeCarpoolCode(item.multiplier, 'custom'),
     name: item.name,
     seat_count: Number(item.seat_count),
     total_price: Number(item.total_price),
@@ -1143,16 +1157,32 @@ function productLabel(value?: string) {
     openai: 'OpenAI',
     claudecode: 'ClaudeCode',
     claude_code: 'ClaudeCode',
+    glm: 'GLM',
+    volcengine: '火山方舟',
+    volcano: '火山方舟',
+    doubao: '豆包',
+    qwen: '通义千问',
+    custom: '自定义产品',
   }
-  return labels[String(value || '').toLowerCase()] || value || 'OpenAI'
+  const normalized = normalizeCarpoolCode(value, '')
+  return labels[normalized] || value?.trim() || '自定义产品'
 }
 
 function tierLabel(value?: string) {
   const labels: Record<string, string> = {
     pro: 'Pro',
     plus: 'Plus',
+    standard: 'Standard',
+    enterprise: 'Enterprise',
+    custom: '自定义套餐',
   }
-  return labels[String(value || '').toLowerCase()] || value || 'Pro'
+  const normalized = normalizeCarpoolCode(value, '')
+  return labels[normalized] || value?.trim() || '自定义套餐'
+}
+
+function normalizeCarpoolCode(value: string | undefined, fallback: string) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/\s+/g, '_')
+  return normalized || fallback
 }
 
 function parseStringList(raw: string) {
