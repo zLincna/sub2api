@@ -121,46 +121,55 @@
               <button type="button" class="btn btn-secondary btn-sm" @click="loadMine">刷新</button>
             </div>
             <div v-if="mine.length === 0" class="py-12 text-center text-sm text-gray-500 dark:text-dark-400">暂无拼车记录</div>
-            <div v-else class="space-y-3">
-              <article v-for="item in mine" :key="item.id" class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.edges?.vehicle_type?.name || item.vehicle_type_id }}</p>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ item.edges?.vehicle_type ? segmentLabel(item.edges.vehicle_type) : '拼车订单' }}</p>
+            <div v-else class="space-y-4">
+              <article v-for="item in mine" :key="item.id" class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-900">
+                <div class="flex flex-col gap-3 border-b border-gray-100 bg-gray-50/70 p-4 dark:border-dark-700 dark:bg-dark-800/60 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="min-w-0">
+                    <div class="mb-2 flex flex-wrap gap-2">
+                      <span class="rounded bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-200">{{ item.edges?.vehicle_type ? segmentLabel(item.edges.vehicle_type) : '拼车订单' }}</span>
+                      <span class="rounded bg-white px-2 py-1 text-xs text-gray-500 dark:bg-dark-900 dark:text-dark-300">{{ item.edges?.session?.session_no || '等待分配轮次' }}</span>
+                    </div>
+                    <h4 class="truncate text-base font-semibold text-gray-900 dark:text-white">{{ item.edges?.vehicle_type?.name || item.vehicle_type_id }}</h4>
+                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-dark-300">{{ participantStageText(item) }}</p>
                   </div>
-                  <span class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-dark-800 dark:text-dark-300">{{ statusLabel(item.status) }}</span>
+                  <div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                    <span :class="['rounded px-2.5 py-1 text-xs font-medium', carpoolStateBadgeClass(item.edges?.session?.status || item.status)]">{{ statusLabel(item.edges?.session?.status || item.status) }}</span>
+                    <span class="text-sm font-semibold text-gray-900 dark:text-white">¥{{ money(item.amount) }}</span>
+                  </div>
                 </div>
-                <div class="mt-4">
-                  <div class="mb-2 flex items-center justify-between text-xs text-gray-500 dark:text-dark-400">
+                <div class="p-4">
+                  <div class="mb-3 flex items-center justify-between text-xs text-gray-500 dark:text-dark-400">
                     <span>拼车进度</span>
                     <span class="font-semibold text-gray-900 dark:text-white">{{ sessionProgressLabel(item) }}</span>
                   </div>
                   <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
                     <div class="h-full rounded-full bg-primary-500 transition-all" :style="{ width: progressWidth(participantProgress(item)) }"></div>
                   </div>
-                  <p class="mt-2 text-xs text-gray-500 dark:text-dark-400">{{ participantStageText(item) }}</p>
+                  <div class="mt-4 grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+                    <div class="rounded-md bg-gray-50 p-3 dark:bg-dark-800">
+                      <p class="text-xs text-gray-400">等待截止</p>
+                      <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ formatTime(item.wait_until) }}</p>
+                    </div>
+                    <div class="rounded-md bg-gray-50 p-3 dark:bg-dark-800">
+                      <p class="text-xs text-gray-400">拼车成功时间</p>
+                      <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ formatTime(item.edges?.session?.filled_at) }}</p>
+                    </div>
+                    <div class="rounded-md bg-gray-50 p-3 dark:bg-dark-800">
+                      <p class="text-xs text-gray-400">服务到期时间</p>
+                      <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ formatTime(item.edges?.session?.service_ended_at) }}</p>
+                    </div>
+                    <div class="rounded-md bg-gray-50 p-3 dark:bg-dark-800">
+                      <p class="text-xs text-gray-400">到期剩余</p>
+                      <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ timeLeftLabel(item.edges?.session?.service_ended_at) }}</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="mt-4 grid gap-3 text-sm sm:grid-cols-4">
-                  <div>
-                    <p class="text-xs text-gray-400">金额</p>
-                    <p class="font-semibold text-gray-900 dark:text-white">¥{{ money(item.amount) }}</p>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-400">轮次</p>
-                    <p class="font-semibold text-gray-900 dark:text-white">{{ item.edges?.session?.session_no || '-' }}</p>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-400">等待截止</p>
-                    <p class="font-semibold text-gray-900 dark:text-white">{{ formatTime(item.wait_until) }}</p>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-400">轮次状态</p>
-                    <p class="font-semibold text-gray-900 dark:text-white">{{ statusLabel(item.edges?.session?.status || item.status) }}</p>
-                  </div>
-                </div>
-                <div class="mt-4 flex justify-end gap-2">
+                <div class="flex flex-col gap-2 border-t border-gray-100 px-4 py-3 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
+                  <p class="text-xs text-gray-500 dark:text-dark-400">支付时间：{{ formatTime(item.paid_at || item.created_at) }}</p>
+                  <div class="flex justify-end gap-2">
                   <button v-if="canRequestRefund(item)" type="button" class="btn btn-secondary btn-sm text-red-600 dark:text-red-300" @click="openRefundDialog(item)">发起退款</button>
                   <button type="button" class="btn btn-secondary btn-sm" @click="openDetail(item)">查看详情</button>
+                  </div>
                 </div>
               </article>
             </div>
@@ -201,7 +210,7 @@
               <div class="flex flex-col gap-2 border-b border-gray-100 px-4 py-3 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h4 class="text-sm font-semibold text-gray-900 dark:text-white">拼车信息</h4>
-                  <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">进度、交付、凭证和账号池窗口集中展示在这里。</p>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">进度、交付信息和凭证集中展示在这里；用量请切换到“车成员与用量”。</p>
                 </div>
                 <span class="text-xs text-gray-500 dark:text-dark-400">{{ detailSession?.session_no || '等待成团' }} · {{ statusLabel(detailSession?.status || detailItem.status) }}</span>
               </div>
@@ -218,75 +227,42 @@
                   <p class="mt-3 text-sm text-gray-600 dark:text-dark-300">{{ participantStageText(detailItem) }}</p>
                 </div>
 
-                <div class="grid gap-3 text-sm md:grid-cols-5">
+                <div v-if="detailStateNotice" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-100">
+                  {{ detailStateNotice }}
+                </div>
+
+                <div class="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
                   <div class="rounded-lg bg-gray-50 p-4 dark:bg-dark-800">
                     <p class="text-xs text-gray-500 dark:text-dark-400">支付金额</p>
                     <p class="mt-1 font-semibold text-gray-900 dark:text-white">¥{{ money(detailItem.amount) }}</p>
                   </div>
                   <div class="rounded-lg bg-gray-50 p-4 dark:bg-dark-800">
-                    <p class="text-xs text-gray-500 dark:text-dark-400">本车总请求</p>
-                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ compactNumber(detailData?.total_usage?.request_count || 0) }} 次</p>
+                    <p class="text-xs text-gray-500 dark:text-dark-400">拼车成功时间</p>
+                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ formatTime(detailSession?.filled_at) }}</p>
                   </div>
                   <div class="rounded-lg bg-gray-50 p-4 dark:bg-dark-800">
-                    <p class="text-xs text-gray-500 dark:text-dark-400">本车总消耗</p>
-                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">${{ money(detailData?.total_usage?.total_actual_cost || 0) }}</p>
+                    <p class="text-xs text-gray-500 dark:text-dark-400">服务开始</p>
+                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ formatTime(detailSession?.service_started_at || detailSession?.provisioned_at) }}</p>
                   </div>
                   <div class="rounded-lg bg-gray-50 p-4 dark:bg-dark-800">
-                    <p class="text-xs text-gray-500 dark:text-dark-400">最近 5h</p>
-                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ compactNumber(detailData?.total_windows?.five_hour?.request_count || 0) }} 次</p>
-                  </div>
-                  <div class="rounded-lg bg-gray-50 p-4 dark:bg-dark-800">
-                    <p class="text-xs text-gray-500 dark:text-dark-400">最近 7d</p>
-                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ compactNumber(detailData?.total_windows?.seven_day?.request_count || 0) }} 次</p>
+                    <p class="text-xs text-gray-500 dark:text-dark-400">服务到期</p>
+                    <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ formatTime(detailSession?.service_ended_at) }}</p>
                   </div>
                 </div>
 
-                <div class="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-                  <div class="space-y-4">
-                    <section class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
-                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">发车后如何使用</h4>
-                      <ol class="mt-3 space-y-2 text-sm leading-6 text-gray-600 dark:text-dark-300">
-                        <li>1. 管理员发车后会分配订阅分组，并上传交付凭证。</li>
-                        <li>2. 进入“订阅”或 API Key 配置页使用已分配的分组；车内沟通信息以本详情为准。</li>
-                        <li>3. 本页会展示账号池 5h/7d 窗口、本车总用量、自己和其他成员的用量。</li>
-                      </ol>
-                    </section>
-
-                    <section v-if="deliverySummary(detailItem)" class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
-                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">交付信息</h4>
-                      <p class="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600 dark:text-dark-300">{{ deliverySummary(detailItem) }}</p>
-                    </section>
-                  </div>
-
+                <div class="grid gap-4 lg:grid-cols-2">
                   <section class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
-                    <div class="mb-3 flex items-center justify-between">
-                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">账号池 5h / 7d 用量</h4>
-                      <span class="text-xs text-gray-500 dark:text-dark-400">{{ accountWindowPairs.length }} 个账号</span>
-                    </div>
-                    <div v-if="accountWindowPairs.length === 0" class="rounded-md bg-gray-50 p-4 text-sm leading-6 text-gray-500 dark:bg-dark-800 dark:text-dark-400">发车后管理员分配订阅分组，账号池窗口会在这里展示。</div>
-                    <div v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                      <div v-for="item in accountWindowPairs" :key="item.account_id" class="rounded-md border border-gray-100 p-3 dark:border-dark-700">
-                        <p class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ item.account_name || `账号 ${item.account_id}` }}</p>
-                        <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                          <div v-for="win in item.windows" :key="win.window" class="rounded bg-gray-50 p-3 dark:bg-dark-800">
-                            <div class="mb-2 flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-dark-400">
-                              <span class="rounded bg-white px-2 py-1 dark:bg-dark-900">{{ compactNumber(win.usage?.request_count || 0) }} req</span>
-                              <span class="rounded bg-white px-2 py-1 dark:bg-dark-900">{{ compactNumber(win.usage?.total_tokens || 0) }}</span>
-                              <span class="rounded bg-white px-2 py-1 dark:bg-dark-900" title="账号成本">A ${{ money(win.usage?.total_actual_cost || 0) }}</span>
-                              <span class="rounded bg-white px-2 py-1 dark:bg-dark-900" title="用户计费">U ${{ money(win.usage?.total_cost || 0) }}</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-xs">
-                              <span :class="['w-9 shrink-0 rounded px-1.5 py-0.5 text-center font-medium', usageWindowBadgeClass(win.window)]">{{ windowShortLabel(win.window) }}</span>
-                              <div class="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-700">
-                                <div :class="['h-full rounded-full', usageWindowBarClass(win.utilization)]" :style="{ width: Math.min(100, Math.max(0, win.utilization || 0)) + '%' }"></div>
-                              </div>
-                              <span class="w-10 shrink-0 text-right font-medium text-gray-700 dark:text-dark-200">{{ usagePercent(win.utilization) }}</span>
-                              <span class="shrink-0 text-gray-400">{{ resetCountdown(win.resets_at, win.utilization) }}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">发车后如何使用</h4>
+                    <ol class="mt-3 space-y-2 text-sm leading-6 text-gray-600 dark:text-dark-300">
+                      <li>1. 管理员发车后会分配订阅分组，并上传交付凭证。</li>
+                      <li>2. 进入“订阅”或 API Key 配置页使用已分配的分组；车内沟通信息以本详情为准。</li>
+                      <li>3. 账号整体用量、自己和其他成员用量请切换到“车成员与用量”查看。</li>
+                    </ol>
+                  </section>
+
+                  <section v-if="deliverySummary(detailItem)" class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">交付信息</h4>
+                    <p class="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600 dark:text-dark-300">{{ deliverySummary(detailItem) }}</p>
                   </section>
                 </div>
 
@@ -692,6 +668,15 @@ const accountWindowPairs = computed(() => {
   }))
 })
 
+const detailStateNotice = computed(() => {
+  const session = detailSession.value
+  if (!detailItem.value || !session) return ''
+  if (session.status === 'full') return '拼车已成功，正在等待管理员采购账号、配置代理和分配订阅分组。完成后这里会展示交付信息，成员用量页也会显示账号池窗口。'
+  if (session.status === 'provisioning') return '管理员正在进行采购和订阅分配，当前暂未完成发车。请等待短信或站内状态更新。'
+  if (session.status === 'active' && !deliverySummary(detailItem.value)) return '本轮已经发车，但暂未填写交付说明或凭证。如无法使用，请联系管理员确认订阅分组。'
+  return ''
+})
+
 const renderedNoticeHtml = computed(() => {
   const content = notice.value?.content_md?.trim() || [
     '拼车为多人共同等待成团，人满后由管理员采购和交付。',
@@ -970,6 +955,14 @@ function statusLabel(status?: string) {
   return labels[String(status || '')] || status || '-'
 }
 
+function carpoolStateBadgeClass(status?: string) {
+  const value = String(status || '')
+  if (['active'].includes(value)) return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200'
+  if (['full', 'provisioning'].includes(value)) return 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200'
+  if (['refund_pending', 'refunded_balance', 'refunded_gateway', 'failed', 'cancelled'].includes(value)) return 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-200'
+  return 'bg-gray-100 text-gray-600 dark:bg-dark-800 dark:text-dark-300'
+}
+
 function sessionProgressLabel(item: CarpoolParticipant) {
   const session = item.edges?.session
   if (!session) {
@@ -1112,6 +1105,20 @@ function resetCountdown(value?: string, utilization?: number) {
   }
   if (hours > 0) return `${hours}h ${minutes}m`
   return `${minutes}m`
+}
+
+function timeLeftLabel(value?: string) {
+  if (!value) return '待发车'
+  const diffMs = new Date(value).getTime() - Date.now()
+  if (!Number.isFinite(diffMs)) return '-'
+  if (diffMs <= 0) return '已到期'
+  const totalHours = Math.floor(diffMs / 3600000)
+  const days = Math.floor(totalHours / 24)
+  const hours = totalHours % 24
+  if (days > 0) return `${days}天${hours}小时`
+  const minutes = Math.max(0, Math.floor((diffMs % 3600000) / 60000))
+  if (hours > 0) return `${hours}小时${minutes}分钟`
+  return `${minutes}分钟`
 }
 
 function formatTime(value?: string) {

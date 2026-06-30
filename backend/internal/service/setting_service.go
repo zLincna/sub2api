@@ -1787,6 +1787,18 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 		updates[SettingKeyAliyunSMSAccessKeySecret] = strings.TrimSpace(settings.AliyunSMSAccessKeySecret)
 	}
 	updates[SettingKeyAliyunSMSSignName] = strings.TrimSpace(settings.AliyunSMSSignName)
+	registrationMode := normalizeAliyunSMSRegistrationMode(settings.AliyunSMSRegistrationMode)
+	updates[SettingKeyAliyunSMSRegistrationMode] = registrationMode
+	updates[SettingKeyAliyunSMSVerifyCodeSignName] = strings.TrimSpace(settings.AliyunSMSVerifyCodeSignName)
+	updates[SettingKeyAliyunSMSVerifyCodeTemplateCode] = strings.TrimSpace(settings.AliyunSMSVerifyCodeTemplateCode)
+	if strings.TrimSpace(settings.AliyunSMSVerifyCodeStaticParams) != "" {
+		if !json.Valid([]byte(settings.AliyunSMSVerifyCodeStaticParams)) {
+			return nil, infraerrors.BadRequest("INVALID_ALIYUN_SMS_VERIFY_CODE_STATIC_PARAMS", "aliyun sms verify code static params must be valid JSON")
+		}
+		updates[SettingKeyAliyunSMSVerifyCodeStaticJSON] = strings.TrimSpace(settings.AliyunSMSVerifyCodeStaticParams)
+	} else {
+		updates[SettingKeyAliyunSMSVerifyCodeStaticJSON] = "{}"
+	}
 	updates[SettingKeyAliyunSMSTemplateCode] = strings.TrimSpace(settings.AliyunSMSTemplateCode)
 	templateParamKey := strings.TrimSpace(settings.AliyunSMSTemplateParamKey)
 	if templateParamKey == "" {
@@ -2967,6 +2979,10 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyAliyunSMSAccessKeyID:                      "",
 		SettingKeyAliyunSMSAccessKeySecret:                  "",
 		SettingKeyAliyunSMSSignName:                         "兴惠云科技",
+		SettingKeyAliyunSMSRegistrationMode:                 AliyunSMSRegistrationModeVerifyCode,
+		SettingKeyAliyunSMSVerifyCodeSignName:               "速通互联验证码",
+		SettingKeyAliyunSMSVerifyCodeTemplateCode:           "100001",
+		SettingKeyAliyunSMSVerifyCodeStaticJSON:             `{"min":"5"}`,
 		SettingKeyAliyunSMSTemplateCode:                     "SMS_506825188",
 		SettingKeyAliyunSMSTemplateParamKey:                 "code",
 		SettingKeyAliyunSMSTemplateStaticJSON:               "{}",
@@ -3070,6 +3086,10 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		AliyunSMSAccessKeyID:               strings.TrimSpace(settings[SettingKeyAliyunSMSAccessKeyID]),
 		AliyunSMSAccessKeySecretConfigured: strings.TrimSpace(settings[SettingKeyAliyunSMSAccessKeySecret]) != "",
 		AliyunSMSSignName:                  strings.TrimSpace(settings[SettingKeyAliyunSMSSignName]),
+		AliyunSMSRegistrationMode:          normalizeAliyunSMSRegistrationMode(settings[SettingKeyAliyunSMSRegistrationMode]),
+		AliyunSMSVerifyCodeSignName:        strings.TrimSpace(settings[SettingKeyAliyunSMSVerifyCodeSignName]),
+		AliyunSMSVerifyCodeTemplateCode:    strings.TrimSpace(settings[SettingKeyAliyunSMSVerifyCodeTemplateCode]),
+		AliyunSMSVerifyCodeStaticParams:    firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeStaticJSON], "{}"),
 		AliyunSMSTemplateCode:              strings.TrimSpace(settings[SettingKeyAliyunSMSTemplateCode]),
 		AliyunSMSTemplateParamKey:          firstNonEmpty(settings[SettingKeyAliyunSMSTemplateParamKey], "code"),
 		AliyunSMSTemplateStaticParams:      firstNonEmpty(settings[SettingKeyAliyunSMSTemplateStaticJSON], "{}"),

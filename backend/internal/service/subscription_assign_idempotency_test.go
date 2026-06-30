@@ -244,7 +244,7 @@ func TestAssignSubscriptionReuseWhenSemanticsMatch(t *testing.T) {
 	require.Equal(t, 0, subRepo.createCalls, "reuse should not create new subscription")
 }
 
-func TestAssignSubscriptionConflictWhenSemanticsMismatch(t *testing.T) {
+func TestAssignSubscriptionReusesWhenOnlyNotesDiffer(t *testing.T) {
 	start := time.Date(2026, 2, 20, 10, 0, 0, 0, time.UTC)
 	groupRepo := &subscriptionGroupRepoStub{
 		group: &Group{ID: 1, SubscriptionType: SubscriptionTypeSubscription},
@@ -260,15 +260,15 @@ func TestAssignSubscriptionConflictWhenSemanticsMismatch(t *testing.T) {
 	})
 
 	svc := NewSubscriptionService(groupRepo, subRepo, nil, nil, nil)
-	_, err := svc.AssignSubscription(context.Background(), &AssignSubscriptionInput{
+	sub, err := svc.AssignSubscription(context.Background(), &AssignSubscriptionInput{
 		UserID:       2001,
 		GroupID:      1,
 		ValidityDays: 30,
 		Notes:        "new-note",
 	})
-	require.Error(t, err)
-	require.Equal(t, "SUBSCRIPTION_ASSIGN_CONFLICT", infraerrorsReason(err))
-	require.Equal(t, 0, subRepo.createCalls, "conflict should not create or mutate existing subscription")
+	require.NoError(t, err)
+	require.Equal(t, int64(11), sub.ID)
+	require.Equal(t, 0, subRepo.createCalls, "reuse should not create or mutate existing subscription")
 }
 
 func TestBulkAssignSubscriptionCreatedReusedAndConflict(t *testing.T) {
@@ -378,8 +378,8 @@ func TestDetectAssignSemanticConflictCases(t *testing.T) {
 		ValidityDays: 30,
 		Notes:        "other",
 	})
-	require.True(t, conflict)
-	require.Equal(t, "notes_mismatch", reason)
+	require.False(t, conflict)
+	require.Equal(t, "", reason)
 }
 
 func TestAssignSubscriptionGroupTypeValidation(t *testing.T) {

@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/rand/v2"
 	"strconv"
-	"strings"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
@@ -495,12 +494,6 @@ func detectAssignSemanticConflict(existing *UserSubscription, input *AssignSubsc
 		if !existing.ExpiresAt.Equal(expectedExpiresAt) {
 			return "validity_days_mismatch", true
 		}
-	}
-
-	existingNotes := strings.TrimSpace(existing.Notes)
-	inputNotes := strings.TrimSpace(input.Notes)
-	if existingNotes != inputNotes {
-		return "notes_mismatch", true
 	}
 
 	return "", false

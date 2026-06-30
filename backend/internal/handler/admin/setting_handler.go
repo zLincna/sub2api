@@ -143,6 +143,10 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		AliyunSMSAccessKeyID:                   settings.AliyunSMSAccessKeyID,
 		AliyunSMSAccessKeySecretConfigured:     settings.AliyunSMSAccessKeySecretConfigured,
 		AliyunSMSSignName:                      settings.AliyunSMSSignName,
+		AliyunSMSRegistrationMode:              settings.AliyunSMSRegistrationMode,
+		AliyunSMSVerifyCodeSignName:            settings.AliyunSMSVerifyCodeSignName,
+		AliyunSMSVerifyCodeTemplateCode:        settings.AliyunSMSVerifyCodeTemplateCode,
+		AliyunSMSVerifyCodeStaticParams:        settings.AliyunSMSVerifyCodeStaticParams,
 		AliyunSMSTemplateCode:                  settings.AliyunSMSTemplateCode,
 		AliyunSMSTemplateParamKey:              settings.AliyunSMSTemplateParamKey,
 		AliyunSMSTemplateStaticParams:          settings.AliyunSMSTemplateStaticParams,
@@ -431,6 +435,10 @@ type UpdateSettingsRequest struct {
 	AliyunSMSAccessKeyID              string `json:"aliyun_sms_access_key_id"`
 	AliyunSMSAccessKeySecret          string `json:"aliyun_sms_access_key_secret"`
 	AliyunSMSSignName                 string `json:"aliyun_sms_sign_name"`
+	AliyunSMSRegistrationMode         string `json:"aliyun_sms_registration_mode"`
+	AliyunSMSVerifyCodeSignName       string `json:"aliyun_sms_verify_code_sign_name"`
+	AliyunSMSVerifyCodeTemplateCode   string `json:"aliyun_sms_verify_code_template_code"`
+	AliyunSMSVerifyCodeStaticParams   string `json:"aliyun_sms_verify_code_static_params"`
 	AliyunSMSTemplateCode             string `json:"aliyun_sms_template_code"`
 	AliyunSMSTemplateParamKey         string `json:"aliyun_sms_template_param_key"`
 	AliyunSMSTemplateStaticParams     string `json:"aliyun_sms_template_static_params"`
@@ -1540,6 +1548,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AliyunSMSAccessKeyID:              req.AliyunSMSAccessKeyID,
 		AliyunSMSAccessKeySecret:          req.AliyunSMSAccessKeySecret,
 		AliyunSMSSignName:                 req.AliyunSMSSignName,
+		AliyunSMSRegistrationMode:         req.AliyunSMSRegistrationMode,
+		AliyunSMSVerifyCodeSignName:       req.AliyunSMSVerifyCodeSignName,
+		AliyunSMSVerifyCodeTemplateCode:   req.AliyunSMSVerifyCodeTemplateCode,
+		AliyunSMSVerifyCodeStaticParams:   req.AliyunSMSVerifyCodeStaticParams,
 		AliyunSMSTemplateCode:             req.AliyunSMSTemplateCode,
 		AliyunSMSTemplateParamKey:         req.AliyunSMSTemplateParamKey,
 		AliyunSMSTemplateStaticParams:     req.AliyunSMSTemplateStaticParams,
@@ -2034,6 +2046,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AliyunSMSAccessKeyID:                   updatedSettings.AliyunSMSAccessKeyID,
 		AliyunSMSAccessKeySecretConfigured:     updatedSettings.AliyunSMSAccessKeySecretConfigured,
 		AliyunSMSSignName:                      updatedSettings.AliyunSMSSignName,
+		AliyunSMSRegistrationMode:              updatedSettings.AliyunSMSRegistrationMode,
+		AliyunSMSVerifyCodeSignName:            updatedSettings.AliyunSMSVerifyCodeSignName,
+		AliyunSMSVerifyCodeTemplateCode:        updatedSettings.AliyunSMSVerifyCodeTemplateCode,
+		AliyunSMSVerifyCodeStaticParams:        updatedSettings.AliyunSMSVerifyCodeStaticParams,
 		AliyunSMSTemplateCode:                  updatedSettings.AliyunSMSTemplateCode,
 		AliyunSMSTemplateParamKey:              updatedSettings.AliyunSMSTemplateParamKey,
 		AliyunSMSTemplateStaticParams:          updatedSettings.AliyunSMSTemplateStaticParams,
@@ -3028,6 +3044,23 @@ type SendTestEmailRequest struct {
 	SMTPUseTLS   bool   `json:"smtp_use_tls"`
 }
 
+type SendTestSMSRequest struct {
+	Phone                            string `json:"phone" binding:"required"`
+	Type                             string `json:"type" binding:"required"`
+	AliyunSMSAccessKeyID             string `json:"aliyun_sms_access_key_id"`
+	AliyunSMSAccessKeySecret         string `json:"aliyun_sms_access_key_secret"`
+	AliyunSMSSignName                string `json:"aliyun_sms_sign_name"`
+	AliyunSMSRegistrationMode        string `json:"aliyun_sms_registration_mode"`
+	AliyunSMSVerifyCodeSignName      string `json:"aliyun_sms_verify_code_sign_name"`
+	AliyunSMSVerifyCodeTemplateCode  string `json:"aliyun_sms_verify_code_template_code"`
+	AliyunSMSVerifyCodeStaticParams  string `json:"aliyun_sms_verify_code_static_params"`
+	AliyunSMSTemplateCode            string `json:"aliyun_sms_template_code"`
+	AliyunSMSTemplateParamKey        string `json:"aliyun_sms_template_param_key"`
+	AliyunSMSTemplateStaticParams    string `json:"aliyun_sms_template_static_params"`
+	CarpoolAdminFullSMSTemplateCode  string `json:"carpool_admin_full_sms_template_code"`
+	CarpoolUserActiveSMSTemplateCode string `json:"carpool_user_active_sms_template_code"`
+}
+
 // SendTestEmail 发送测试邮件
 // POST /api/v1/admin/settings/send-test-email
 func (h *SettingHandler) SendTestEmail(c *gin.Context) {
@@ -3125,6 +3158,41 @@ func (h *SettingHandler) SendTestEmail(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{"message": "Test email sent successfully"})
+}
+
+// SendTestSMS 发送测试短信
+// POST /api/v1/admin/settings/send-test-sms
+func (h *SettingHandler) SendTestSMS(c *gin.Context) {
+	var req SendTestSMSRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	phone := strings.TrimSpace(req.Phone)
+	templateCode, err := h.settingService.SendAliyunTestSMS(c.Request.Context(), service.AliyunTestSMSOptions{
+		Type:                           service.AliyunTestSMSType(strings.TrimSpace(req.Type)),
+		Phone:                          phone,
+		AccessKeyID:                    req.AliyunSMSAccessKeyID,
+		AccessKeySecret:                req.AliyunSMSAccessKeySecret,
+		SignName:                       req.AliyunSMSSignName,
+		RegistrationMode:               req.AliyunSMSRegistrationMode,
+		VerifyCodeSignName:             req.AliyunSMSVerifyCodeSignName,
+		VerifyCodeTemplateCode:         req.AliyunSMSVerifyCodeTemplateCode,
+		VerifyCodeStaticJSON:           req.AliyunSMSVerifyCodeStaticParams,
+		RegistrationTemplateCode:       req.AliyunSMSTemplateCode,
+		RegistrationTemplateParamKey:   req.AliyunSMSTemplateParamKey,
+		RegistrationTemplateStaticJSON: req.AliyunSMSTemplateStaticParams,
+		CarpoolAdminFullTemplateCode:   req.CarpoolAdminFullSMSTemplateCode,
+		CarpoolUserActiveTemplateCode:  req.CarpoolUserActiveSMSTemplateCode,
+	})
+	if err != nil {
+		response.BadRequest(c, "测试短信发送失败："+err.Error())
+		return
+	}
+	response.Success(c, gin.H{
+		"message":       "测试短信已提交",
+		"template_code": templateCode,
+	})
 }
 
 // GetAdminAPIKey 获取管理员 API Key 状态

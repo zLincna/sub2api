@@ -451,6 +451,10 @@ export interface SystemSettings {
   aliyun_sms_access_key_id?: string;
   aliyun_sms_access_key_secret_configured?: boolean;
   aliyun_sms_sign_name?: string;
+  aliyun_sms_registration_mode?: string;
+  aliyun_sms_verify_code_sign_name?: string;
+  aliyun_sms_verify_code_template_code?: string;
+  aliyun_sms_verify_code_static_params?: string;
   aliyun_sms_template_code?: string;
   aliyun_sms_template_param_key?: string;
   aliyun_sms_template_static_params?: string;
@@ -732,6 +736,10 @@ export interface UpdateSettingsRequest {
   aliyun_sms_access_key_id?: string;
   aliyun_sms_access_key_secret?: string;
   aliyun_sms_sign_name?: string;
+  aliyun_sms_registration_mode?: string;
+  aliyun_sms_verify_code_sign_name?: string;
+  aliyun_sms_verify_code_template_code?: string;
+  aliyun_sms_verify_code_static_params?: string;
   aliyun_sms_template_code?: string;
   aliyun_sms_template_param_key?: string;
   aliyun_sms_template_static_params?: string;
@@ -974,6 +982,38 @@ export async function sendTestEmail(
     "/admin/settings/send-test-email",
     request,
   );
+  return data;
+}
+
+export type SendTestSMSType =
+  | "registration"
+  | "carpool_admin_full"
+  | "carpool_user_active";
+
+export interface SendTestSMSRequest {
+  phone: string;
+  type: SendTestSMSType;
+  aliyun_sms_access_key_id?: string;
+  aliyun_sms_access_key_secret?: string;
+  aliyun_sms_sign_name?: string;
+  aliyun_sms_registration_mode?: string;
+  aliyun_sms_verify_code_sign_name?: string;
+  aliyun_sms_verify_code_template_code?: string;
+  aliyun_sms_verify_code_static_params?: string;
+  aliyun_sms_template_code?: string;
+  aliyun_sms_template_param_key?: string;
+  aliyun_sms_template_static_params?: string;
+  carpool_admin_full_sms_template_code?: string;
+  carpool_user_active_sms_template_code?: string;
+}
+
+export async function sendTestSMS(
+  request: SendTestSMSRequest,
+): Promise<{ message: string; template_code?: string }> {
+  const { data } = await apiClient.post<{
+    message: string;
+    template_code?: string;
+  }>("/admin/settings/send-test-sms", request);
   return data;
 }
 
@@ -1384,6 +1424,7 @@ export const settingsAPI = {
   updateSettings,
   testSmtpConnection,
   sendTestEmail,
+  sendTestSMS,
   getEmailTemplates,
   getEmailTemplate,
   updateEmailTemplate,

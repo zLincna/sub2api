@@ -53,6 +53,10 @@ type SystemSettings struct {
 	AliyunSMSAccessKeyID               string `json:"aliyun_sms_access_key_id"`
 	AliyunSMSAccessKeySecretConfigured bool   `json:"aliyun_sms_access_key_secret_configured"`
 	AliyunSMSSignName                  string `json:"aliyun_sms_sign_name"`
+	AliyunSMSRegistrationMode          string `json:"aliyun_sms_registration_mode"`
+	AliyunSMSVerifyCodeSignName        string `json:"aliyun_sms_verify_code_sign_name"`
+	AliyunSMSVerifyCodeTemplateCode    string `json:"aliyun_sms_verify_code_template_code"`
+	AliyunSMSVerifyCodeStaticParams    string `json:"aliyun_sms_verify_code_static_params"`
 	AliyunSMSTemplateCode              string `json:"aliyun_sms_template_code"`
 	AliyunSMSTemplateParamKey          string `json:"aliyun_sms_template_param_key"`
 	AliyunSMSTemplateStaticParams      string `json:"aliyun_sms_template_static_params"`

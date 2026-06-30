@@ -17,69 +17,35 @@
         </div>
       </section>
 
-      <div class="flex gap-2 rounded-lg bg-gray-100 p-1 dark:bg-dark-800">
-        <button v-for="tab in tabs" :key="tab.key" type="button" class="flex-1 rounded-md px-3 py-2 text-sm font-medium" :class="activeTab === tab.key ? 'bg-white text-gray-900 shadow dark:bg-dark-700 dark:text-white' : 'text-gray-500 dark:text-dark-300'" @click="activeTab = tab.key">
+      <div class="flex gap-2 overflow-x-auto rounded-lg bg-gray-100 p-1 dark:bg-dark-800">
+        <button v-for="tab in tabs" :key="tab.key" type="button" class="shrink-0 rounded-md px-4 py-2 text-sm font-medium" :class="activeTab === tab.key ? 'bg-white text-gray-900 shadow dark:bg-dark-700 dark:text-white' : 'text-gray-500 dark:text-dark-300'" @click="activeTab = tab.key">
           {{ tab.label }}
         </button>
       </div>
 
       <section v-if="activeTab === 'management'" class="space-y-5">
-        <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-          <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 class="text-base font-semibold text-gray-900 dark:text-white">已成团管理</h3>
-              <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">只展示已满员、采购中、已发车、已结束的轮次，避免把空的新队列误认为可分配车辆。</p>
-            </div>
-            <select v-model="managementStatus" class="input w-40" @change="loadManagement">
-              <option value="">可管理轮次</option>
-              <option value="full">已满员</option>
-              <option value="provisioning">采购中</option>
-              <option value="active">已发车</option>
-              <option value="ended">已结束</option>
-              <option value="all">全部状态</option>
-            </select>
-          </div>
-
-          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <div v-for="item in managementCards" :key="item.label" class="rounded-md bg-gray-50 p-3 dark:bg-dark-800">
-              <p class="text-xs text-gray-500 dark:text-dark-400">{{ item.label }}</p>
-              <p class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ item.value }}</p>
-            </div>
-          </div>
-
-          <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div class="rounded-md border border-gray-100 p-4 dark:border-dark-700">
-              <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">车型分布</h4>
-              <div v-if="managementSummary.by_segment.length === 0" class="py-6 text-center text-sm text-gray-500 dark:text-dark-400">暂无已成团数据</div>
-              <div v-else class="space-y-3">
-                <div v-for="item in managementSummary.by_segment" :key="item.label">
-                  <div class="mb-1 flex items-center justify-between gap-3 text-xs">
-                    <span class="font-medium text-gray-700 dark:text-dark-200">{{ item.label }}</span>
-                    <span class="text-gray-500 dark:text-dark-400">{{ item.sessions }} 车 · {{ item.paid_members }} 人 · ¥{{ money(item.amount) }}</span>
-                  </div>
-                  <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-800">
-                    <div class="h-full rounded-full bg-primary-500" :style="{ width: `${Math.max(6, (Number(item.paid_members || 0) / maxSegmentMembers) * 100)}%` }"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="rounded-md border border-gray-100 p-4 dark:border-dark-700">
-              <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">状态统计</h4>
-              <div class="space-y-2 text-sm">
-                <div v-for="status in ['full', 'provisioning', 'active', 'ended']" :key="status" class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-dark-800">
-                  <span class="text-gray-600 dark:text-dark-300">{{ statusLabel(status) }}</span>
-                  <span class="font-semibold text-gray-900 dark:text-white">{{ managementSummary.by_status[status] || 0 }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-900">
-          <div class="border-b border-gray-100 px-5 py-4 dark:border-dark-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white">已成团车辆</h3>
-            <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认只展示概要，点击详情查看车辆与成员用量，避免表格内容过长。</p>
+          <div class="space-y-4 border-b border-gray-100 px-5 py-4 dark:border-dark-700">
+            <div>
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white">已成团车辆</h3>
+              <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">只展示已满员、采购中、已发车、已结束的轮次。点击详情查看车辆与成员用量，点击交付配置完成发车。</p>
+            </div>
+            <div class="grid gap-3 md:grid-cols-[160px_220px_minmax(0,1fr)_auto]">
+              <select v-model="managementStatus" class="input" @change="loadManagement">
+                <option value="">可管理轮次</option>
+                <option value="full">已满员</option>
+                <option value="provisioning">采购中</option>
+                <option value="active">已发车</option>
+                <option value="ended">已结束</option>
+                <option value="all">全部状态</option>
+              </select>
+              <select v-model.number="managementVehicleTypeId" class="input">
+                <option :value="0">全部车型</option>
+                <option v-for="type in managementFilterTypes" :key="type.id" :value="type.id">{{ type.name }}</option>
+              </select>
+              <input v-model="managementKeyword" class="input" placeholder="搜索轮次、车型、成员邮箱/昵称" />
+              <button type="button" class="btn btn-secondary btn-sm" @click="resetManagementFilters">重置</button>
+            </div>
           </div>
           <div v-if="managementRows.length === 0" class="py-12 text-center text-sm text-gray-500 dark:text-dark-400">暂无可管理的已成团轮次</div>
           <div v-else class="overflow-x-auto">
@@ -296,6 +262,43 @@
           </div>
         </div>
       </section>
+
+      <section v-if="activeTab === 'stats'" class="space-y-5">
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <div v-for="item in managementCards" :key="item.label" class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <p class="text-xs text-gray-500 dark:text-dark-400">{{ item.label }}</p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ item.value }}</p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <h3 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">车型分布</h3>
+            <div v-if="managementSummary.by_segment.length === 0" class="py-10 text-center text-sm text-gray-500 dark:text-dark-400">暂无已成团数据</div>
+            <div v-else class="space-y-4">
+              <div v-for="item in managementSummary.by_segment" :key="item.label">
+                <div class="mb-1 flex items-center justify-between gap-3 text-xs">
+                  <span class="font-medium text-gray-700 dark:text-dark-200">{{ item.label }}</span>
+                  <span class="text-gray-500 dark:text-dark-400">{{ item.sessions }} 车 · {{ item.paid_members }} 人 · ¥{{ money(item.amount) }}</span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-dark-800">
+                  <div class="h-full rounded-full bg-primary-500" :style="{ width: `${Math.max(6, (Number(item.paid_members || 0) / maxSegmentMembers) * 100)}%` }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <h3 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">状态统计</h3>
+            <div class="space-y-2 text-sm">
+              <div v-for="status in ['full', 'provisioning', 'active', 'ended']" :key="status" class="flex items-center justify-between rounded bg-gray-50 px-3 py-2 dark:bg-dark-800">
+                <span class="text-gray-600 dark:text-dark-300">{{ statusLabel(status) }}</span>
+                <span class="font-semibold text-gray-900 dark:text-white">{{ managementSummary.by_status[status] || 0 }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div v-if="managementDetail" class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
@@ -491,28 +494,12 @@
     <div v-if="editingSession" class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
       <div class="max-h-[94vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-dark-900">
         <div class="border-b border-gray-100 px-5 py-4 dark:border-dark-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">交付配置</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">发车后选择订阅分组给成员开通权限，再选择账号池分组用于展示整车 5h / 7d 用量。账号和代理/IP 仍在系统账号管理与分组里维护。</p>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ editingSession.status === 'active' ? '编辑交付配置' : '发车配置' }}</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">选择订阅分组给成员开通权限；这个分组绑定的账号会作为本车账号池，用于展示整车 5h / 7d 用量。账号和代理/IP 仍在系统账号管理与分组里维护。</p>
         </div>
         <div class="max-h-[74vh] overflow-y-auto p-5">
           <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div class="space-y-5">
-              <section class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
-                <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">发车状态</h4>
-                <div class="grid gap-3 md:grid-cols-2">
-                  <label class="space-y-1">
-                    <span class="text-sm text-gray-500">分配成功后状态</span>
-                    <select v-model="editingProvision.status" class="input">
-                      <option value="full">已满员</option>
-                      <option value="provisioning">采购中</option>
-                      <option value="active">已发车</option>
-                      <option value="ended">已结束</option>
-                      <option value="cancelled">已取消</option>
-                    </select>
-                  </label>
-                </div>
-              </section>
-
               <section class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
                 <h4 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">车内沟通</h4>
                 <div class="grid gap-3 md:grid-cols-3">
@@ -544,7 +531,7 @@
                 <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-white">订阅分配</h4>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">订阅分组用于给用户开通权限；账号池分组用于展示这辆车实际账号的整体窗口。</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">选择订阅分组即可。这个分组绑定的账号会作为本车账号池，并用于用户端展示整体 5h / 7d 用量。</p>
                   </div>
                   <button type="button" class="btn btn-secondary btn-sm" @click="loadGroups">刷新分组</button>
                 </div>
@@ -585,39 +572,6 @@
                     <input v-model.number="assignmentForm.validity_days" type="number" min="1" max="36500" class="input" />
                   </label>
                 </div>
-                <div class="mt-3 grid gap-3 md:grid-cols-2">
-                  <label class="space-y-1">
-                    <span class="text-sm text-gray-500">账号池分组</span>
-                    <Select
-                      v-model="assignmentForm.account_pool_group_id"
-                      :options="accountPoolGroupOptions"
-                      placeholder="请选择实际账号池分组"
-                      searchable
-                      search-placeholder="搜索分组名称 / 平台"
-                      empty-text="暂无可用账号池分组"
-                    >
-                      <template #selected="{ option }">
-                        <span v-if="option" class="flex min-w-0 items-center gap-2">
-                          <span class="truncate">{{ option.name }}</span>
-                          <span class="shrink-0 rounded bg-primary-50 px-1.5 py-0.5 text-[11px] text-primary-700 dark:bg-primary-900/30 dark:text-primary-200">{{ option.platformLabel }}</span>
-                          <span class="shrink-0 text-xs text-gray-500 dark:text-dark-300">账号 {{ option.accountCount }}</span>
-                        </span>
-                        <span v-else class="text-gray-400 dark:text-dark-400">请选择实际账号池分组</span>
-                      </template>
-                      <template #option="{ option, selected }">
-                        <div class="min-w-0 flex-1">
-                          <div class="flex min-w-0 items-center gap-2">
-                            <span class="truncate font-medium">{{ option.name }}</span>
-                            <span class="shrink-0 rounded bg-primary-50 px-1.5 py-0.5 text-[11px] text-primary-700 dark:bg-primary-900/30 dark:text-primary-200">{{ option.platformLabel }}</span>
-                            <span class="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">账号 {{ option.accountCount }}</span>
-                          </div>
-                          <p class="mt-1 truncate text-xs text-gray-500 dark:text-dark-400">{{ option.summary }}</p>
-                        </div>
-                        <Icon v-if="selected" name="check" size="sm" class="shrink-0 text-primary-500" :stroke-width="2" />
-                      </template>
-                    </Select>
-                  </label>
-                </div>
                 <div v-if="selectedSubscriptionGroup" class="mt-4 rounded-md bg-gray-50 p-4 text-sm dark:bg-dark-800">
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="font-semibold text-gray-900 dark:text-white">{{ selectedSubscriptionGroup.name }}</span>
@@ -631,12 +585,23 @@
                     <span>周限：{{ limitLabel(selectedSubscriptionGroup.weekly_limit_usd) }}</span>
                     <span>月限：{{ limitLabel(selectedSubscriptionGroup.monthly_limit_usd) }}</span>
                   </div>
-                  <p v-if="selectedAccountPoolGroup" class="mt-3 text-xs text-gray-500 dark:text-dark-300">
-                    整体用量来源：{{ selectedAccountPoolGroup.name }} · 账号 {{ selectedAccountPoolGroup.active_account_count ?? selectedAccountPoolGroup.account_count ?? 0 }}
-                  </p>
-                  <p v-else class="mt-3 text-xs text-amber-600 dark:text-amber-200">
-                    请再选择一个实际绑定账号的账号池分组，否则用户端账号整体用量会显示 0 个账号。
-                  </p>
+                  <div class="mt-4 rounded-md border border-gray-100 bg-white dark:border-dark-700 dark:bg-dark-900">
+                    <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2 dark:border-dark-700">
+                      <span class="text-xs font-semibold text-gray-700 dark:text-dark-200">绑定账号</span>
+                      <span class="text-xs text-gray-500 dark:text-dark-400">{{ groupAccountLoading ? '加载中...' : `${selectedGroupAccounts.length} 个` }}</span>
+                    </div>
+                    <div v-if="groupAccountLoading" class="p-3 text-xs text-gray-500 dark:text-dark-400">正在读取该订阅分组绑定账号...</div>
+                    <div v-else-if="selectedGroupAccounts.length === 0" class="p-3 text-xs leading-5 text-amber-600 dark:text-amber-200">该订阅分组暂未绑定账号，用户端账号整体用量会显示为空。请先在账号管理中把账号加入这个订阅分组。</div>
+                    <div v-else class="max-h-44 divide-y divide-gray-100 overflow-y-auto dark:divide-dark-700">
+                      <div v-for="account in selectedGroupAccounts" :key="account.id" class="flex items-center justify-between gap-3 px-3 py-2 text-xs">
+                        <div class="min-w-0">
+                          <p class="truncate font-medium text-gray-900 dark:text-white">{{ account.name || `账号 ${account.id}` }}</p>
+                          <p class="truncate text-gray-500 dark:text-dark-400">{{ platformLabel(account.platform) }} · {{ account.type }} · 并发 {{ account.concurrency }}</p>
+                        </div>
+                        <span :class="account.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200' : 'bg-gray-100 text-gray-500 dark:bg-dark-800 dark:text-dark-300'" class="shrink-0 rounded px-2 py-1">{{ accountStatusLabel(account.status) }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div v-else-if="subscriptionGroups.length === 0" class="mt-4 rounded-md bg-amber-50 p-4 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
                   暂无可用订阅分组，请先到“分组管理”创建订阅类型分组，并确认分组已启用。
@@ -722,7 +687,7 @@
         <div class="flex justify-end gap-2 border-t border-gray-100 px-5 py-4 dark:border-dark-700">
           <button type="button" class="btn btn-secondary" @click="editingSession = null">取消</button>
           <button type="button" class="btn btn-primary" :disabled="assigning" @click="saveProvision">
-            {{ assigning ? '处理中...' : '分配订阅并保存' }}
+            {{ assigning ? '处理中...' : editingSession.status === 'active' ? '保存交付配置' : '分配订阅并发车' }}
           </button>
         </div>
       </div>
@@ -746,13 +711,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import Select from '@/components/common/Select.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { adminAPI } from '@/api/admin'
 import { adminCarpoolAPI } from '@/api/admin/carpool'
+import type { Account, AdminGroup } from '@/types'
 import type {
   CarpoolAdminManagementResponse,
   CarpoolAdminSessionRow,
@@ -761,17 +727,17 @@ import type {
   CarpoolVehicleType,
   CarpoolVoucher,
 } from '@/types/carpool'
-import type { AdminGroup } from '@/types'
 import { useAppStore } from '@/stores'
 
 const appStore = useAppStore()
-const activeTab = ref<'management' | 'progress' | 'types' | 'sessions' | 'notice'>('management')
+const activeTab = ref<'management' | 'progress' | 'types' | 'sessions' | 'notice' | 'stats'>('management')
 const tabs = [
   { key: 'management', label: '拼车管理' },
   { key: 'progress', label: '拼车情况' },
   { key: 'types', label: '车类型' },
   { key: 'sessions', label: '发车交付' },
   { key: 'notice', label: '用户须知' },
+  { key: 'stats', label: '数据统计' },
 ] as const
 const overview = ref<Record<string, any>>({})
 const management = ref<CarpoolAdminManagementResponse | null>(null)
@@ -782,12 +748,16 @@ const notices = ref<CarpoolNoticeVersion[]>([])
 const groups = ref<AdminGroup[]>([])
 const sessionStatus = ref('full')
 const managementStatus = ref('')
+const managementVehicleTypeId = ref(0)
+const managementKeyword = ref('')
 const managementDetail = ref<CarpoolAdminSessionRow | null>(null)
 const editingType = ref<CarpoolVehicleType | null>(null)
 const editingTypeRefundMethods = ref('balance,gateway')
 const editingSession = ref<CarpoolSession | null>(null)
 const sessionVouchers = ref<CarpoolVoucher[]>([])
 const previewVoucher = ref<CarpoolVoucher | null>(null)
+const selectedGroupAccounts = ref<Account[]>([])
+const groupAccountLoading = ref(false)
 const assigning = ref(false)
 const editingProvision = reactive({
   status: 'provisioning',
@@ -836,16 +806,8 @@ const subscriptionGroups = computed(() =>
   groups.value.filter((group) => group.status === 'active' && group.subscription_type === 'subscription')
 )
 
-const accountPoolGroups = computed(() =>
-  groups.value.filter((group) => group.status === 'active' && (group.account_count || 0) > 0)
-)
-
 const selectedSubscriptionGroup = computed(() =>
   subscriptionGroups.value.find((group) => group.id === assignmentForm.group_id) || null
-)
-
-const selectedAccountPoolGroup = computed(() =>
-  accountPoolGroups.value.find((group) => group.id === assignmentForm.account_pool_group_id) || null
 )
 
 const subscriptionGroupOptions = computed(() =>
@@ -867,21 +829,6 @@ const subscriptionGroupOptions = computed(() =>
   })
 )
 
-const accountPoolGroupOptions = computed(() =>
-  accountPoolGroups.value.map((group) => {
-    const accountCount = group.active_account_count ?? group.account_count ?? 0
-    return {
-      value: group.id,
-      label: `${group.name} ${platformLabel(group.platform)} 账号 ${accountCount}`,
-      name: group.name,
-      platformLabel: platformLabel(group.platform),
-      accountCount,
-      summary: `${group.subscription_type === 'subscription' ? '订阅分组' : '标准分组'} · ${group.rate_multiplier}x 倍率 · 账号 ${accountCount}`,
-      description: [group.description || '', platformLabel(group.platform), `账号 ${accountCount}`].join(' '),
-    }
-  })
-)
-
 const assignableParticipants = computed(() => {
   const participants = editingSession.value?.edges?.participants || []
   return participants.filter((participant) => ['paid', 'active'].includes(participant.status))
@@ -898,7 +845,30 @@ const managementSummary = computed(() => management.value?.summary || {
   by_segment: [],
 })
 
-const managementRows = computed(() => management.value?.items || [])
+const managementRows = computed(() => {
+  const rows = management.value?.items || []
+  const keyword = managementKeyword.value.trim().toLowerCase()
+  return rows.filter((row) => {
+    if (managementVehicleTypeId.value && row.session.vehicle_type_id !== managementVehicleTypeId.value) return false
+    if (!keyword) return true
+    const haystack = [
+      row.session.session_no,
+      row.session.edges?.vehicle_type?.name,
+      row.session.edges?.vehicle_type ? segmentLabel(row.session.edges.vehicle_type) : '',
+      row.participants.map((member) => [member.user?.username, member.user?.email, member.participant.user_id].filter(Boolean).join(' ')).join(' '),
+    ].filter(Boolean).join(' ').toLowerCase()
+    return haystack.includes(keyword)
+  })
+})
+
+const managementFilterTypes = computed(() => {
+  const map = new Map<number, CarpoolVehicleType>()
+  for (const row of management.value?.items || []) {
+    const type = row.session.edges?.vehicle_type
+    if (type) map.set(type.id, type)
+  }
+  return Array.from(map.values()).sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+})
 
 const progressSessions = computed(() =>
   progressSessionList.value.filter((session) => session.status === 'recruiting')
@@ -951,8 +921,29 @@ async function loadManagement() {
   management.value = await adminCarpoolAPI.management({ page: 1, page_size: 50, status: managementStatus.value || undefined })
 }
 
+function resetManagementFilters() {
+  managementStatus.value = ''
+  managementVehicleTypeId.value = 0
+  managementKeyword.value = ''
+  loadManagement()
+}
+
 async function loadGroups() {
   groups.value = await adminAPI.groups.getAll()
+}
+
+async function loadSelectedGroupAccounts(groupID: number) {
+  selectedGroupAccounts.value = []
+  if (!groupID) return
+  groupAccountLoading.value = true
+  try {
+    const data = await adminAPI.accounts.list(1, 50, { group: String(groupID), sort_by: 'priority', sort_order: 'asc' })
+    selectedGroupAccounts.value = data.items || []
+  } catch {
+    appStore.showError('订阅分组绑定账号读取失败')
+  } finally {
+    groupAccountLoading.value = false
+  }
 }
 
 function openTypeEditor(item?: CarpoolVehicleType) {
@@ -1040,13 +1031,13 @@ async function openSessionEditor(session: CarpoolSession) {
 function cloneSession(session: CarpoolSession) {
   const communication = session.communication || {}
   const account = session.account_info || {}
-  editingProvision.status = session.status === 'active' ? 'active' : 'provisioning'
+  editingProvision.status = 'active'
   editingProvision.communication_type = stringField(communication.type, 'system_chat')
   editingProvision.communication_group_no = stringField(communication.group_no)
   editingProvision.communication_link = stringField(communication.link)
   editingProvision.communication_note = stringField(communication.note)
   assignmentForm.group_id = numberField(account.subscription_group_id)
-  assignmentForm.account_pool_group_id = numberField(account.account_pool_group_id) || numberField(account.subscription_group_id)
+  assignmentForm.account_pool_group_id = assignmentForm.group_id
   assignmentForm.validity_days = numberField(account.subscription_validity_days, session.edges?.vehicle_type?.service_days || 30)
   assignmentForm.notes = stringField(account.subscription_notes) || `拼车轮次 ${session.session_no || session.id} 发车分配`
   editingProvision.admin_notes = session.admin_notes || ''
@@ -1062,10 +1053,7 @@ async function saveProvision() {
     appStore.showWarning('请选择订阅分组')
     return
   }
-  if (!assignmentForm.account_pool_group_id) {
-    appStore.showWarning('请选择账号池分组，用于展示账号整体用量')
-    return
-  }
+  assignmentForm.account_pool_group_id = assignmentForm.group_id
   if (assignmentForm.validity_days <= 0) {
     appStore.showWarning('有效期必须大于 0 天')
     return
@@ -1078,8 +1066,8 @@ async function saveProvision() {
 
   assigning.value = true
   try {
+    const wasActive = editingSession.value.status === 'active'
     const group = selectedSubscriptionGroup.value
-    const accountPoolGroup = selectedAccountPoolGroup.value
     const notes = assignmentForm.notes.trim() || `拼车轮次 ${editingSession.value.session_no || editingSession.value.id} 发车分配`
     const result = await adminAPI.subscriptions.bulkAssign({
       user_ids: userIds,
@@ -1093,7 +1081,7 @@ async function saveProvision() {
     }
 
     await adminCarpoolAPI.provisionSession(editingSession.value.id, {
-      status: editingProvision.status,
+      status: 'active',
       communication: compactRecord({
         type: editingProvision.communication_type,
         group_no: editingProvision.communication_group_no,
@@ -1103,8 +1091,8 @@ async function saveProvision() {
       account_info: compactRecord({
         subscription_group_id: assignmentForm.group_id,
         subscription_group_name: group?.name || '',
-        account_pool_group_id: assignmentForm.account_pool_group_id,
-        account_pool_group_name: accountPoolGroup?.name || '',
+        account_pool_group_id: assignmentForm.group_id,
+        account_pool_group_name: group?.name || '',
         subscription_validity_days: Number(assignmentForm.validity_days),
         subscription_notes: notes,
         assigned_user_count: userIds.length,
@@ -1122,7 +1110,7 @@ async function saveProvision() {
       })
     }
     editingSession.value = null
-    appStore.showSuccess(`已分配订阅：新建 ${result.created_count}，复用 ${result.reused_count}`)
+    appStore.showSuccess(`${wasActive ? '交付配置已保存' : '已分配订阅并发车'}：新建 ${result.created_count}，复用 ${result.reused_count}`)
     await loadManagement()
     await loadSessions()
   } finally {
@@ -1284,6 +1272,20 @@ function formatTime(value?: string) {
   if (!value) return '-'
   return new Date(value).toLocaleString()
 }
+
+function accountStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    active: '正常',
+    inactive: '停用',
+    error: '异常',
+  }
+  return labels[String(status || '')] || status || '-'
+}
+
+watch(() => assignmentForm.group_id, (groupID) => {
+  assignmentForm.account_pool_group_id = Number(groupID || 0)
+  loadSelectedGroupAccounts(Number(groupID || 0))
+})
 
 onMounted(loadAll)
 </script>

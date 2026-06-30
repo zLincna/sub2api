@@ -39,6 +39,10 @@ type SystemSettings struct {
 	AliyunSMSAccessKeySecret           string
 	AliyunSMSAccessKeySecretConfigured bool
 	AliyunSMSSignName                  string
+	AliyunSMSRegistrationMode          string
+	AliyunSMSVerifyCodeSignName        string
+	AliyunSMSVerifyCodeTemplateCode    string
+	AliyunSMSVerifyCodeStaticParams    string
 	AliyunSMSTemplateCode              string
 	AliyunSMSTemplateParamKey          string
 	AliyunSMSTemplateStaticParams      string

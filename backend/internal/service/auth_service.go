@@ -89,6 +89,7 @@ type AuthService struct {
 type smsChallenge struct {
 	OutID         string
 	Code          string
+	Mode          string
 	ExpiresAt     time.Time
 	CooldownUntil time.Time
 }

@@ -985,6 +985,9 @@ func maskedCarpoolMemberName(u *dbent.User) string {
 	if u == nil {
 		return "拼车成员"
 	}
+	if phone := strings.TrimSpace(u.Phone); phone != "" {
+		return maskLoginAccount(phone)
+	}
 	if username := strings.TrimSpace(u.Username); username != "" {
 		return username
 	}
@@ -1182,6 +1185,13 @@ func (s *CarpoolService) AdminProvisionSession(ctx context.Context, id int64, in
 	if status == "" {
 		status = CarpoolSessionProvisioning
 	}
+	existing, err := s.entClient.CarpoolSession.Query().
+		Where(carpoolsession.IDEQ(id)).
+		WithVehicleType().
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
 	up := s.entClient.CarpoolSession.UpdateOneID(id).
 		SetStatus(status).
 		SetAccountInfo(nonNilMap(input.AccountInfo)).
@@ -1190,7 +1200,23 @@ func (s *CarpoolService) AdminProvisionSession(ctx context.Context, id int64, in
 		SetAdminNotes(strings.TrimSpace(input.AdminNotes))
 	now := time.Now()
 	if status == CarpoolSessionActive {
-		up.SetProvisionedAt(now).SetServiceStartedAt(now)
+		serviceStartedAt := now
+		if existing.ServiceStartedAt != nil && !existing.ServiceStartedAt.IsZero() {
+			serviceStartedAt = *existing.ServiceStartedAt
+		} else {
+			up.SetServiceStartedAt(serviceStartedAt)
+		}
+		if existing.ProvisionedAt == nil || existing.ProvisionedAt.IsZero() {
+			up.SetProvisionedAt(now)
+		}
+		serviceDays := int(numberFromMap(input.AccountInfo, "subscription_validity_days"))
+		if serviceDays <= 0 && existing.Edges.VehicleType != nil {
+			serviceDays = existing.Edges.VehicleType.ServiceDays
+		}
+		if serviceDays <= 0 {
+			serviceDays = 30
+		}
+		up.SetServiceEndedAt(serviceStartedAt.AddDate(0, 0, serviceDays))
 	}
 	session, err := up.Save(ctx)
 	if err != nil {
