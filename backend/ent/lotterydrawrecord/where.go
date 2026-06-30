@@ -75,6 +75,11 @@ func PrizeName(v string) predicate.LotteryDrawRecord {
 	return predicate.LotteryDrawRecord(sql.FieldEQ(FieldPrizeName, v))
 }
 
+// PrizeDescription applies equality check predicate on the "prize_description" field. It's identical to PrizeDescriptionEQ.
+func PrizeDescription(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldEQ(FieldPrizeDescription, v))
+}
+
 // Amount applies equality check predicate on the "amount" field. It's identical to AmountEQ.
 func Amount(v float64) predicate.LotteryDrawRecord {
 	return predicate.LotteryDrawRecord(sql.FieldEQ(FieldAmount, v))
@@ -223,6 +228,71 @@ func PrizeNameEqualFold(v string) predicate.LotteryDrawRecord {
 // PrizeNameContainsFold applies the ContainsFold predicate on the "prize_name" field.
 func PrizeNameContainsFold(v string) predicate.LotteryDrawRecord {
 	return predicate.LotteryDrawRecord(sql.FieldContainsFold(FieldPrizeName, v))
+}
+
+// PrizeDescriptionEQ applies the EQ predicate on the "prize_description" field.
+func PrizeDescriptionEQ(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldEQ(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionNEQ applies the NEQ predicate on the "prize_description" field.
+func PrizeDescriptionNEQ(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldNEQ(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionIn applies the In predicate on the "prize_description" field.
+func PrizeDescriptionIn(vs ...string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldIn(FieldPrizeDescription, vs...))
+}
+
+// PrizeDescriptionNotIn applies the NotIn predicate on the "prize_description" field.
+func PrizeDescriptionNotIn(vs ...string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldNotIn(FieldPrizeDescription, vs...))
+}
+
+// PrizeDescriptionGT applies the GT predicate on the "prize_description" field.
+func PrizeDescriptionGT(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldGT(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionGTE applies the GTE predicate on the "prize_description" field.
+func PrizeDescriptionGTE(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldGTE(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionLT applies the LT predicate on the "prize_description" field.
+func PrizeDescriptionLT(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldLT(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionLTE applies the LTE predicate on the "prize_description" field.
+func PrizeDescriptionLTE(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldLTE(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionContains applies the Contains predicate on the "prize_description" field.
+func PrizeDescriptionContains(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldContains(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionHasPrefix applies the HasPrefix predicate on the "prize_description" field.
+func PrizeDescriptionHasPrefix(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldHasPrefix(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionHasSuffix applies the HasSuffix predicate on the "prize_description" field.
+func PrizeDescriptionHasSuffix(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldHasSuffix(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionEqualFold applies the EqualFold predicate on the "prize_description" field.
+func PrizeDescriptionEqualFold(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldEqualFold(FieldPrizeDescription, v))
+}
+
+// PrizeDescriptionContainsFold applies the ContainsFold predicate on the "prize_description" field.
+func PrizeDescriptionContainsFold(v string) predicate.LotteryDrawRecord {
+	return predicate.LotteryDrawRecord(sql.FieldContainsFold(FieldPrizeDescription, v))
 }
 
 // AmountEQ applies the EQ predicate on the "amount" field.

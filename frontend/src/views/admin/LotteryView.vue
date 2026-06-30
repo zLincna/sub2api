@@ -100,6 +100,7 @@
           <thead class="text-left text-xs uppercase text-gray-500 dark:text-dark-400">
             <tr>
               <th class="px-3 py-2">{{ t('admin.lottery.prizeName') }}</th>
+              <th class="px-3 py-2">{{ t('admin.lottery.prizeContent') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.amount') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.probability') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.stock') }}</th>
@@ -114,6 +115,9 @@
                   <span class="h-3 w-3 rounded-full" :style="{ backgroundColor: prize.color }"></span>
                   <span class="font-medium text-gray-900 dark:text-white">{{ prize.name }}</span>
                 </div>
+              </td>
+              <td class="max-w-xs px-3 py-2 text-gray-500 dark:text-dark-400">
+                <span class="line-clamp-2">{{ prize.description || '-' }}</span>
               </td>
               <td class="px-3 py-2">${{ prize.amount.toFixed(2) }}</td>
               <td class="px-3 py-2">{{ prize.probability }}%</td>
@@ -132,7 +136,7 @@
               </td>
             </tr>
             <tr v-if="prizes.length === 0">
-              <td colspan="6" class="px-3 py-10 text-center text-sm text-gray-500 dark:text-dark-400">
+              <td colspan="7" class="px-3 py-10 text-center text-sm text-gray-500 dark:text-dark-400">
                 {{ t('admin.lottery.emptyPrizes') }}
               </td>
             </tr>
@@ -142,9 +146,45 @@
     </section>
 
     <section class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.recordsTitle') }}</h2>
-        <button type="button" class="btn btn-secondary btn-sm" @click="loadRecords">{{ t('common.refresh') }}</button>
+      <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.lottery.recordsTitle') }}</h2>
+          <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('admin.lottery.recordsDesc') }}</p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm shrink-0" @click="loadRecords">{{ t('common.refresh') }}</button>
+      </div>
+      <div class="mb-4 grid gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-800/60 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+        <div>
+          <label class="input-label">{{ t('admin.lottery.userId') }}</label>
+          <input v-model.number="recordFilters.user_id" type="number" min="1" class="input" :placeholder="t('admin.lottery.userId')" />
+        </div>
+        <div>
+          <label class="input-label">{{ t('admin.lottery.userKeyword') }}</label>
+          <input v-model="recordFilters.user_query" class="input" :placeholder="t('admin.lottery.userKeywordPlaceholder')" @keyup.enter="applyRecordFilters" />
+        </div>
+        <div>
+          <label class="input-label">{{ t('admin.lottery.source') }}</label>
+          <select v-model="recordFilters.source_type" class="input">
+            <option value="">{{ t('common.all') }}</option>
+            <option value="daily_login">{{ t('lottery.sourceTypes.daily_login') }}</option>
+            <option value="spend">{{ t('lottery.sourceTypes.spend') }}</option>
+            <option value="recharge">{{ t('lottery.sourceTypes.recharge') }}</option>
+          </select>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div>
+            <label class="input-label">{{ t('admin.lottery.startTime') }}</label>
+            <input v-model="recordFilters.start_time" type="datetime-local" class="input" />
+          </div>
+          <div>
+            <label class="input-label">{{ t('admin.lottery.endTime') }}</label>
+            <input v-model="recordFilters.end_time" type="datetime-local" class="input" />
+          </div>
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="button" class="btn btn-primary" @click="applyRecordFilters">{{ t('common.search') }}</button>
+          <button type="button" class="btn btn-secondary" @click="resetRecordFilters">{{ t('common.reset') }}</button>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -152,6 +192,7 @@
             <tr>
               <th class="px-3 py-2">{{ t('admin.lottery.user') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.prizeName') }}</th>
+              <th class="px-3 py-2">{{ t('admin.lottery.prizeContent') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.amount') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.source') }}</th>
               <th class="px-3 py-2">{{ t('admin.lottery.time') }}</th>
@@ -161,17 +202,29 @@
             <tr v-for="record in records" :key="record.id">
               <td class="px-3 py-2">{{ record.user_email || record.user_id }}</td>
               <td class="px-3 py-2">{{ record.prize_name }}</td>
+              <td class="max-w-sm px-3 py-2 text-gray-500 dark:text-dark-400">
+                <span class="line-clamp-2">{{ record.prize_description || '-' }}</span>
+              </td>
               <td class="px-3 py-2 text-emerald-600 dark:text-emerald-400">${{ record.amount.toFixed(2) }}</td>
               <td class="px-3 py-2">{{ t(`lottery.sourceTypes.${record.source_type}`, record.source_type) }}</td>
               <td class="px-3 py-2 text-gray-500 dark:text-dark-400">{{ new Date(record.created_at).toLocaleString() }}</td>
             </tr>
             <tr v-if="records.length === 0">
-              <td colspan="5" class="px-3 py-10 text-center text-sm text-gray-500 dark:text-dark-400">
+              <td colspan="6" class="px-3 py-10 text-center text-sm text-gray-500 dark:text-dark-400">
                 {{ t('admin.lottery.emptyRecords') }}
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+      <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 text-sm dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-gray-500 dark:text-dark-400">
+          {{ t('admin.lottery.recordTotal', { total: recordPagination.total, page: recordPagination.page, pages: recordPagination.pages }) }}
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" :disabled="recordPagination.page <= 1" @click="goRecordPage(recordPagination.page - 1)">{{ t('admin.lottery.previousPage') }}</button>
+          <button type="button" class="btn btn-secondary btn-sm" :disabled="recordPagination.page >= recordPagination.pages" @click="goRecordPage(recordPagination.page + 1)">{{ t('admin.lottery.nextPage') }}</button>
+        </div>
       </div>
     </section>
 
@@ -180,6 +233,11 @@
         <div>
           <label class="input-label">{{ t('admin.lottery.prizeName') }}</label>
           <input v-model="prizeForm.name" class="input" required />
+        </div>
+        <div>
+          <label class="input-label">{{ t('admin.lottery.prizeContent') }}</label>
+          <textarea v-model="prizeForm.description" rows="3" class="input resize-y" :placeholder="t('admin.lottery.prizeContentPlaceholder')"></textarea>
+          <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ t('admin.lottery.prizeContentHint') }}</p>
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
           <div><label class="input-label">{{ t('admin.lottery.amount') }}</label><input v-model.number="prizeForm.amount" type="number" min="0" step="0.01" class="input" /></div>
@@ -223,6 +281,7 @@ const showPrizeDialog = ref(false)
 const editingPrize = ref<LotteryPrize | null>(null)
 const prizeForm = reactive<LotteryPrizeInput>({
   name: '',
+  description: '',
   amount: 0,
   probability: 0,
   daily_stock: 0,
@@ -230,6 +289,19 @@ const prizeForm = reactive<LotteryPrizeInput>({
   enabled: true,
   color: '#f59e0b',
   sort_order: 0
+})
+const recordFilters = reactive({
+  user_id: undefined as number | undefined,
+  user_query: '',
+  source_type: '',
+  start_time: '',
+  end_time: ''
+})
+const recordPagination = reactive({
+  page: 1,
+  page_size: 20,
+  total: 0,
+  pages: 1
 })
 
 const enabledPrizeCount = computed(() => prizes.value.filter(prize => prize.enabled).length)
@@ -317,8 +389,12 @@ async function loadPrizes() {
 }
 
 async function loadRecords() {
-  const page = await adminLotteryAPI.listRecords({ page: 1, page_size: 20 })
+  const page = await adminLotteryAPI.listRecords(buildRecordQuery())
   records.value = page.items || []
+  recordPagination.total = page.total
+  recordPagination.page = page.page
+  recordPagination.page_size = page.page_size
+  recordPagination.pages = page.pages
 }
 
 async function saveConfig() {
@@ -336,7 +412,7 @@ async function saveConfig() {
 
 function addPrize() {
   editingPrize.value = null
-  Object.assign(prizeForm, { name: '', amount: 0, probability: 0, daily_stock: 0, total_stock: 0, enabled: true, color: '#f59e0b', sort_order: prizes.value.length * 10 })
+  Object.assign(prizeForm, { name: '', description: '', amount: 0, probability: 0, daily_stock: 0, total_stock: 0, enabled: true, color: '#f59e0b', sort_order: prizes.value.length * 10 })
   showPrizeDialog.value = true
 }
 
@@ -344,6 +420,7 @@ function editPrize(prize: LotteryPrize) {
   editingPrize.value = prize
   Object.assign(prizeForm, {
     name: prize.name,
+    description: prize.description || '',
     amount: prize.amount,
     probability: prize.probability,
     daily_stock: prize.daily_stock,
@@ -353,6 +430,44 @@ function editPrize(prize: LotteryPrize) {
     sort_order: prize.sort_order
   })
   showPrizeDialog.value = true
+}
+
+function buildRecordQuery() {
+  return {
+    page: recordPagination.page,
+    page_size: recordPagination.page_size,
+    user_id: recordFilters.user_id || undefined,
+    user_query: recordFilters.user_query.trim() || undefined,
+    source_type: recordFilters.source_type || undefined,
+    start_time: toApiDateTime(recordFilters.start_time),
+    end_time: toApiDateTime(recordFilters.end_time)
+  }
+}
+
+function toApiDateTime(value: string): string | undefined {
+  if (!value) return undefined
+  return new Date(value).toISOString()
+}
+
+function applyRecordFilters() {
+  recordPagination.page = 1
+  loadRecords().catch(err => appStore.showError(extractI18nErrorMessage(err, t, 'admin.lottery.errors', t('common.error'))))
+}
+
+function resetRecordFilters() {
+  Object.assign(recordFilters, {
+    user_id: undefined,
+    user_query: '',
+    source_type: '',
+    start_time: '',
+    end_time: ''
+  })
+  applyRecordFilters()
+}
+
+function goRecordPage(page: number) {
+  recordPagination.page = Math.min(Math.max(1, page), recordPagination.pages || 1)
+  loadRecords().catch(err => appStore.showError(extractI18nErrorMessage(err, t, 'admin.lottery.errors', t('common.error'))))
 }
 
 async function savePrize() {

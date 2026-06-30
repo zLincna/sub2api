@@ -29,20 +29,46 @@
           </div>
 
           <div class="mt-8 flex flex-col items-center gap-6">
-            <div class="relative h-72 w-72 sm:h-80 sm:w-80">
-              <div class="absolute left-1/2 top-0 z-10 -translate-x-1/2">
-                <div class="h-0 w-0 border-x-[12px] border-t-[28px] border-x-transparent border-t-red-500 drop-shadow"></div>
+            <div class="relative h-[22rem] w-[22rem] max-w-full sm:h-[28rem] sm:w-[28rem]">
+              <div class="absolute left-1/2 top-[-2px] z-20 -translate-x-1/2">
+                <div class="h-0 w-0 border-x-[18px] border-t-[38px] border-x-transparent border-t-red-500 drop-shadow-lg"></div>
               </div>
               <div
-                class="lottery-wheel h-full w-full rounded-full border-[10px] border-white shadow-xl dark:border-dark-800"
+                class="lottery-wheel relative h-full w-full rounded-full border-[12px] border-white bg-white shadow-2xl dark:border-dark-800 dark:bg-dark-900"
                 :class="{ spinning }"
-                :style="wheelStyle"
               >
-                <div class="absolute inset-8 rounded-full bg-white/80 shadow-inner dark:bg-dark-900/80"></div>
+                <svg class="h-full w-full overflow-visible rounded-full" viewBox="0 0 400 400" aria-hidden="true">
+                  <defs>
+                    <filter id="lotterySegmentShadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.18" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#lotterySegmentShadow)">
+                    <path
+                      v-for="segment in wheelSegments"
+                      :key="segment.id"
+                      :d="segment.path"
+                      :fill="segment.color"
+                      stroke="rgba(255,255,255,0.76)"
+                      stroke-width="2"
+                    />
+                  </g>
+                  <g v-for="segment in wheelSegments" :key="`${segment.id}-label`" :transform="segment.transform">
+                    <text
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      class="lottery-segment-title"
+                    >
+                      <tspan x="0" dy="-0.45em">{{ segment.title }}</tspan>
+                      <tspan x="0" dy="1.25em" class="lottery-segment-subtitle">{{ segment.subtitle }}</tspan>
+                    </text>
+                  </g>
+                </svg>
+                <div class="pointer-events-none absolute inset-[27%] rounded-full bg-slate-950/15 shadow-inner dark:bg-black/20"></div>
                 <div class="absolute inset-0 flex items-center justify-center">
                   <button
                     type="button"
-                    class="z-10 flex h-24 w-24 flex-col items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-gray-400"
+                    class="z-10 flex h-28 w-28 flex-col items-center justify-center rounded-full bg-red-500 text-white shadow-xl ring-8 ring-white/80 transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-gray-400 dark:ring-dark-900/80 sm:h-32 sm:w-32"
                     :disabled="drawing || spinning || !status?.config.enabled || (status?.chances.remaining ?? 0) <= 0"
                     @click="draw"
                   >
@@ -55,7 +81,8 @@
 
             <div v-if="lastPrize" class="rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-3 text-center dark:border-emerald-800/60 dark:bg-emerald-900/20">
               <p class="text-sm text-emerald-700 dark:text-emerald-300">{{ t('lottery.winPrefix') }}</p>
-              <p class="text-xl font-bold text-emerald-800 dark:text-emerald-200">{{ lastPrize.name }} · ${{ lastPrize.amount.toFixed(2) }}</p>
+              <p class="text-xl font-bold text-emerald-800 dark:text-emerald-200">{{ lastPrize.name }} · {{ prizeSubtitle(lastPrize) }}</p>
+              <p v-if="lastPrize.description" class="mt-1 max-w-xl text-sm text-emerald-700/80 dark:text-emerald-200/80">{{ lastPrize.description }}</p>
             </div>
           </div>
         </section>
@@ -95,7 +122,10 @@
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
               <tr v-for="record in records" :key="record.id">
-                <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">{{ record.prize_name }}</td>
+                <td class="px-3 py-2">
+                  <div class="font-medium text-gray-900 dark:text-white">{{ record.prize_name }}</div>
+                  <div v-if="record.prize_description" class="mt-0.5 max-w-md text-xs text-gray-500 dark:text-dark-400">{{ record.prize_description }}</div>
+                </td>
                 <td class="px-3 py-2 text-emerald-600 dark:text-emerald-400">${{ record.amount.toFixed(2) }}</td>
                 <td class="px-3 py-2 text-gray-500 dark:text-dark-400">{{ sourceLabel(record.source_type) }}</td>
                 <td class="px-3 py-2 text-gray-500 dark:text-dark-400">{{ formatTime(record.created_at) }}</td>
@@ -127,14 +157,46 @@ const lastPrize = ref<LotteryPrize | null>(null)
 
 const records = computed(() => status.value?.recent_draws ?? [])
 
-const wheelStyle = computed(() => {
+const wheelPrizes = computed(() => {
   const prizes = status.value?.prizes?.length ? status.value.prizes : []
   if (!prizes.length) {
-    return { background: 'conic-gradient(#e5e7eb 0deg 360deg)' }
+    return [{
+      id: 0,
+      name: t('lottery.noPrizeConfigured'),
+      description: '',
+      amount: 0,
+      probability: 1,
+      daily_stock: 0,
+      daily_used: 0,
+      total_stock: 0,
+      total_used: 0,
+      enabled: true,
+      color: '#94a3b8',
+      sort_order: 0,
+      created_at: '',
+      updated_at: ''
+    }] as LotteryPrize[]
   }
+  return prizes
+})
+
+const wheelSegments = computed(() => {
+  const prizes = wheelPrizes.value
   const step = 360 / prizes.length
-  const stops = prizes.map((p, idx) => `${p.color || '#f59e0b'} ${idx * step}deg ${(idx + 1) * step}deg`)
-  return { background: `conic-gradient(${stops.join(', ')})` }
+  return prizes.map((prize, idx) => {
+    const start = -90 + idx * step
+    const end = start + step
+    const mid = start + step / 2
+    const label = polarToCartesian(200, 200, 124, mid)
+    return {
+      id: prize.id || idx,
+      color: prize.color || '#f59e0b',
+      path: describeArcSegment(200, 200, 190, 64, start, end),
+      transform: `translate(${label.x} ${label.y}) rotate(${textRotation(mid)})`,
+      title: compactWheelText(prize.name, 8),
+      subtitle: compactWheelText(prizeSubtitle(prize), 10)
+    }
+  })
 })
 
 const sourceRows = computed(() => {
@@ -152,6 +214,50 @@ function sourceLabel(source: string): string {
 
 function formatTime(value: string): string {
   return new Date(value).toLocaleString()
+}
+
+function prizeSubtitle(prize: Pick<LotteryPrize, 'amount' | 'description'>): string {
+  if (prize.amount > 0) {
+    return `$${prize.amount.toFixed(2)}`
+  }
+  return prize.description || t('lottery.customPrize')
+}
+
+function compactWheelText(value: string, maxLength: number): string {
+  const chars = Array.from((value || '').trim())
+  if (chars.length <= maxLength) return chars.join('')
+  return `${chars.slice(0, Math.max(1, maxLength - 1)).join('')}…`
+}
+
+function polarToCartesian(cx: number, cy: number, radius: number, angleInDegrees: number) {
+  const angleInRadians = (angleInDegrees * Math.PI) / 180
+  return {
+    x: cx + radius * Math.cos(angleInRadians),
+    y: cy + radius * Math.sin(angleInRadians)
+  }
+}
+
+function describeArcSegment(cx: number, cy: number, outerRadius: number, innerRadius: number, startAngle: number, endAngle: number): string {
+  const outerStart = polarToCartesian(cx, cy, outerRadius, startAngle)
+  const outerEnd = polarToCartesian(cx, cy, outerRadius, endAngle)
+  const innerEnd = polarToCartesian(cx, cy, innerRadius, endAngle)
+  const innerStart = polarToCartesian(cx, cy, innerRadius, startAngle)
+  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1'
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
+    'Z'
+  ].join(' ')
+}
+
+function textRotation(angle: number): number {
+  const normalized = ((angle % 360) + 360) % 360
+  if (normalized > 90 && normalized < 270) {
+    return angle + 180
+  }
+  return angle
 }
 
 async function loadStatus() {
@@ -172,7 +278,7 @@ async function draw() {
       lastPrize.value = result.prize
       await loadStatus()
       await authStore.refreshUser()
-      appStore.showSuccess(t('lottery.drawSuccess', { name: result.prize.name, amount: result.prize.amount.toFixed(2) }))
+      appStore.showSuccess(t('lottery.drawSuccess', { name: result.prize.name, award: prizeSubtitle(result.prize), amount: result.prize.amount.toFixed(2) }))
       spinning.value = false
       drawing.value = false
     }, 1200)
@@ -189,7 +295,7 @@ onMounted(loadStatus)
 <style scoped>
 .lottery-wheel {
   position: relative;
-  transition: transform 0.8s ease;
+  transition: transform 0.8s cubic-bezier(0.2, 0.72, 0.28, 1);
 }
 
 .lottery-wheel.spinning {
@@ -199,5 +305,22 @@ onMounted(loadStatus)
 @keyframes lottery-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(720deg); }
+}
+
+.lottery-segment-title {
+  fill: white;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0;
+  paint-order: stroke;
+  stroke: rgba(15, 23, 42, 0.38);
+  stroke-linejoin: round;
+  stroke-width: 4px;
+}
+
+.lottery-segment-subtitle {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.95;
 }
 </style>

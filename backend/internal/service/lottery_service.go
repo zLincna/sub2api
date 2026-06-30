@@ -53,18 +53,19 @@ type LotteryThresholdGrantConfig struct {
 }
 
 type LotteryConfig struct {
-	Enabled        bool                         `json:"enabled"`
-	ButtonEnabled  bool                         `json:"button_enabled"`
-	Timezone       string                       `json:"timezone"`
-	RuleText       string                       `json:"rule_text"`
-	LoginGrant     LotteryLoginGrantConfig      `json:"login_grant"`
-	SpendGrant     LotteryThresholdGrantConfig  `json:"spend_grant"`
-	RechargeGrant  LotteryThresholdGrantConfig  `json:"recharge_grant"`
+	Enabled       bool                        `json:"enabled"`
+	ButtonEnabled bool                        `json:"button_enabled"`
+	Timezone      string                      `json:"timezone"`
+	RuleText      string                      `json:"rule_text"`
+	LoginGrant    LotteryLoginGrantConfig     `json:"login_grant"`
+	SpendGrant    LotteryThresholdGrantConfig `json:"spend_grant"`
+	RechargeGrant LotteryThresholdGrantConfig `json:"recharge_grant"`
 }
 
 type LotteryPrize struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
+	Description string    `json:"description"`
 	Amount      float64   `json:"amount"`
 	Probability float64   `json:"probability"`
 	DailyStock  int       `json:"daily_stock"`
@@ -87,34 +88,36 @@ type LotteryChanceSummary struct {
 }
 
 type LotteryDrawRecord struct {
-	ID            int64     `json:"id"`
-	UserID        int64     `json:"user_id"`
-	UserEmail     string    `json:"user_email,omitempty"`
-	PrizeID       int64     `json:"prize_id"`
-	PrizeName     string    `json:"prize_name"`
-	Amount        float64   `json:"amount"`
-	BalanceBefore float64   `json:"balance_before"`
-	BalanceAfter  float64   `json:"balance_after"`
-	SourceType    string    `json:"source_type"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID               int64     `json:"id"`
+	UserID           int64     `json:"user_id"`
+	UserEmail        string    `json:"user_email,omitempty"`
+	PrizeID          int64     `json:"prize_id"`
+	PrizeName        string    `json:"prize_name"`
+	PrizeDescription string    `json:"prize_description"`
+	Amount           float64   `json:"amount"`
+	BalanceBefore    float64   `json:"balance_before"`
+	BalanceAfter     float64   `json:"balance_after"`
+	SourceType       string    `json:"source_type"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 
 type LotteryStatus struct {
-	Config       LotteryConfig         `json:"config"`
-	Prizes       []LotteryPrize        `json:"prizes"`
-	Chances      LotteryChanceSummary  `json:"chances"`
-	RecentDraws  []LotteryDrawRecord   `json:"recent_draws"`
-	ServerTime    time.Time             `json:"server_time"`
+	Config      LotteryConfig        `json:"config"`
+	Prizes      []LotteryPrize       `json:"prizes"`
+	Chances     LotteryChanceSummary `json:"chances"`
+	RecentDraws []LotteryDrawRecord  `json:"recent_draws"`
+	ServerTime  time.Time            `json:"server_time"`
 }
 
 type LotteryDrawResult struct {
-	Prize            LotteryPrize         `json:"prize"`
-	Record           LotteryDrawRecord    `json:"record"`
-	RemainingChances int                  `json:"remaining_chances"`
+	Prize            LotteryPrize      `json:"prize"`
+	Record           LotteryDrawRecord `json:"record"`
+	RemainingChances int               `json:"remaining_chances"`
 }
 
 type LotteryPrizeInput struct {
 	Name        string  `json:"name"`
+	Description string  `json:"description"`
 	Amount      float64 `json:"amount"`
 	Probability float64 `json:"probability"`
 	DailyStock  int     `json:"daily_stock"`
@@ -122,6 +125,14 @@ type LotteryPrizeInput struct {
 	Enabled     bool    `json:"enabled"`
 	Color       string  `json:"color"`
 	SortOrder   int     `json:"sort_order"`
+}
+
+type LotteryDrawRecordFilters struct {
+	UserID     int64
+	UserQuery  string
+	SourceType string
+	StartTime  time.Time
+	EndTime    time.Time
 }
 
 type LotteryService struct {
@@ -247,7 +258,7 @@ func (s *LotteryService) GetStatus(ctx context.Context, userID int64) (*LotteryS
 		Prizes:      prizes,
 		Chances:     chances,
 		RecentDraws: records,
-		ServerTime:   time.Now(),
+		ServerTime:  time.Now(),
 	}, nil
 }
 
@@ -363,15 +374,16 @@ func (s *LotteryService) Draw(ctx context.Context, userID int64) (*LotteryDrawRe
 	}
 	snapshot, _ := json.Marshal(map[string]any{
 		"prize_probability": prize.Probability,
+		"prize_description": prize.Description,
 		"source_type":       sourceType,
 	})
 	var record LotteryDrawRecord
 	err = tx.QueryRowContext(ctx, `
-		INSERT INTO lottery_draw_records (user_id, chance_id, prize_id, prize_name, amount, balance_before, balance_after, source_type, config_snapshot, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, NOW())
-		RETURNING id, user_id, prize_id, prize_name, amount, balance_before, balance_after, source_type, created_at
-	`, userID, chanceID, prize.ID, prize.Name, prize.Amount, balanceBefore, balanceAfter, sourceType, string(snapshot)).
-		Scan(&record.ID, &record.UserID, &record.PrizeID, &record.PrizeName, &record.Amount, &record.BalanceBefore, &record.BalanceAfter, &record.SourceType, &record.CreatedAt)
+		INSERT INTO lottery_draw_records (user_id, chance_id, prize_id, prize_name, prize_description, amount, balance_before, balance_after, source_type, config_snapshot, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, NOW())
+		RETURNING id, user_id, prize_id, prize_name, prize_description, amount, balance_before, balance_after, source_type, created_at
+	`, userID, chanceID, prize.ID, prize.Name, prize.Description, prize.Amount, balanceBefore, balanceAfter, sourceType, string(snapshot)).
+		Scan(&record.ID, &record.UserID, &record.PrizeID, &record.PrizeName, &record.PrizeDescription, &record.Amount, &record.BalanceBefore, &record.BalanceAfter, &record.SourceType, &record.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +434,7 @@ func (s *LotteryService) ListPrizes(ctx context.Context, enabledOnly bool) ([]Lo
 	loc := lotteryLocation(cfg.Timezone)
 	dayStart, dayEnd := dayRange(time.Now().In(loc), loc)
 	query := `
-		SELECT p.id, p.name, p.amount, p.probability, p.daily_stock,
+		SELECT p.id, p.name, p.description, p.amount, p.probability, p.daily_stock,
 		       COALESCE(d.today_used, 0)::int AS daily_used,
 		       p.total_stock, p.total_used, p.enabled, p.color, p.sort_order, p.created_at, p.updated_at
 		FROM lottery_prizes p
@@ -448,11 +460,11 @@ func (s *LotteryService) CreatePrize(ctx context.Context, input LotteryPrizeInpu
 	normalizePrizeInput(&input)
 	var prize LotteryPrize
 	err := s.db.QueryRowContext(ctx, `
-		INSERT INTO lottery_prizes (name, amount, probability, daily_stock, total_stock, enabled, color, sort_order, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-		RETURNING id, name, amount, probability, daily_stock, daily_used, total_stock, total_used, enabled, color, sort_order, created_at, updated_at
-	`, input.Name, input.Amount, input.Probability, input.DailyStock, input.TotalStock, input.Enabled, input.Color, input.SortOrder).
-		Scan(&prize.ID, &prize.Name, &prize.Amount, &prize.Probability, &prize.DailyStock, &prize.DailyUsed, &prize.TotalStock, &prize.TotalUsed, &prize.Enabled, &prize.Color, &prize.SortOrder, &prize.CreatedAt, &prize.UpdatedAt)
+		INSERT INTO lottery_prizes (name, description, amount, probability, daily_stock, total_stock, enabled, color, sort_order, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+		RETURNING id, name, description, amount, probability, daily_stock, daily_used, total_stock, total_used, enabled, color, sort_order, created_at, updated_at
+	`, input.Name, input.Description, input.Amount, input.Probability, input.DailyStock, input.TotalStock, input.Enabled, input.Color, input.SortOrder).
+		Scan(&prize.ID, &prize.Name, &prize.Description, &prize.Amount, &prize.Probability, &prize.DailyStock, &prize.DailyUsed, &prize.TotalStock, &prize.TotalUsed, &prize.Enabled, &prize.Color, &prize.SortOrder, &prize.CreatedAt, &prize.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -464,12 +476,12 @@ func (s *LotteryService) UpdatePrize(ctx context.Context, id int64, input Lotter
 	var prize LotteryPrize
 	err := s.db.QueryRowContext(ctx, `
 		UPDATE lottery_prizes
-		SET name = $2, amount = $3, probability = $4, daily_stock = $5, total_stock = $6,
-		    enabled = $7, color = $8, sort_order = $9, updated_at = NOW()
+		SET name = $2, description = $3, amount = $4, probability = $5, daily_stock = $6, total_stock = $7,
+		    enabled = $8, color = $9, sort_order = $10, updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, name, amount, probability, daily_stock, daily_used, total_stock, total_used, enabled, color, sort_order, created_at, updated_at
-	`, id, input.Name, input.Amount, input.Probability, input.DailyStock, input.TotalStock, input.Enabled, input.Color, input.SortOrder).
-		Scan(&prize.ID, &prize.Name, &prize.Amount, &prize.Probability, &prize.DailyStock, &prize.DailyUsed, &prize.TotalStock, &prize.TotalUsed, &prize.Enabled, &prize.Color, &prize.SortOrder, &prize.CreatedAt, &prize.UpdatedAt)
+		RETURNING id, name, description, amount, probability, daily_stock, daily_used, total_stock, total_used, enabled, color, sort_order, created_at, updated_at
+	`, id, input.Name, input.Description, input.Amount, input.Probability, input.DailyStock, input.TotalStock, input.Enabled, input.Color, input.SortOrder).
+		Scan(&prize.ID, &prize.Name, &prize.Description, &prize.Amount, &prize.Probability, &prize.DailyStock, &prize.DailyUsed, &prize.TotalStock, &prize.TotalUsed, &prize.Enabled, &prize.Color, &prize.SortOrder, &prize.CreatedAt, &prize.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, infraerrors.NotFound("LOTTERY_PRIZE_NOT_FOUND", "奖品不存在")
@@ -498,7 +510,7 @@ func (s *LotteryService) ListUserDrawRecords(ctx context.Context, userID int64, 
 		return nil, 0, err
 	}
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT id, user_id, prize_id, prize_name, amount, balance_before, balance_after, source_type, created_at
+		SELECT id, user_id, prize_id, prize_name, prize_description, amount, balance_before, balance_after, source_type, created_at
 		FROM lottery_draw_records
 		WHERE user_id = $1
 		ORDER BY id DESC
@@ -512,16 +524,40 @@ func (s *LotteryService) ListUserDrawRecords(ctx context.Context, userID int64, 
 	return records, total, err
 }
 
-func (s *LotteryService) ListAdminDrawRecords(ctx context.Context, page, pageSize int, userID int64) ([]LotteryDrawRecord, int64, error) {
+func (s *LotteryService) ListAdminDrawRecords(ctx context.Context, page, pageSize int, filters LotteryDrawRecordFilters) ([]LotteryDrawRecord, int64, error) {
 	page, pageSize = normalizePage(page, pageSize)
+	whereParts := make([]string, 0, 5)
+	args := make([]any, 0, 7)
+	addArg := func(value any) string {
+		args = append(args, value)
+		return fmt.Sprintf("$%d", len(args))
+	}
+	if filters.UserID > 0 {
+		whereParts = append(whereParts, "r.user_id = "+addArg(filters.UserID))
+	}
+	if query := strings.TrimSpace(filters.UserQuery); query != "" {
+		placeholder := addArg("%" + strings.ToLower(query) + "%")
+		whereParts = append(whereParts, "(LOWER(COALESCE(u.email, '')) LIKE "+placeholder+" OR CAST(r.user_id AS TEXT) LIKE "+placeholder+")")
+	}
+	if sourceType := strings.TrimSpace(filters.SourceType); sourceType != "" {
+		whereParts = append(whereParts, "r.source_type = "+addArg(sourceType))
+	}
+	if !filters.StartTime.IsZero() {
+		whereParts = append(whereParts, "r.created_at >= "+addArg(filters.StartTime))
+	}
+	if !filters.EndTime.IsZero() {
+		whereParts = append(whereParts, "r.created_at <= "+addArg(filters.EndTime))
+	}
 	where := ""
-	args := []any{}
-	if userID > 0 {
-		where = "WHERE r.user_id = $1"
-		args = append(args, userID)
+	if len(whereParts) > 0 {
+		where = "WHERE " + strings.Join(whereParts, " AND ")
 	}
 	var total int64
-	countQuery := `SELECT COUNT(*) FROM lottery_draw_records r ` + where
+	countQuery := `
+		SELECT COUNT(*)
+		FROM lottery_draw_records r
+		LEFT JOIN users u ON u.id = r.user_id
+		` + where
 	if err := s.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
@@ -529,7 +565,7 @@ func (s *LotteryService) ListAdminDrawRecords(ctx context.Context, page, pageSiz
 	limitPos := len(args) - 1
 	offsetPos := len(args)
 	query := fmt.Sprintf(`
-		SELECT r.id, r.user_id, COALESCE(u.email, ''), r.prize_id, r.prize_name, r.amount, r.balance_before, r.balance_after, r.source_type, r.created_at
+		SELECT r.id, r.user_id, COALESCE(u.email, ''), r.prize_id, r.prize_name, r.prize_description, r.amount, r.balance_before, r.balance_after, r.source_type, r.created_at
 		FROM lottery_draw_records r
 		LEFT JOIN users u ON u.id = r.user_id
 		%s
@@ -647,7 +683,7 @@ func (s *LotteryService) countRemainingChances(ctx context.Context, userID int64
 
 func queryAvailablePrizes(ctx context.Context, tx *sql.Tx, dayStart, dayEnd time.Time) ([]LotteryPrize, error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT p.id, p.name, p.amount, p.probability, p.daily_stock,
+		SELECT p.id, p.name, p.description, p.amount, p.probability, p.daily_stock,
 		       COALESCE(d.today_used, 0)::int AS daily_used,
 		       p.total_stock, p.total_used, p.enabled, p.color, p.sort_order, p.created_at, p.updated_at
 		FROM lottery_prizes p
@@ -675,7 +711,7 @@ func scanLotteryPrizes(rows *sql.Rows) ([]LotteryPrize, error) {
 	prizes := []LotteryPrize{}
 	for rows.Next() {
 		var p LotteryPrize
-		if err := rows.Scan(&p.ID, &p.Name, &p.Amount, &p.Probability, &p.DailyStock, &p.DailyUsed, &p.TotalStock, &p.TotalUsed, &p.Enabled, &p.Color, &p.SortOrder, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Amount, &p.Probability, &p.DailyStock, &p.DailyUsed, &p.TotalStock, &p.TotalUsed, &p.Enabled, &p.Color, &p.SortOrder, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		prizes = append(prizes, p)
@@ -689,9 +725,9 @@ func scanDrawRecords(rows *sql.Rows, withUser bool) ([]LotteryDrawRecord, error)
 		var r LotteryDrawRecord
 		var err error
 		if withUser {
-			err = rows.Scan(&r.ID, &r.UserID, &r.UserEmail, &r.PrizeID, &r.PrizeName, &r.Amount, &r.BalanceBefore, &r.BalanceAfter, &r.SourceType, &r.CreatedAt)
+			err = rows.Scan(&r.ID, &r.UserID, &r.UserEmail, &r.PrizeID, &r.PrizeName, &r.PrizeDescription, &r.Amount, &r.BalanceBefore, &r.BalanceAfter, &r.SourceType, &r.CreatedAt)
 		} else {
-			err = rows.Scan(&r.ID, &r.UserID, &r.PrizeID, &r.PrizeName, &r.Amount, &r.BalanceBefore, &r.BalanceAfter, &r.SourceType, &r.CreatedAt)
+			err = rows.Scan(&r.ID, &r.UserID, &r.PrizeID, &r.PrizeName, &r.PrizeDescription, &r.Amount, &r.BalanceBefore, &r.BalanceAfter, &r.SourceType, &r.CreatedAt)
 		}
 		if err != nil {
 			return nil, err
@@ -814,6 +850,13 @@ func normalizePrizeInput(input *LotteryPrizeInput) {
 	input.Name = strings.TrimSpace(input.Name)
 	if input.Name == "" {
 		input.Name = "余额奖励"
+	}
+	if len([]rune(input.Name)) > 100 {
+		input.Name = string([]rune(input.Name)[:100])
+	}
+	input.Description = strings.TrimSpace(input.Description)
+	if len([]rune(input.Description)) > 500 {
+		input.Description = string([]rune(input.Description)[:500])
 	}
 	if input.Amount < 0 {
 		input.Amount = 0

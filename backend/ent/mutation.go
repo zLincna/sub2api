@@ -27729,6 +27729,7 @@ type LotteryDrawRecordMutation struct {
 	typ               string
 	id                *int64
 	prize_name        *string
+	prize_description *string
 	amount            *float64
 	addamount         *float64
 	balance_before    *float64
@@ -27990,6 +27991,42 @@ func (m *LotteryDrawRecordMutation) OldPrizeName(ctx context.Context) (v string,
 // ResetPrizeName resets all changes to the "prize_name" field.
 func (m *LotteryDrawRecordMutation) ResetPrizeName() {
 	m.prize_name = nil
+}
+
+// SetPrizeDescription sets the "prize_description" field.
+func (m *LotteryDrawRecordMutation) SetPrizeDescription(s string) {
+	m.prize_description = &s
+}
+
+// PrizeDescription returns the value of the "prize_description" field in the mutation.
+func (m *LotteryDrawRecordMutation) PrizeDescription() (r string, exists bool) {
+	v := m.prize_description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrizeDescription returns the old "prize_description" field's value of the LotteryDrawRecord entity.
+// If the LotteryDrawRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LotteryDrawRecordMutation) OldPrizeDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPrizeDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPrizeDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrizeDescription: %w", err)
+	}
+	return oldValue.PrizeDescription, nil
+}
+
+// ResetPrizeDescription resets all changes to the "prize_description" field.
+func (m *LotteryDrawRecordMutation) ResetPrizeDescription() {
+	m.prize_description = nil
 }
 
 // SetAmount sets the "amount" field.
@@ -28396,7 +28433,7 @@ func (m *LotteryDrawRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LotteryDrawRecordMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.user != nil {
 		fields = append(fields, lotterydrawrecord.FieldUserID)
 	}
@@ -28408,6 +28445,9 @@ func (m *LotteryDrawRecordMutation) Fields() []string {
 	}
 	if m.prize_name != nil {
 		fields = append(fields, lotterydrawrecord.FieldPrizeName)
+	}
+	if m.prize_description != nil {
+		fields = append(fields, lotterydrawrecord.FieldPrizeDescription)
 	}
 	if m.amount != nil {
 		fields = append(fields, lotterydrawrecord.FieldAmount)
@@ -28443,6 +28483,8 @@ func (m *LotteryDrawRecordMutation) Field(name string) (ent.Value, bool) {
 		return m.PrizeID()
 	case lotterydrawrecord.FieldPrizeName:
 		return m.PrizeName()
+	case lotterydrawrecord.FieldPrizeDescription:
+		return m.PrizeDescription()
 	case lotterydrawrecord.FieldAmount:
 		return m.Amount()
 	case lotterydrawrecord.FieldBalanceBefore:
@@ -28472,6 +28514,8 @@ func (m *LotteryDrawRecordMutation) OldField(ctx context.Context, name string) (
 		return m.OldPrizeID(ctx)
 	case lotterydrawrecord.FieldPrizeName:
 		return m.OldPrizeName(ctx)
+	case lotterydrawrecord.FieldPrizeDescription:
+		return m.OldPrizeDescription(ctx)
 	case lotterydrawrecord.FieldAmount:
 		return m.OldAmount(ctx)
 	case lotterydrawrecord.FieldBalanceBefore:
@@ -28520,6 +28564,13 @@ func (m *LotteryDrawRecordMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPrizeName(v)
+		return nil
+	case lotterydrawrecord.FieldPrizeDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrizeDescription(v)
 		return nil
 	case lotterydrawrecord.FieldAmount:
 		v, ok := value.(float64)
@@ -28672,6 +28723,9 @@ func (m *LotteryDrawRecordMutation) ResetField(name string) error {
 	case lotterydrawrecord.FieldPrizeName:
 		m.ResetPrizeName()
 		return nil
+	case lotterydrawrecord.FieldPrizeDescription:
+		m.ResetPrizeDescription()
+		return nil
 	case lotterydrawrecord.FieldAmount:
 		m.ResetAmount()
 		return nil
@@ -28811,6 +28865,7 @@ type LotteryPrizeMutation struct {
 	typ                 string
 	id                  *int64
 	name                *string
+	description         *string
 	amount              *float64
 	addamount           *float64
 	probability         *float64
@@ -28970,6 +29025,42 @@ func (m *LotteryPrizeMutation) OldName(ctx context.Context) (v string, err error
 // ResetName resets all changes to the "name" field.
 func (m *LotteryPrizeMutation) ResetName() {
 	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *LotteryPrizeMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *LotteryPrizeMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the LotteryPrize entity.
+// If the LotteryPrize object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *LotteryPrizeMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *LotteryPrizeMutation) ResetDescription() {
+	m.description = nil
 }
 
 // SetAmount sets the "amount" field.
@@ -29596,9 +29687,12 @@ func (m *LotteryPrizeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *LotteryPrizeMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.name != nil {
 		fields = append(fields, lotteryprize.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, lotteryprize.FieldDescription)
 	}
 	if m.amount != nil {
 		fields = append(fields, lotteryprize.FieldAmount)
@@ -29643,6 +29737,8 @@ func (m *LotteryPrizeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case lotteryprize.FieldName:
 		return m.Name()
+	case lotteryprize.FieldDescription:
+		return m.Description()
 	case lotteryprize.FieldAmount:
 		return m.Amount()
 	case lotteryprize.FieldProbability:
@@ -29676,6 +29772,8 @@ func (m *LotteryPrizeMutation) OldField(ctx context.Context, name string) (ent.V
 	switch name {
 	case lotteryprize.FieldName:
 		return m.OldName(ctx)
+	case lotteryprize.FieldDescription:
+		return m.OldDescription(ctx)
 	case lotteryprize.FieldAmount:
 		return m.OldAmount(ctx)
 	case lotteryprize.FieldProbability:
@@ -29713,6 +29811,13 @@ func (m *LotteryPrizeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case lotteryprize.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
 		return nil
 	case lotteryprize.FieldAmount:
 		v, ok := value.(float64)
@@ -29929,6 +30034,9 @@ func (m *LotteryPrizeMutation) ResetField(name string) error {
 	switch name {
 	case lotteryprize.FieldName:
 		m.ResetName()
+		return nil
+	case lotteryprize.FieldDescription:
+		m.ResetDescription()
 		return nil
 	case lotteryprize.FieldAmount:
 		m.ResetAmount()

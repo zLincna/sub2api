@@ -86,6 +86,20 @@ func (_u *LotteryDrawRecordUpdate) SetNillablePrizeName(v *string) *LotteryDrawR
 	return _u
 }
 
+// SetPrizeDescription sets the "prize_description" field.
+func (_u *LotteryDrawRecordUpdate) SetPrizeDescription(v string) *LotteryDrawRecordUpdate {
+	_u.mutation.SetPrizeDescription(v)
+	return _u
+}
+
+// SetNillablePrizeDescription sets the "prize_description" field if the given value is not nil.
+func (_u *LotteryDrawRecordUpdate) SetNillablePrizeDescription(v *string) *LotteryDrawRecordUpdate {
+	if v != nil {
+		_u.SetPrizeDescription(*v)
+	}
+	return _u
+}
+
 // SetAmount sets the "amount" field.
 func (_u *LotteryDrawRecordUpdate) SetAmount(v float64) *LotteryDrawRecordUpdate {
 	_u.mutation.ResetAmount()
@@ -247,6 +261,11 @@ func (_u *LotteryDrawRecordUpdate) check() error {
 			return &ValidationError{Name: "prize_name", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.prize_name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.PrizeDescription(); ok {
+		if err := lotterydrawrecord.PrizeDescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "prize_description", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.prize_description": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.SourceType(); ok {
 		if err := lotterydrawrecord.SourceTypeValidator(v); err != nil {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.source_type": %w`, err)}
@@ -278,6 +297,9 @@ func (_u *LotteryDrawRecordUpdate) sqlSave(ctx context.Context) (_node int, err 
 	}
 	if value, ok := _u.mutation.PrizeName(); ok {
 		_spec.SetField(lotterydrawrecord.FieldPrizeName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PrizeDescription(); ok {
+		_spec.SetField(lotterydrawrecord.FieldPrizeDescription, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Amount(); ok {
 		_spec.SetField(lotterydrawrecord.FieldAmount, field.TypeFloat64, value)
@@ -469,6 +491,20 @@ func (_u *LotteryDrawRecordUpdateOne) SetNillablePrizeName(v *string) *LotteryDr
 	return _u
 }
 
+// SetPrizeDescription sets the "prize_description" field.
+func (_u *LotteryDrawRecordUpdateOne) SetPrizeDescription(v string) *LotteryDrawRecordUpdateOne {
+	_u.mutation.SetPrizeDescription(v)
+	return _u
+}
+
+// SetNillablePrizeDescription sets the "prize_description" field if the given value is not nil.
+func (_u *LotteryDrawRecordUpdateOne) SetNillablePrizeDescription(v *string) *LotteryDrawRecordUpdateOne {
+	if v != nil {
+		_u.SetPrizeDescription(*v)
+	}
+	return _u
+}
+
 // SetAmount sets the "amount" field.
 func (_u *LotteryDrawRecordUpdateOne) SetAmount(v float64) *LotteryDrawRecordUpdateOne {
 	_u.mutation.ResetAmount()
@@ -643,6 +679,11 @@ func (_u *LotteryDrawRecordUpdateOne) check() error {
 			return &ValidationError{Name: "prize_name", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.prize_name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.PrizeDescription(); ok {
+		if err := lotterydrawrecord.PrizeDescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "prize_description", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.prize_description": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.SourceType(); ok {
 		if err := lotterydrawrecord.SourceTypeValidator(v); err != nil {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.source_type": %w`, err)}
@@ -691,6 +732,9 @@ func (_u *LotteryDrawRecordUpdateOne) sqlSave(ctx context.Context) (_node *Lotte
 	}
 	if value, ok := _u.mutation.PrizeName(); ok {
 		_spec.SetField(lotterydrawrecord.FieldPrizeName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PrizeDescription(); ok {
+		_spec.SetField(lotterydrawrecord.FieldPrizeDescription, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Amount(); ok {
 		_spec.SetField(lotterydrawrecord.FieldAmount, field.TypeFloat64, value)

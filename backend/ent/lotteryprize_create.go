@@ -29,6 +29,20 @@ func (_c *LotteryPrizeCreate) SetName(v string) *LotteryPrizeCreate {
 	return _c
 }
 
+// SetDescription sets the "description" field.
+func (_c *LotteryPrizeCreate) SetDescription(v string) *LotteryPrizeCreate {
+	_c.mutation.SetDescription(v)
+	return _c
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_c *LotteryPrizeCreate) SetNillableDescription(v *string) *LotteryPrizeCreate {
+	if v != nil {
+		_c.SetDescription(*v)
+	}
+	return _c
+}
+
 // SetAmount sets the "amount" field.
 func (_c *LotteryPrizeCreate) SetAmount(v float64) *LotteryPrizeCreate {
 	_c.mutation.SetAmount(v)
@@ -233,6 +247,10 @@ func (_c *LotteryPrizeCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *LotteryPrizeCreate) defaults() {
+	if _, ok := _c.mutation.Description(); !ok {
+		v := lotteryprize.DefaultDescription
+		_c.mutation.SetDescription(v)
+	}
 	if _, ok := _c.mutation.Amount(); !ok {
 		v := lotteryprize.DefaultAmount
 		_c.mutation.SetAmount(v)
@@ -287,6 +305,14 @@ func (_c *LotteryPrizeCreate) check() error {
 	if v, ok := _c.mutation.Name(); ok {
 		if err := lotteryprize.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.name": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "LotteryPrize.description"`)}
+	}
+	if v, ok := _c.mutation.Description(); ok {
+		if err := lotteryprize.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.description": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Amount(); !ok {
@@ -357,6 +383,10 @@ func (_c *LotteryPrizeCreate) createSpec() (*LotteryPrize, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(lotteryprize.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := _c.mutation.Description(); ok {
+		_spec.SetField(lotteryprize.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if value, ok := _c.mutation.Amount(); ok {
 		_spec.SetField(lotteryprize.FieldAmount, field.TypeFloat64, value)
@@ -479,6 +509,18 @@ func (u *LotteryPrizeUpsert) SetName(v string) *LotteryPrizeUpsert {
 // UpdateName sets the "name" field to the value that was provided on create.
 func (u *LotteryPrizeUpsert) UpdateName() *LotteryPrizeUpsert {
 	u.SetExcluded(lotteryprize.FieldName)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *LotteryPrizeUpsert) SetDescription(v string) *LotteryPrizeUpsert {
+	u.Set(lotteryprize.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *LotteryPrizeUpsert) UpdateDescription() *LotteryPrizeUpsert {
+	u.SetExcluded(lotteryprize.FieldDescription)
 	return u
 }
 
@@ -700,6 +742,20 @@ func (u *LotteryPrizeUpsertOne) SetName(v string) *LotteryPrizeUpsertOne {
 func (u *LotteryPrizeUpsertOne) UpdateName() *LotteryPrizeUpsertOne {
 	return u.Update(func(s *LotteryPrizeUpsert) {
 		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *LotteryPrizeUpsertOne) SetDescription(v string) *LotteryPrizeUpsertOne {
+	return u.Update(func(s *LotteryPrizeUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *LotteryPrizeUpsertOne) UpdateDescription() *LotteryPrizeUpsertOne {
+	return u.Update(func(s *LotteryPrizeUpsert) {
+		s.UpdateDescription()
 	})
 }
 
@@ -1114,6 +1170,20 @@ func (u *LotteryPrizeUpsertBulk) SetName(v string) *LotteryPrizeUpsertBulk {
 func (u *LotteryPrizeUpsertBulk) UpdateName() *LotteryPrizeUpsertBulk {
 	return u.Update(func(s *LotteryPrizeUpsert) {
 		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *LotteryPrizeUpsertBulk) SetDescription(v string) *LotteryPrizeUpsertBulk {
+	return u.Update(func(s *LotteryPrizeUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *LotteryPrizeUpsertBulk) UpdateDescription() *LotteryPrizeUpsertBulk {
+	return u.Update(func(s *LotteryPrizeUpsert) {
+		s.UpdateDescription()
 	})
 }
 

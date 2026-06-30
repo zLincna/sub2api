@@ -19,6 +19,8 @@ type LotteryPrize struct {
 	ID int64 `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount float64 `json:"amount,omitempty"`
 	// Probability holds the value of the "probability" field.
@@ -76,7 +78,7 @@ func (*LotteryPrize) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case lotteryprize.FieldID, lotteryprize.FieldDailyStock, lotteryprize.FieldDailyUsed, lotteryprize.FieldTotalStock, lotteryprize.FieldTotalUsed, lotteryprize.FieldSortOrder:
 			values[i] = new(sql.NullInt64)
-		case lotteryprize.FieldName, lotteryprize.FieldColor:
+		case lotteryprize.FieldName, lotteryprize.FieldDescription, lotteryprize.FieldColor:
 			values[i] = new(sql.NullString)
 		case lotteryprize.FieldCreatedAt, lotteryprize.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -106,6 +108,12 @@ func (_m *LotteryPrize) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
+			}
+		case lotteryprize.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = value.String
 			}
 		case lotteryprize.FieldAmount:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -216,6 +224,9 @@ func (_m *LotteryPrize) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("amount=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Amount))

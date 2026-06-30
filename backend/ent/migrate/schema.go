@@ -1110,6 +1110,7 @@ var (
 	LotteryDrawRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "prize_name", Type: field.TypeString, Size: 100},
+		{Name: "prize_description", Type: field.TypeString, Size: 500, Default: ""},
 		{Name: "amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "balance_before", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "balance_after", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
@@ -1128,19 +1129,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "lottery_draw_records_lottery_chances_draw_records",
-				Columns:    []*schema.Column{LotteryDrawRecordsColumns[8]},
+				Columns:    []*schema.Column{LotteryDrawRecordsColumns[9]},
 				RefColumns: []*schema.Column{LotteryChancesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "lottery_draw_records_lottery_prizes_draw_records",
-				Columns:    []*schema.Column{LotteryDrawRecordsColumns[9]},
+				Columns:    []*schema.Column{LotteryDrawRecordsColumns[10]},
 				RefColumns: []*schema.Column{LotteryPrizesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "lottery_draw_records_users_lottery_draw_records",
-				Columns:    []*schema.Column{LotteryDrawRecordsColumns[10]},
+				Columns:    []*schema.Column{LotteryDrawRecordsColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1149,17 +1150,17 @@ var (
 			{
 				Name:    "lotterydrawrecord_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{LotteryDrawRecordsColumns[10]},
+				Columns: []*schema.Column{LotteryDrawRecordsColumns[11]},
 			},
 			{
 				Name:    "lotterydrawrecord_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{LotteryDrawRecordsColumns[7]},
+				Columns: []*schema.Column{LotteryDrawRecordsColumns[8]},
 			},
 			{
 				Name:    "lotterydrawrecord_source_type",
 				Unique:  false,
-				Columns: []*schema.Column{LotteryDrawRecordsColumns[5]},
+				Columns: []*schema.Column{LotteryDrawRecordsColumns[6]},
 			},
 		},
 	}
@@ -1167,6 +1168,7 @@ var (
 	LotteryPrizesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "description", Type: field.TypeString, Size: 500, Default: ""},
 		{Name: "amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "probability", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(10,6)"}},
 		{Name: "daily_stock", Type: field.TypeInt, Default: 0},
@@ -1188,12 +1190,12 @@ var (
 			{
 				Name:    "lotteryprize_enabled",
 				Unique:  false,
-				Columns: []*schema.Column{LotteryPrizesColumns[8]},
+				Columns: []*schema.Column{LotteryPrizesColumns[9]},
 			},
 			{
 				Name:    "lotteryprize_sort_order",
 				Unique:  false,
-				Columns: []*schema.Column{LotteryPrizesColumns[10]},
+				Columns: []*schema.Column{LotteryPrizesColumns[11]},
 			},
 		},
 	}

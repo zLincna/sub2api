@@ -49,6 +49,20 @@ func (_c *LotteryDrawRecordCreate) SetPrizeName(v string) *LotteryDrawRecordCrea
 	return _c
 }
 
+// SetPrizeDescription sets the "prize_description" field.
+func (_c *LotteryDrawRecordCreate) SetPrizeDescription(v string) *LotteryDrawRecordCreate {
+	_c.mutation.SetPrizeDescription(v)
+	return _c
+}
+
+// SetNillablePrizeDescription sets the "prize_description" field if the given value is not nil.
+func (_c *LotteryDrawRecordCreate) SetNillablePrizeDescription(v *string) *LotteryDrawRecordCreate {
+	if v != nil {
+		_c.SetPrizeDescription(*v)
+	}
+	return _c
+}
+
 // SetAmount sets the "amount" field.
 func (_c *LotteryDrawRecordCreate) SetAmount(v float64) *LotteryDrawRecordCreate {
 	_c.mutation.SetAmount(v)
@@ -167,6 +181,10 @@ func (_c *LotteryDrawRecordCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *LotteryDrawRecordCreate) defaults() {
+	if _, ok := _c.mutation.PrizeDescription(); !ok {
+		v := lotterydrawrecord.DefaultPrizeDescription
+		_c.mutation.SetPrizeDescription(v)
+	}
 	if _, ok := _c.mutation.Amount(); !ok {
 		v := lotterydrawrecord.DefaultAmount
 		_c.mutation.SetAmount(v)
@@ -202,6 +220,14 @@ func (_c *LotteryDrawRecordCreate) check() error {
 	if v, ok := _c.mutation.PrizeName(); ok {
 		if err := lotterydrawrecord.PrizeNameValidator(v); err != nil {
 			return &ValidationError{Name: "prize_name", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.prize_name": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PrizeDescription(); !ok {
+		return &ValidationError{Name: "prize_description", err: errors.New(`ent: missing required field "LotteryDrawRecord.prize_description"`)}
+	}
+	if v, ok := _c.mutation.PrizeDescription(); ok {
+		if err := lotterydrawrecord.PrizeDescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "prize_description", err: fmt.Errorf(`ent: validator failed for field "LotteryDrawRecord.prize_description": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Amount(); !ok {
@@ -263,6 +289,10 @@ func (_c *LotteryDrawRecordCreate) createSpec() (*LotteryDrawRecord, *sqlgraph.C
 	if value, ok := _c.mutation.PrizeName(); ok {
 		_spec.SetField(lotterydrawrecord.FieldPrizeName, field.TypeString, value)
 		_node.PrizeName = value
+	}
+	if value, ok := _c.mutation.PrizeDescription(); ok {
+		_spec.SetField(lotterydrawrecord.FieldPrizeDescription, field.TypeString, value)
+		_node.PrizeDescription = value
 	}
 	if value, ok := _c.mutation.Amount(); ok {
 		_spec.SetField(lotterydrawrecord.FieldAmount, field.TypeFloat64, value)
@@ -436,6 +466,18 @@ func (u *LotteryDrawRecordUpsert) SetPrizeName(v string) *LotteryDrawRecordUpser
 // UpdatePrizeName sets the "prize_name" field to the value that was provided on create.
 func (u *LotteryDrawRecordUpsert) UpdatePrizeName() *LotteryDrawRecordUpsert {
 	u.SetExcluded(lotterydrawrecord.FieldPrizeName)
+	return u
+}
+
+// SetPrizeDescription sets the "prize_description" field.
+func (u *LotteryDrawRecordUpsert) SetPrizeDescription(v string) *LotteryDrawRecordUpsert {
+	u.Set(lotterydrawrecord.FieldPrizeDescription, v)
+	return u
+}
+
+// UpdatePrizeDescription sets the "prize_description" field to the value that was provided on create.
+func (u *LotteryDrawRecordUpsert) UpdatePrizeDescription() *LotteryDrawRecordUpsert {
+	u.SetExcluded(lotterydrawrecord.FieldPrizeDescription)
 	return u
 }
 
@@ -621,6 +663,20 @@ func (u *LotteryDrawRecordUpsertOne) SetPrizeName(v string) *LotteryDrawRecordUp
 func (u *LotteryDrawRecordUpsertOne) UpdatePrizeName() *LotteryDrawRecordUpsertOne {
 	return u.Update(func(s *LotteryDrawRecordUpsert) {
 		s.UpdatePrizeName()
+	})
+}
+
+// SetPrizeDescription sets the "prize_description" field.
+func (u *LotteryDrawRecordUpsertOne) SetPrizeDescription(v string) *LotteryDrawRecordUpsertOne {
+	return u.Update(func(s *LotteryDrawRecordUpsert) {
+		s.SetPrizeDescription(v)
+	})
+}
+
+// UpdatePrizeDescription sets the "prize_description" field to the value that was provided on create.
+func (u *LotteryDrawRecordUpsertOne) UpdatePrizeDescription() *LotteryDrawRecordUpsertOne {
+	return u.Update(func(s *LotteryDrawRecordUpsert) {
+		s.UpdatePrizeDescription()
 	})
 }
 
@@ -986,6 +1042,20 @@ func (u *LotteryDrawRecordUpsertBulk) SetPrizeName(v string) *LotteryDrawRecordU
 func (u *LotteryDrawRecordUpsertBulk) UpdatePrizeName() *LotteryDrawRecordUpsertBulk {
 	return u.Update(func(s *LotteryDrawRecordUpsert) {
 		s.UpdatePrizeName()
+	})
+}
+
+// SetPrizeDescription sets the "prize_description" field.
+func (u *LotteryDrawRecordUpsertBulk) SetPrizeDescription(v string) *LotteryDrawRecordUpsertBulk {
+	return u.Update(func(s *LotteryDrawRecordUpsert) {
+		s.SetPrizeDescription(v)
+	})
+}
+
+// UpdatePrizeDescription sets the "prize_description" field to the value that was provided on create.
+func (u *LotteryDrawRecordUpsertBulk) UpdatePrizeDescription() *LotteryDrawRecordUpsertBulk {
+	return u.Update(func(s *LotteryDrawRecordUpsert) {
+		s.UpdatePrizeDescription()
 	})
 }
 

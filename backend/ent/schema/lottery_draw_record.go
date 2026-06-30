@@ -29,6 +29,7 @@ func (LotteryDrawRecord) Fields() []ent.Field {
 		field.Int64("chance_id"),
 		field.Int64("prize_id"),
 		field.String("prize_name").MaxLen(100),
+		field.String("prize_description").MaxLen(500).Default(""),
 		field.Float("amount").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),

@@ -8,6 +8,7 @@ import type {
 
 export interface LotteryPrizeInput {
   name: string
+  description: string
   amount: number
   probability: number
   daily_stock: number
@@ -47,7 +48,15 @@ export const adminLotteryAPI = {
     await apiClient.delete(`/admin/lottery/prizes/${id}`)
   },
 
-  async listRecords(params: { page?: number; page_size?: number; user_id?: number } = {}): Promise<PaginatedLotteryRecords & { items: LotteryDrawRecord[] }> {
+  async listRecords(params: {
+    page?: number
+    page_size?: number
+    user_id?: number
+    user_query?: string
+    source_type?: string
+    start_time?: string
+    end_time?: string
+  } = {}): Promise<PaginatedLotteryRecords & { items: LotteryDrawRecord[] }> {
     const { data } = await apiClient.get('/admin/lottery/records', { params })
     return data
   }

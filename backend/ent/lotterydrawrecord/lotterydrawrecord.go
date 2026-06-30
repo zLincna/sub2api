@@ -22,6 +22,8 @@ const (
 	FieldPrizeID = "prize_id"
 	// FieldPrizeName holds the string denoting the prize_name field in the database.
 	FieldPrizeName = "prize_name"
+	// FieldPrizeDescription holds the string denoting the prize_description field in the database.
+	FieldPrizeDescription = "prize_description"
 	// FieldAmount holds the string denoting the amount field in the database.
 	FieldAmount = "amount"
 	// FieldBalanceBefore holds the string denoting the balance_before field in the database.
@@ -72,6 +74,7 @@ var Columns = []string{
 	FieldChanceID,
 	FieldPrizeID,
 	FieldPrizeName,
+	FieldPrizeDescription,
 	FieldAmount,
 	FieldBalanceBefore,
 	FieldBalanceAfter,
@@ -93,6 +96,10 @@ func ValidColumn(column string) bool {
 var (
 	// PrizeNameValidator is a validator for the "prize_name" field. It is called by the builders before save.
 	PrizeNameValidator func(string) error
+	// DefaultPrizeDescription holds the default value on creation for the "prize_description" field.
+	DefaultPrizeDescription string
+	// PrizeDescriptionValidator is a validator for the "prize_description" field. It is called by the builders before save.
+	PrizeDescriptionValidator func(string) error
 	// DefaultAmount holds the default value on creation for the "amount" field.
 	DefaultAmount float64
 	// DefaultBalanceBefore holds the default value on creation for the "balance_before" field.
@@ -131,6 +138,11 @@ func ByPrizeID(opts ...sql.OrderTermOption) OrderOption {
 // ByPrizeName orders the results by the prize_name field.
 func ByPrizeName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPrizeName, opts...).ToFunc()
+}
+
+// ByPrizeDescription orders the results by the prize_description field.
+func ByPrizeDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPrizeDescription, opts...).ToFunc()
 }
 
 // ByAmount orders the results by the amount field.

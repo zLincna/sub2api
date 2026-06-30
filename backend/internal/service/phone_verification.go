@@ -30,6 +30,11 @@ var ErrPhoneVerifyCooldown = infraerrors.TooManyRequests("PHONE_VERIFY_COOLDOWN"
 const (
 	AliyunSMSRegistrationModeVerifyCode = "verify_code"
 	AliyunSMSRegistrationModeTemplate   = "template"
+
+	defaultAliyunVerifyCodeSignName       = "速通互联验证码"
+	defaultAliyunVerifyCodeTemplateCode   = "100001"
+	defaultAliyunVerifyCodeStaticJSON     = `{"min":"5"}`
+	defaultAliyunVerifyCodeStaticParamMin = "5"
 )
 
 type AliyunSMSConfig struct {
@@ -295,8 +300,8 @@ func (s *SettingService) GetAliyunSMSConfig(ctx context.Context) (*AliyunSMSConf
 		AccessKeySecret:        firstNonEmpty(settings[SettingKeyAliyunSMSAccessKeySecret], getenv("ALIYUN_ACCESS_KEY_SECRET"), getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET")),
 		SignName:               firstNonEmpty(settings[SettingKeyAliyunSMSSignName], getenv("ALIYUN_SMS_SIGN_NAME")),
 		RegistrationMode:       normalizeAliyunSMSRegistrationMode(firstNonEmpty(settings[SettingKeyAliyunSMSRegistrationMode], getenv("ALIYUN_SMS_REGISTRATION_MODE"))),
-		VerifyCodeSignName:     firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeSignName], getenv("ALIYUN_SMS_VERIFY_CODE_SIGN_NAME")),
-		VerifyCodeTemplateCode: firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeTemplateCode], getenv("ALIYUN_SMS_VERIFY_CODE_TEMPLATE_CODE")),
+		VerifyCodeSignName:     firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeSignName], getenv("ALIYUN_SMS_VERIFY_CODE_SIGN_NAME"), defaultAliyunVerifyCodeSignName),
+		VerifyCodeTemplateCode: firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeTemplateCode], getenv("ALIYUN_SMS_VERIFY_CODE_TEMPLATE_CODE"), defaultAliyunVerifyCodeTemplateCode),
 		TemplateCode:           firstNonEmpty(settings[SettingKeyAliyunSMSTemplateCode], getenv("ALIYUN_SMS_TEMPLATE_CODE")),
 		TemplateParamKey:       firstNonEmpty(settings[SettingKeyAliyunSMSTemplateParamKey], getenv("ALIYUN_SMS_TEMPLATE_PARAM_KEY"), "code"),
 		SchemeName:             firstNonEmpty(settings[SettingKeyAliyunSMSSchemeName], getenv("ALIYUN_SMS_SCHEME_NAME")),
@@ -308,9 +313,15 @@ func (s *SettingService) GetAliyunSMSConfig(ctx context.Context) (*AliyunSMSConf
 		return nil, err
 	}
 	cfg.TemplateStaticParams = staticParams
-	verifyCodeStaticParams, err := parseSMSStaticParams(firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeStaticJSON], getenv("ALIYUN_SMS_VERIFY_CODE_STATIC_PARAMS"), "{}"))
+	verifyCodeStaticParams, err := parseSMSStaticParams(firstNonEmpty(settings[SettingKeyAliyunSMSVerifyCodeStaticJSON], getenv("ALIYUN_SMS_VERIFY_CODE_STATIC_PARAMS"), defaultAliyunVerifyCodeStaticJSON))
 	if err != nil {
 		return nil, err
+	}
+	if _, ok := verifyCodeStaticParams["min"]; !ok {
+		verifyCodeStaticParams["min"] = strconv.Itoa(cfg.ValidTimeSeconds / 60)
+		if verifyCodeStaticParams["min"] == "0" {
+			verifyCodeStaticParams["min"] = defaultAliyunVerifyCodeStaticParamMin
+		}
 	}
 	cfg.VerifyCodeStaticParams = verifyCodeStaticParams
 

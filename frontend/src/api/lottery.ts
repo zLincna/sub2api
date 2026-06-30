@@ -32,6 +32,7 @@ export interface LotteryConfig {
 export interface LotteryPrize {
   id: number
   name: string
+  description: string
   amount: number
   probability: number
   daily_stock: number
@@ -59,6 +60,7 @@ export interface LotteryDrawRecord {
   user_email?: string
   prize_id: number
   prize_name: string
+  prize_description: string
   amount: number
   balance_before: number
   balance_after: number

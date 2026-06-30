@@ -7871,6 +7871,32 @@ const smsTestForms = reactive<Record<SendTestSMSType, { phone: string; sending: 
   carpool_admin_full: { phone: "", sending: false },
   carpool_user_active: { phone: "", sending: false },
 });
+
+const defaultAliyunVerifyCodeSignName = "速通互联验证码";
+const defaultAliyunVerifyCodeTemplateCode = "100001";
+const defaultAliyunVerifyCodeStaticParams = '{"min":"5"}';
+
+function normalizeAliyunVerifyCodeStaticParams(value: string | undefined) {
+  const trimmed = (value || "").trim();
+  if (!trimmed || trimmed === "{}") {
+    return defaultAliyunVerifyCodeStaticParams;
+  }
+  return trimmed;
+}
+
+function ensureAliyunVerifyCodeDefaults() {
+  if ((form.aliyun_sms_registration_mode || "verify_code") !== "template") {
+    form.aliyun_sms_verify_code_sign_name =
+      form.aliyun_sms_verify_code_sign_name || defaultAliyunVerifyCodeSignName;
+    form.aliyun_sms_verify_code_template_code =
+      form.aliyun_sms_verify_code_template_code ||
+      defaultAliyunVerifyCodeTemplateCode;
+    form.aliyun_sms_verify_code_static_params =
+      normalizeAliyunVerifyCodeStaticParams(
+        form.aliyun_sms_verify_code_static_params,
+      );
+  }
+}
 const registrationEmailSuffixWhitelistTags = ref<string[]>([]);
 const registrationEmailSuffixWhitelistDraft = ref("");
 const tablePageSizeOptionsInput = ref("10, 20, 50, 100");
@@ -9322,6 +9348,7 @@ async function loadSettings() {
         (form as Record<string, unknown>)[key] = value;
       }
     }
+    ensureAliyunVerifyCodeDefaults();
     if (!form.claude_oauth_system_prompt_blocks?.trim()) {
       form.claude_oauth_system_prompt_blocks =
         defaultClaudeOAuthSystemPromptBlocks;
@@ -9534,6 +9561,7 @@ function findDuplicateDefaultSubscription(
 async function saveSettings() {
   saving.value = true;
   try {
+    ensureAliyunVerifyCodeDefaults();
     const normalizedTableDefaultPageSize = Math.floor(
       Number(form.table_default_page_size),
     );
@@ -9734,7 +9762,9 @@ async function saveSettings() {
       aliyun_sms_verify_code_template_code:
         form.aliyun_sms_verify_code_template_code,
       aliyun_sms_verify_code_static_params:
-        form.aliyun_sms_verify_code_static_params || "{}",
+        normalizeAliyunVerifyCodeStaticParams(
+          form.aliyun_sms_verify_code_static_params,
+        ),
       aliyun_sms_template_code: form.aliyun_sms_template_code,
       aliyun_sms_template_param_key: form.aliyun_sms_template_param_key || "code",
       aliyun_sms_template_static_params: form.aliyun_sms_template_static_params || "{}",
@@ -10117,6 +10147,7 @@ async function sendTestSMS(type: SendTestSMSType) {
 
   target.sending = true;
   try {
+    ensureAliyunVerifyCodeDefaults();
     const result = await adminAPI.settings.sendTestSMS({
       phone,
       type,
@@ -10128,7 +10159,9 @@ async function sendTestSMS(type: SendTestSMSType) {
       aliyun_sms_verify_code_template_code:
         form.aliyun_sms_verify_code_template_code,
       aliyun_sms_verify_code_static_params:
-        form.aliyun_sms_verify_code_static_params || "{}",
+        normalizeAliyunVerifyCodeStaticParams(
+          form.aliyun_sms_verify_code_static_params,
+        ),
       aliyun_sms_template_code: form.aliyun_sms_template_code,
       aliyun_sms_template_param_key: form.aliyun_sms_template_param_key || "code",
       aliyun_sms_template_static_params: form.aliyun_sms_template_static_params || "{}",

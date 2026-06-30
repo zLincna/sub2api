@@ -26,6 +26,7 @@ func (LotteryPrize) Annotations() []schema.Annotation {
 func (LotteryPrize) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").MaxLen(100).NotEmpty(),
+		field.String("description").MaxLen(500).Default(""),
 		field.Float("amount").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),

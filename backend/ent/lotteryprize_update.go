@@ -43,6 +43,20 @@ func (_u *LotteryPrizeUpdate) SetNillableName(v *string) *LotteryPrizeUpdate {
 	return _u
 }
 
+// SetDescription sets the "description" field.
+func (_u *LotteryPrizeUpdate) SetDescription(v string) *LotteryPrizeUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *LotteryPrizeUpdate) SetNillableDescription(v *string) *LotteryPrizeUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
 // SetAmount sets the "amount" field.
 func (_u *LotteryPrizeUpdate) SetAmount(v float64) *LotteryPrizeUpdate {
 	_u.mutation.ResetAmount()
@@ -308,6 +322,11 @@ func (_u *LotteryPrizeUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Description(); ok {
+		if err := lotteryprize.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.description": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Color(); ok {
 		if err := lotteryprize.ColorValidator(v); err != nil {
 			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.color": %w`, err)}
@@ -330,6 +349,9 @@ func (_u *LotteryPrizeUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(lotteryprize.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(lotteryprize.FieldDescription, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Amount(); ok {
 		_spec.SetField(lotteryprize.FieldAmount, field.TypeFloat64, value)
@@ -457,6 +479,20 @@ func (_u *LotteryPrizeUpdateOne) SetName(v string) *LotteryPrizeUpdateOne {
 func (_u *LotteryPrizeUpdateOne) SetNillableName(v *string) *LotteryPrizeUpdateOne {
 	if v != nil {
 		_u.SetName(*v)
+	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *LotteryPrizeUpdateOne) SetDescription(v string) *LotteryPrizeUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *LotteryPrizeUpdateOne) SetNillableDescription(v *string) *LotteryPrizeUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
 	return _u
 }
@@ -739,6 +775,11 @@ func (_u *LotteryPrizeUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Description(); ok {
+		if err := lotteryprize.DescriptionValidator(v); err != nil {
+			return &ValidationError{Name: "description", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.description": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Color(); ok {
 		if err := lotteryprize.ColorValidator(v); err != nil {
 			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "LotteryPrize.color": %w`, err)}
@@ -778,6 +819,9 @@ func (_u *LotteryPrizeUpdateOne) sqlSave(ctx context.Context) (_node *LotteryPri
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(lotteryprize.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(lotteryprize.FieldDescription, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Amount(); ok {
 		_spec.SetField(lotteryprize.FieldAmount, field.TypeFloat64, value)

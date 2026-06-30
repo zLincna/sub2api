@@ -34,7 +34,7 @@
                 {{ tab.label }}
               </button>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm sm:w-auto" @click="activeTab === 'mine' ? loadMine() : loadAll()">刷新</button>
+            <button v-if="activeTab === 'hall'" type="button" class="btn btn-secondary btn-sm sm:w-auto" @click="loadAll">刷新</button>
           </div>
 
           <div v-if="activeTab === 'hall'" class="min-w-0">

@@ -29,6 +29,8 @@ type LotteryDrawRecord struct {
 	PrizeID int64 `json:"prize_id,omitempty"`
 	// PrizeName holds the value of the "prize_name" field.
 	PrizeName string `json:"prize_name,omitempty"`
+	// PrizeDescription holds the value of the "prize_description" field.
+	PrizeDescription string `json:"prize_description,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount float64 `json:"amount,omitempty"`
 	// BalanceBefore holds the value of the "balance_before" field.
@@ -104,7 +106,7 @@ func (*LotteryDrawRecord) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case lotterydrawrecord.FieldID, lotterydrawrecord.FieldUserID, lotterydrawrecord.FieldChanceID, lotterydrawrecord.FieldPrizeID:
 			values[i] = new(sql.NullInt64)
-		case lotterydrawrecord.FieldPrizeName, lotterydrawrecord.FieldSourceType:
+		case lotterydrawrecord.FieldPrizeName, lotterydrawrecord.FieldPrizeDescription, lotterydrawrecord.FieldSourceType:
 			values[i] = new(sql.NullString)
 		case lotterydrawrecord.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -152,6 +154,12 @@ func (_m *LotteryDrawRecord) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field prize_name", values[i])
 			} else if value.Valid {
 				_m.PrizeName = value.String
+			}
+		case lotterydrawrecord.FieldPrizeDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field prize_description", values[i])
+			} else if value.Valid {
+				_m.PrizeDescription = value.String
 			}
 		case lotterydrawrecord.FieldAmount:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -253,6 +261,9 @@ func (_m *LotteryDrawRecord) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("prize_name=")
 	builder.WriteString(_m.PrizeName)
+	builder.WriteString(", ")
+	builder.WriteString("prize_description=")
+	builder.WriteString(_m.PrizeDescription)
 	builder.WriteString(", ")
 	builder.WriteString("amount=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Amount))
