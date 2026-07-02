@@ -338,6 +338,21 @@ const UsersIcon = {
     )
 }
 
+const CarIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h7.5m-10.5 0H4.5a.75.75 0 01-.75-.75v-3.75c0-.414.336-.75.75-.75h.879a1.5 1.5 0 001.342-.829l1.473-2.946A2.25 2.25 0 0110.207 8.5h3.586a2.25 2.25 0 012.013 1.225l1.473 2.946a1.5 1.5 0 001.342.829h.879c.414 0 .75.336.75.75V18a.75.75 0 01-.75.75h-.75m-3 0a1.5 1.5 0 103 0m-3 0a1.5 1.5 0 013 0M6.75 13.5h10.5'
+        })
+      ]
+    )
+}
+
 const FolderIcon = {
   render: () =>
     h(
@@ -672,7 +687,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/purchase', label: t('nav.buySubscription'), icon: RechargeSubscriptionIcon, hideInSimpleMode: true, featureFlag: flagPayment },
     { path: '/orders', label: t('nav.myOrders'), icon: OrderListIcon, hideInSimpleMode: true, featureFlag: flagPayment },
-    { path: '/carpool', label: t('nav.carpool'), icon: UsersIcon, hideInSimpleMode: true },
+    { path: '/carpool', label: t('nav.carpool'), icon: CarIcon, hideInSimpleMode: true },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/affiliate', label: t('nav.affiliate'), icon: UsersIcon, hideInSimpleMode: true, featureFlag: flagAffiliate },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
@@ -739,7 +754,7 @@ const adminNavItems = computed((): NavItem[] => {
     { path: '/admin/risk-control', label: t('nav.riskControl'), icon: ShieldIcon, hideInSimpleMode: true, featureFlag: flagRiskControl },
     { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true },
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
-    { path: '/admin/carpool', label: t('nav.carpoolManagement'), icon: UsersIcon, hideInSimpleMode: true },
+    { path: '/admin/carpool', label: t('nav.carpoolManagement'), icon: CarIcon, hideInSimpleMode: true },
     {
       path: '/admin/affiliates',
       label: t('nav.affiliateManagement'),
