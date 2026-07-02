@@ -30,12 +30,21 @@
 
           <div class="mt-8 flex flex-col items-center gap-6">
             <div class="relative h-[22rem] w-[22rem] max-w-full sm:h-[28rem] sm:w-[28rem]">
+              <div v-if="confettiPieces.length" class="pointer-events-none absolute inset-x-[-18%] top-[-18%] z-30 h-[125%] overflow-hidden" aria-hidden="true">
+                <span
+                  v-for="piece in confettiPieces"
+                  :key="piece.id"
+                  class="lottery-confetti-piece"
+                  :style="piece.style"
+                ></span>
+              </div>
               <div class="absolute left-1/2 top-[-2px] z-20 -translate-x-1/2">
                 <div class="h-0 w-0 border-x-[18px] border-t-[38px] border-x-transparent border-t-red-500 drop-shadow-lg"></div>
               </div>
               <div
                 class="lottery-wheel relative h-full w-full rounded-full border-[12px] border-white bg-white shadow-2xl dark:border-dark-800 dark:bg-dark-900"
-                :class="{ spinning }"
+                :class="wheelPhaseClass"
+                :style="wheelStyle"
               >
                 <svg class="h-full w-full overflow-visible rounded-full" viewBox="0 0 400 400" aria-hidden="true">
                   <defs>
@@ -69,7 +78,7 @@
                   <button
                     type="button"
                     class="z-10 flex h-28 w-28 flex-col items-center justify-center rounded-full bg-red-500 text-white shadow-xl ring-8 ring-white/80 transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-gray-400 dark:ring-dark-900/80 sm:h-32 sm:w-32"
-                    :disabled="drawing || spinning || !status?.config.enabled || (status?.chances.remaining ?? 0) <= 0"
+                    :disabled="drawing || !status?.config.enabled || (status?.chances.remaining ?? 0) <= 0"
                     @click="draw"
                   >
                     <span class="text-base font-bold">{{ drawing ? t('lottery.drawing') : t('lottery.draw') }}</span>
@@ -139,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { lotteryAPI, type LotteryPrize, type LotteryStatus } from '@/api/lottery'
@@ -152,8 +161,12 @@ const authStore = useAuthStore()
 
 const status = ref<LotteryStatus | null>(null)
 const drawing = ref(false)
-const spinning = ref(false)
 const lastPrize = ref<LotteryPrize | null>(null)
+const wheelRotation = ref(0)
+const wheelPhase = ref<'idle' | 'pending' | 'settling'>('idle')
+const confettiPieces = ref<Array<{ id: number; style: Record<string, string> }>>([])
+let pendingSpinTimer: number | null = null
+let confettiTimer: number | null = null
 
 const records = computed(() => status.value?.recent_draws ?? [])
 
@@ -198,6 +211,15 @@ const wheelSegments = computed(() => {
     }
   })
 })
+
+const wheelStyle = computed(() => ({
+  transform: `rotate(${wheelRotation.value}deg)`
+}))
+
+const wheelPhaseClass = computed(() => ({
+  'is-pending': wheelPhase.value === 'pending',
+  'is-settling': wheelPhase.value === 'settling'
+}))
 
 const sourceRows = computed(() => {
   const bySource = status.value?.chances.by_source ?? {}
@@ -260,6 +282,71 @@ function textRotation(angle: number): number {
   return angle
 }
 
+function findPrizeIndex(prize: LotteryPrize, prizes: LotteryPrize[]): number {
+  const byID = prizes.findIndex(item => item.id === prize.id)
+  if (byID >= 0) return byID
+  const byNameAndAmount = prizes.findIndex(item => item.name === prize.name && item.amount === prize.amount)
+  return byNameAndAmount >= 0 ? byNameAndAmount : 0
+}
+
+function calculatePrizeRotation(prizeIndex: number, prizeCount: number): number {
+  const step = 360 / Math.max(1, prizeCount)
+  const segmentCenterOffset = prizeIndex * step + step / 2
+  const targetModulo = -segmentCenterOffset
+  const current = wheelRotation.value
+  const forwardDelta = ((targetModulo - current) % 360 + 360) % 360
+  return current + 5 * 360 + forwardDelta
+}
+
+function startPendingSpin() {
+  stopPendingSpin()
+  wheelPhase.value = 'pending'
+  wheelRotation.value += 360
+  pendingSpinTimer = window.setInterval(() => {
+    wheelRotation.value += 360
+  }, 720)
+}
+
+function stopPendingSpin() {
+  if (pendingSpinTimer) {
+    window.clearInterval(pendingSpinTimer)
+    pendingSpinTimer = null
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => window.setTimeout(resolve, ms))
+}
+
+function launchConfetti() {
+  if (confettiTimer) {
+    window.clearTimeout(confettiTimer)
+    confettiTimer = null
+  }
+  const colors = ['#ef4444', '#f59e0b', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#f43f5e']
+  confettiPieces.value = Array.from({ length: 56 }, (_, index) => {
+    const size = 6 + Math.random() * 8
+    const drift = Math.round((Math.random() - 0.5) * 150)
+    return {
+      id: Date.now() + index,
+      style: {
+        left: `${Math.random() * 100}%`,
+        width: `${size}px`,
+        height: `${Math.max(8, size * 1.45)}px`,
+        '--confetti-color': colors[index % colors.length],
+        '--confetti-drift': `${drift}px`,
+        '--confetti-rotate': `${180 + Math.random() * 540}deg`,
+        animationDelay: `${Math.random() * 0.45}s`,
+        animationDuration: `${2.1 + Math.random() * 1.1}s`
+      }
+    }
+  })
+  confettiTimer = window.setTimeout(() => {
+    confettiPieces.value = []
+    confettiTimer = null
+  }, 3800)
+}
+
 async function loadStatus() {
   try {
     status.value = await lotteryAPI.status()
@@ -269,42 +356,54 @@ async function loadStatus() {
 }
 
 async function draw() {
-  if (drawing.value || spinning.value) return
+  if (drawing.value) return
   drawing.value = true
-  spinning.value = true
+  startPendingSpin()
+  const prizesBeforeDraw = [...wheelPrizes.value]
   try {
     const result = await lotteryAPI.draw()
-    setTimeout(async () => {
-      lastPrize.value = result.prize
-      await loadStatus()
-      await authStore.refreshUser()
-      appStore.showSuccess(t('lottery.drawSuccess', { name: result.prize.name, award: prizeSubtitle(result.prize), amount: result.prize.amount.toFixed(2) }))
-      spinning.value = false
-      drawing.value = false
-    }, 1200)
+    stopPendingSpin()
+    const winnerIndex = findPrizeIndex(result.prize, prizesBeforeDraw)
+    wheelPhase.value = 'settling'
+    wheelRotation.value = calculatePrizeRotation(winnerIndex, prizesBeforeDraw.length)
+    await sleep(3600)
+    lastPrize.value = result.prize
+    launchConfetti()
+    await loadStatus()
+    await authStore.refreshUser()
+    appStore.showSuccess(t('lottery.drawSuccess', { name: result.prize.name, award: prizeSubtitle(result.prize), amount: result.prize.amount.toFixed(2) }))
+    wheelPhase.value = 'idle'
+    drawing.value = false
   } catch (err) {
-    spinning.value = false
+    stopPendingSpin()
+    wheelPhase.value = 'idle'
     drawing.value = false
     appStore.showError(extractI18nErrorMessage(err, t, 'lottery.errors', t('common.error')))
   }
 }
 
 onMounted(loadStatus)
+
+onUnmounted(() => {
+  stopPendingSpin()
+  if (confettiTimer) {
+    window.clearTimeout(confettiTimer)
+  }
+})
 </script>
 
 <style scoped>
 .lottery-wheel {
   position: relative;
-  transition: transform 0.8s cubic-bezier(0.2, 0.72, 0.28, 1);
+  transform: rotate(0deg);
 }
 
-.lottery-wheel.spinning {
-  animation: lottery-spin 1.2s cubic-bezier(0.2, 0.72, 0.28, 1) infinite;
+.lottery-wheel.is-pending {
+  transition: transform 0.72s linear;
 }
 
-@keyframes lottery-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(720deg); }
+.lottery-wheel.is-settling {
+  transition: transform 3.6s cubic-bezier(0.08, 0.78, 0.12, 1);
 }
 
 .lottery-segment-title {
@@ -322,5 +421,32 @@ onMounted(loadStatus)
   font-size: 13px;
   font-weight: 700;
   opacity: 0.95;
+}
+
+.lottery-confetti-piece {
+  position: absolute;
+  top: -18px;
+  display: block;
+  border-radius: 2px;
+  background: var(--confetti-color);
+  opacity: 0.95;
+  transform: translate3d(0, 0, 0) rotate(0deg);
+  animation-name: lottery-confetti-fall;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.38, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes lottery-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--confetti-drift), 430px, 0) rotate(var(--confetti-rotate));
+  }
 }
 </style>
