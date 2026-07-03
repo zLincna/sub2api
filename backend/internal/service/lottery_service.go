@@ -267,6 +267,10 @@ func (s *LotteryService) GrantDailyLogin(ctx context.Context, userID int64) erro
 	if err != nil {
 		return err
 	}
+	return s.ensureDailyLoginChance(ctx, userID, cfg)
+}
+
+func (s *LotteryService) ensureDailyLoginChance(ctx context.Context, userID int64, cfg LotteryConfig) error {
 	if !cfg.Enabled || !cfg.LoginGrant.Enabled || cfg.LoginGrant.DailyChances <= 0 {
 		return nil
 	}
@@ -582,6 +586,9 @@ func (s *LotteryService) ListAdminDrawRecords(ctx context.Context, page, pageSiz
 }
 
 func (s *LotteryService) ensureUserChancesBestEffort(ctx context.Context, userID int64, cfg LotteryConfig) {
+	if err := s.ensureDailyLoginChance(ctx, userID, cfg); err != nil {
+		logger.LegacyPrintf("service.lottery", "[Lottery] daily login grant failed for user %d: %v", userID, err)
+	}
 	if err := s.ensureSpendChances(ctx, userID, cfg); err != nil {
 		logger.LegacyPrintf("service.lottery", "[Lottery] spend grant failed for user %d: %v", userID, err)
 	}
