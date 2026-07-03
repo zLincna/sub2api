@@ -135,9 +135,14 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 
 	for {
 		reqLog.Debug("openai_chat_completions.account_selecting", zap.Int("excluded_account_count", len(failedAccountIDs)))
+		revenueDecision := h.planCarpoolRevenueDispatch(c.Request.Context(), apiKey, subject.UserID, reqModel, requestPlatform, sessionHash)
+		routingGroupID := apiKey.GroupID
+		if revenueDecision != nil {
+			routingGroupID = revenueDecision.RoutingGroupID(apiKey.GroupID)
+		}
 		selection, scheduleDecision, err := h.gatewayService.SelectAccountWithSchedulerForCapability(
 			c.Request.Context(),
-			apiKey.GroupID,
+			routingGroupID,
 			"",
 			sessionHash,
 			reqModel,
@@ -147,6 +152,27 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 			false,
 			requestPlatform,
 		)
+		if err != nil && revenueDecision != nil && revenueDecision.Routed {
+			reqLog.Warn("openai_chat_completions.carpool_revenue_select_failed_fallback",
+				zap.Int64("contribution_id", revenueDecision.ContributionID),
+				zap.Int64("subscription_group_id", revenueDecision.SubscriptionGroupID),
+				zap.Error(err),
+			)
+			revenueDecision = nil
+			routingGroupID = apiKey.GroupID
+			selection, scheduleDecision, err = h.gatewayService.SelectAccountWithSchedulerForCapability(
+				c.Request.Context(),
+				routingGroupID,
+				"",
+				sessionHash,
+				reqModel,
+				failedAccountIDs,
+				service.OpenAIUpstreamTransportAny,
+				service.OpenAIEndpointCapabilityChatCompletions,
+				false,
+				requestPlatform,
+			)
+		}
 		if err != nil {
 			reqLog.Warn("openai_chat_completions.account_select_failed",
 				zap.Error(err),
@@ -182,7 +208,7 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 		_ = scheduleDecision
 		setOpsSelectedAccount(c, account.ID, account.Platform)
 
-		accountReleaseFunc, acquired := h.acquireResponsesAccountSlot(c, apiKey.GroupID, sessionHash, selection, reqStream, &streamStarted, reqLog)
+		accountReleaseFunc, acquired := h.acquireResponsesAccountSlot(c, routingGroupID, sessionHash, selection, reqStream, &streamStarted, reqLog)
 		if !acquired {
 			return
 		}
@@ -314,6 +340,7 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 				IPAddress:          clientIP,
 				APIKeyService:      h.apiKeyService,
 				QuotaPlatform:      quotaPlatform,
+				RevenueDispatch:    revenueDecision,
 				ChannelUsageFields: channelMapping.ToUsageFields(reqModel, result.UpstreamModel),
 				CyberBlocked:       cyberBlocked,
 			}); err != nil {

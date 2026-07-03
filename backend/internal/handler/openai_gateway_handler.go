@@ -97,6 +97,25 @@ func wrapUsageRecordTaskContext(parent context.Context, task service.UsageRecord
 	}
 }
 
+func (h *OpenAIGatewayHandler) planCarpoolRevenueDispatch(ctx context.Context, apiKey *service.APIKey, userID int64, model, platform, requestKey string) *service.CarpoolRevenueGatewayDispatchDecision {
+	if h == nil || h.gatewayService == nil || apiKey == nil {
+		return nil
+	}
+	decision, err := h.gatewayService.PlanCarpoolRevenueGatewayDispatch(ctx, service.CarpoolRevenueGatewayDispatchInput{
+		RequestUserID:   userID,
+		RequestAPIKeyID: apiKey.ID,
+		OriginalGroupID: apiKey.GroupID,
+		RequestedModel:  model,
+		RequestPlatform: platform,
+		RequestKey:      requestKey,
+	})
+	if err != nil {
+		logger.LegacyPrintf("handler.openai_gateway", "carpool revenue dispatch plan failed: user=%d api_key=%d model=%s err=%v", userID, apiKey.ID, model, err)
+		return nil
+	}
+	return decision
+}
+
 func openAICompatibleRequestPlatform(apiKey *service.APIKey) string {
 	if apiKey != nil && apiKey.Group != nil && apiKey.Group.Platform == service.PlatformGrok {
 		return service.PlatformGrok
@@ -340,9 +359,14 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 	for {
 		// Select account supporting the requested model
 		reqLog.Debug("openai.account_selecting", zap.Int("excluded_account_count", len(failedAccountIDs)))
+		revenueDecision := h.planCarpoolRevenueDispatch(c.Request.Context(), apiKey, subject.UserID, reqModel, requestPlatform, sessionHash)
+		routingGroupID := apiKey.GroupID
+		if revenueDecision != nil {
+			routingGroupID = revenueDecision.RoutingGroupID(apiKey.GroupID)
+		}
 		selection, scheduleDecision, err := h.gatewayService.SelectAccountWithSchedulerForCapability(
 			c.Request.Context(),
-			apiKey.GroupID,
+			routingGroupID,
 			previousResponseID,
 			sessionHash,
 			reqModel,
@@ -352,6 +376,27 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 			requireCompact,
 			requestPlatform,
 		)
+		if err != nil && revenueDecision != nil && revenueDecision.Routed {
+			reqLog.Warn("openai.carpool_revenue_select_failed_fallback",
+				zap.Int64("contribution_id", revenueDecision.ContributionID),
+				zap.Int64("subscription_group_id", revenueDecision.SubscriptionGroupID),
+				zap.Error(err),
+			)
+			revenueDecision = nil
+			routingGroupID = apiKey.GroupID
+			selection, scheduleDecision, err = h.gatewayService.SelectAccountWithSchedulerForCapability(
+				c.Request.Context(),
+				routingGroupID,
+				previousResponseID,
+				sessionHash,
+				reqModel,
+				failedAccountIDs,
+				service.OpenAIUpstreamTransportAny,
+				service.OpenAIEndpointCapabilityChatCompletions,
+				requireCompact,
+				requestPlatform,
+			)
+		}
 		if err != nil {
 			reqLog.Warn("openai.account_select_failed",
 				zap.Error(err),
@@ -402,7 +447,7 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 		reqLog.Debug("openai.account_selected", zap.Int64("account_id", account.ID), zap.String("account_name", account.Name))
 		setOpsSelectedAccount(c, account.ID, account.Platform)
 
-		accountReleaseFunc, acquired := h.acquireResponsesAccountSlot(c, apiKey.GroupID, sessionHash, selection, reqStream, &streamStarted, reqLog)
+		accountReleaseFunc, acquired := h.acquireResponsesAccountSlot(c, routingGroupID, sessionHash, selection, reqStream, &streamStarted, reqLog)
 		if !acquired {
 			return
 		}
@@ -542,6 +587,7 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 				RequestPayloadHash: requestPayloadHash,
 				APIKeyService:      h.apiKeyService,
 				QuotaPlatform:      quotaPlatform,
+				RevenueDispatch:    revenueDecision,
 				ChannelUsageFields: channelMapping.ToUsageFields(reqModel, result.UpstreamModel),
 				CyberBlocked:       cyberBlocked,
 			}); err != nil {
@@ -773,9 +819,14 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 			currentRoutingModel = effectiveMappedModel
 		}
 		reqLog.Debug("openai_messages.account_selecting", zap.Int("excluded_account_count", len(failedAccountIDs)))
+		revenueDecision := h.planCarpoolRevenueDispatch(c.Request.Context(), apiKey, subject.UserID, currentRoutingModel, requestPlatform, sessionHash)
+		routingGroupID := apiKey.GroupID
+		if revenueDecision != nil {
+			routingGroupID = revenueDecision.RoutingGroupID(apiKey.GroupID)
+		}
 		selection, scheduleDecision, err := h.gatewayService.SelectAccountWithSchedulerForCapability(
 			c.Request.Context(),
-			apiKey.GroupID,
+			routingGroupID,
 			"", // no previous_response_id
 			sessionHash,
 			currentRoutingModel,
@@ -785,6 +836,27 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 			false,
 			requestPlatform,
 		)
+		if err != nil && revenueDecision != nil && revenueDecision.Routed {
+			reqLog.Warn("openai_messages.carpool_revenue_select_failed_fallback",
+				zap.Int64("contribution_id", revenueDecision.ContributionID),
+				zap.Int64("subscription_group_id", revenueDecision.SubscriptionGroupID),
+				zap.Error(err),
+			)
+			revenueDecision = nil
+			routingGroupID = apiKey.GroupID
+			selection, scheduleDecision, err = h.gatewayService.SelectAccountWithSchedulerForCapability(
+				c.Request.Context(),
+				routingGroupID,
+				"",
+				sessionHash,
+				currentRoutingModel,
+				failedAccountIDs,
+				service.OpenAIUpstreamTransportAny,
+				service.OpenAIEndpointCapabilityChatCompletions,
+				false,
+				requestPlatform,
+			)
+		}
 		if err != nil {
 			reqLog.Warn("openai_messages.account_select_failed",
 				zap.Error(err),
@@ -822,7 +894,7 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 		_ = scheduleDecision
 		setOpsSelectedAccount(c, account.ID, account.Platform)
 
-		accountReleaseFunc, acquired := h.acquireResponsesAccountSlot(c, apiKey.GroupID, sessionHash, selection, reqStream, &streamStarted, reqLog)
+		accountReleaseFunc, acquired := h.acquireResponsesAccountSlot(c, routingGroupID, sessionHash, selection, reqStream, &streamStarted, reqLog)
 		if !acquired {
 			return
 		}
@@ -956,6 +1028,7 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 				RequestPayloadHash: requestPayloadHash,
 				APIKeyService:      h.apiKeyService,
 				QuotaPlatform:      quotaPlatform,
+				RevenueDispatch:    revenueDecision,
 				ChannelUsageFields: channelMappingMsg.ToUsageFields(reqModel, result.UpstreamModel),
 				CyberBlocked:       cyberBlocked,
 			}); err != nil {
@@ -1371,9 +1444,14 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 
 	for {
 		reqLog.Debug("openai.websocket_account_selecting", zap.Int("excluded_account_count", len(failedAccountIDs)))
+		revenueDecision := h.planCarpoolRevenueDispatch(ctx, apiKey, subject.UserID, reqModel, requestPlatform, sessionHash)
+		routingGroupID := apiKey.GroupID
+		if revenueDecision != nil {
+			routingGroupID = revenueDecision.RoutingGroupID(apiKey.GroupID)
+		}
 		selection, scheduleDecision, err := h.gatewayService.SelectAccountWithSchedulerForCapability(
 			ctx,
-			apiKey.GroupID,
+			routingGroupID,
 			previousResponseID,
 			sessionHash,
 			reqModel,
@@ -1383,6 +1461,27 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 			false,
 			requestPlatform,
 		)
+		if err != nil && revenueDecision != nil && revenueDecision.Routed {
+			reqLog.Warn("openai.websocket_carpool_revenue_select_failed_fallback",
+				zap.Int64("contribution_id", revenueDecision.ContributionID),
+				zap.Int64("subscription_group_id", revenueDecision.SubscriptionGroupID),
+				zap.Error(err),
+			)
+			revenueDecision = nil
+			routingGroupID = apiKey.GroupID
+			selection, scheduleDecision, err = h.gatewayService.SelectAccountWithSchedulerForCapability(
+				ctx,
+				routingGroupID,
+				previousResponseID,
+				sessionHash,
+				reqModel,
+				failedAccountIDs,
+				requiredTransport,
+				service.OpenAIEndpointCapabilityChatCompletions,
+				false,
+				requestPlatform,
+			)
+		}
 		if err != nil {
 			reqLog.Warn("openai.websocket_account_select_failed",
 				zap.Error(err),
@@ -1432,7 +1531,7 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 			accountReleaseFunc = fastReleaseFunc
 		}
 		currentAccountRelease = wrapReleaseOnDone(ctx, accountReleaseFunc)
-		if err := h.gatewayService.BindStickySession(ctx, apiKey.GroupID, sessionHash, account.ID); err != nil {
+		if err := h.gatewayService.BindStickySession(ctx, routingGroupID, sessionHash, account.ID); err != nil {
 			reqLog.Warn("openai.websocket_bind_sticky_session_failed", zap.Int64("account_id", account.ID), zap.Error(err))
 		}
 
@@ -1559,6 +1658,7 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 						RequestPayloadHash: requestPayloadHash,
 						APIKeyService:      h.apiKeyService,
 						QuotaPlatform:      quotaPlatform,
+						RevenueDispatch:    revenueDecision,
 						ChannelUsageFields: channelMappingWS.ToUsageFields(reqModel, result.UpstreamModel),
 						CyberBlocked:       cyberBlocked,
 					}); err != nil {

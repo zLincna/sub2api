@@ -232,3 +232,163 @@ export interface CarpoolAdminManagementResponse {
   page: number
   page_size: number
 }
+
+export interface CarpoolRevenueConfig {
+  enabled: boolean
+  user_share_ratio: number
+  platform_share_ratio: number
+  min_withdraw_amount: number
+  withdraw_cooldown_minutes: number
+  settlement_cycle: string
+  freeze_minutes: number
+  allow_user_withdraw: boolean
+  priority_policy: string
+  risk_notes: string
+  gateway_dispatch_enabled: boolean
+  gateway_shadow_mode: boolean
+  gateway_traffic_percent: number
+  gateway_allowed_group_ids: string
+  gateway_allowed_models: string
+  gateway_min_remain_ratio: number
+  gateway_max_daily_quota: number
+  updated_at: string
+}
+
+export interface CarpoolRevenueConfigInput {
+  enabled: boolean
+  user_share_ratio: number
+  platform_share_ratio: number
+  min_withdraw_amount: number
+  withdraw_cooldown_minutes: number
+  settlement_cycle: string
+  freeze_minutes: number
+  allow_user_withdraw: boolean
+  priority_policy: string
+  risk_notes: string
+  gateway_dispatch_enabled: boolean
+  gateway_shadow_mode: boolean
+  gateway_traffic_percent: number
+  gateway_allowed_group_ids?: string
+  gateway_allowed_models?: string
+  gateway_min_remain_ratio: number
+  gateway_max_daily_quota: number
+}
+
+export interface CarpoolRevenueContribution {
+  id: number
+  participant_id: number
+  user_id: number
+  session_id: number
+  vehicle_type_id: number
+  subscription_id?: number
+  subscription_group_id: number
+  enabled: boolean
+  enabled_at?: string
+  disabled_at?: string
+  share_ratio: number
+  status: string
+  paused_reason: string
+  last_settled_at?: string
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CarpoolRevenueSummary {
+  total_revenue: number
+  pending_revenue: number
+  frozen_revenue: number
+  available_revenue: number
+  withdrawn_revenue: number
+  quota_cost: number
+  request_count: number
+  platform_share_amount: number
+}
+
+export interface CarpoolRevenueRecord {
+  id: number
+  contribution_id: number
+  participant_id: number
+  session_id: number
+  user_id: number
+  subscription_group_id: number
+  subscription_id?: number
+  api_key_id?: number
+  usage_log_id?: number
+  request_user_id?: number
+  request_api_key_id?: number
+  request_account_id?: number
+  request_group_id?: number
+  dispatch_mode: string
+  decision_reason: string
+  request_id: string
+  request_count: number
+  quota_cost: number
+  gross_revenue: number
+  upstream_cost: number
+  net_revenue: number
+  user_share_amount: number
+  platform_share_amount: number
+  settlement_period: string
+  status: string
+  occurred_at: string
+  settled_at?: string
+  notes: string
+  created_at: string
+}
+
+export interface CarpoolRevenueWithdrawal {
+  id: number
+  user_id: number
+  participant_id?: number
+  session_id?: number
+  amount: number
+  available_before: number
+  available_after: number
+  balance_before?: number
+  balance_after?: number
+  status: string
+  requested_at: string
+  processed_at?: string
+  failure_reason: string
+  created_at: string
+}
+
+export interface CarpoolRevenueDetail {
+  available_reason: string
+  contribution?: CarpoolRevenueContribution
+  summary: CarpoolRevenueSummary
+  config?: CarpoolRevenueConfig
+  records: CarpoolRevenueRecord[]
+  withdrawals: CarpoolRevenueWithdrawal[]
+}
+
+export interface CarpoolRevenueContributionAdminRow {
+  contribution: CarpoolRevenueContribution
+  summary: CarpoolRevenueSummary
+  user?: { id: number; email: string; username?: string }
+  session?: { id: number; session_no: string; status: string }
+  vehicle_type?: { id: number; name: string }
+}
+
+export interface CarpoolRevenueAdminListResponse {
+  items: CarpoolRevenueContributionAdminRow[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface CarpoolRevenueRecordInput {
+  contribution_id: number
+  request_id?: string
+  request_count: number
+  quota_cost: number
+  gross_revenue: number
+  upstream_cost: number
+  net_revenue: number
+  user_share_amount?: number
+  platform_share_amount?: number
+  settlement_period?: string
+  occurred_at?: string
+  notes?: string
+}

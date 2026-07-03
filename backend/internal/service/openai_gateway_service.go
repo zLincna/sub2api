@@ -356,6 +356,7 @@ type OpenAIGatewayService struct {
 	openaiWSResolver      OpenAIWSProtocolResolver
 	resolver              *ModelPricingResolver
 	channelService        *ChannelService
+	carpoolService        *CarpoolService
 	balanceNotifyService  *BalanceNotifyService
 	settingService        *SettingService
 	userPlatformQuotaRepo UserPlatformQuotaRepository
@@ -449,6 +450,19 @@ func NewOpenAIGatewayService(
 	}
 	svc.logOpenAIWSModeBootstrap()
 	return svc
+}
+
+func (s *OpenAIGatewayService) SetCarpoolService(carpoolService *CarpoolService) {
+	if s != nil {
+		s.carpoolService = carpoolService
+	}
+}
+
+func (s *OpenAIGatewayService) PlanCarpoolRevenueGatewayDispatch(ctx context.Context, input CarpoolRevenueGatewayDispatchInput) (*CarpoolRevenueGatewayDispatchDecision, error) {
+	if s == nil || s.carpoolService == nil {
+		return nil, nil
+	}
+	return s.carpoolService.PlanRevenueGatewayDispatch(ctx, input)
 }
 
 // ResolveChannelMapping 解析渠道级模型映射（代理到 ChannelService）
@@ -6235,6 +6249,7 @@ type OpenAIRecordUsageInput struct {
 	RequestPayloadHash string
 	APIKeyService      APIKeyQuotaUpdater
 	QuotaPlatform      string // user×platform quota platform resolved by the handler before async billing.
+	RevenueDispatch    *CarpoolRevenueGatewayDispatchDecision
 	// CyberBlocked 为 true 时把该用量行标记为 cyber（request_type=cyber），计费逻辑不变。
 	CyberBlocked bool
 	ChannelUsageFields
@@ -6516,8 +6531,10 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		quotaPlatform = PlatformFromAPIKey(apiKey)
 	}
 
+	applied := false
 	billingErr := func() error {
-		_, err := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
+		var err error
+		applied, err = applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
 			Cost:                  cost,
 			User:                  user,
 			APIKey:                apiKey,
@@ -6535,9 +6552,21 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	if billingErr != nil {
 		return billingErr
 	}
+	if applied {
+		s.settleCarpoolRevenueGatewayUsage(ctx, input.RevenueDispatch, usageLog, cost)
+	}
 	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
 
 	return nil
+}
+
+func (s *OpenAIGatewayService) settleCarpoolRevenueGatewayUsage(ctx context.Context, decision *CarpoolRevenueGatewayDispatchDecision, usageLog *UsageLog, cost *CostBreakdown) {
+	if s == nil || s.carpoolService == nil || !decision.ShouldSettle() {
+		return
+	}
+	if err := s.carpoolService.SettleRevenueGatewayUsage(ctx, decision, usageLog, cost); err != nil {
+		logger.LegacyPrintf("service.openai_gateway", "carpool revenue settlement failed: contribution=%d request=%s err=%v", decision.ContributionID, usageLog.RequestID, err)
+	}
 }
 
 func (s *OpenAIGatewayService) calculateOpenAIRecordUsageCost(

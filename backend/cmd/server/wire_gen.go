@@ -214,6 +214,8 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	registry := payment.ProvideRegistry()
 	defaultLoadBalancer := payment.ProvideDefaultLoadBalancer(client, encryptionKey)
 	carpoolService := service.NewCarpoolService(client)
+	gatewayService.SetCarpoolService(carpoolService)
+	openAIGatewayService.SetCarpoolService(carpoolService)
 	paymentService := service.ProvidePaymentServiceWithCarpool(client, registry, defaultLoadBalancer, redeemService, subscriptionService, paymentConfigService, userRepository, groupRepository, affiliateService, notificationEmailService, lotteryService, carpoolService, settingService)
 	settingHandler := handler.ProvideAdminSettingHandler(settingService, emailService, turnstileService, opsService, paymentConfigService, paymentService, userAttributeService, notificationEmailService)
 	opsHandler := admin.NewOpsHandler(opsService)

@@ -170,6 +170,88 @@ func (h *CarpoolHandler) DeleteVoucher(c *gin.Context) {
 	response.Success(c, gin.H{"deleted": true})
 }
 
+func (h *CarpoolHandler) RevenueConfig(c *gin.Context) {
+	cfg, err := h.carpoolService.GetRevenueConfig(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, cfg)
+}
+
+func (h *CarpoolHandler) UpdateRevenueConfig(c *gin.Context) {
+	var req service.CarpoolRevenueConfigInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	cfg, err := h.carpoolService.AdminUpdateRevenueConfig(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, cfg)
+}
+
+func (h *CarpoolHandler) RevenueContributions(c *gin.Context) {
+	page, pageSize := response.ParsePagination(c)
+	data, err := h.carpoolService.AdminListRevenueContributions(c.Request.Context(), page, pageSize, c.Query("status"))
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, data)
+}
+
+func (h *CarpoolHandler) PauseRevenueContribution(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "Invalid contribution id")
+		return
+	}
+	var req struct {
+		Reason string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	item, err := h.carpoolService.AdminPauseRevenueContribution(c.Request.Context(), id, req.Reason)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, item)
+}
+
+func (h *CarpoolHandler) ResumeRevenueContribution(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "Invalid contribution id")
+		return
+	}
+	item, err := h.carpoolService.AdminResumeRevenueContribution(c.Request.Context(), id)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, item)
+}
+
+func (h *CarpoolHandler) CreateRevenueRecord(c *gin.Context) {
+	var req service.CarpoolRevenueRecordInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	item, err := h.carpoolService.AdminCreateRevenueRecord(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Created(c, item)
+}
+
 func (h *CarpoolHandler) ListNotices(c *gin.Context) {
 	items, err := h.carpoolService.AdminListNotices(c.Request.Context())
 	if err != nil {

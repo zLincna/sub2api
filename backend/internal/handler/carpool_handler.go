@@ -123,3 +123,84 @@ func (h *CarpoolHandler) RequestRefund(c *gin.Context) {
 	}
 	response.Success(c, item)
 }
+
+func (h *CarpoolHandler) MyRevenue(c *gin.Context) {
+	subject, ok := servermiddleware.GetAuthSubjectFromContext(c)
+	if !ok || subject.UserID <= 0 {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "Invalid carpool record id")
+		return
+	}
+	detail, err := h.carpoolService.MyRevenueDetail(c.Request.Context(), subject.UserID, id)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, detail)
+}
+
+func (h *CarpoolHandler) EnableRevenue(c *gin.Context) {
+	subject, ok := servermiddleware.GetAuthSubjectFromContext(c)
+	if !ok || subject.UserID <= 0 {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "Invalid carpool record id")
+		return
+	}
+	detail, err := h.carpoolService.EnableMyRevenue(c.Request.Context(), subject.UserID, id)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, detail)
+}
+
+func (h *CarpoolHandler) DisableRevenue(c *gin.Context) {
+	subject, ok := servermiddleware.GetAuthSubjectFromContext(c)
+	if !ok || subject.UserID <= 0 {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "Invalid carpool record id")
+		return
+	}
+	detail, err := h.carpoolService.DisableMyRevenue(c.Request.Context(), subject.UserID, id)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, detail)
+}
+
+func (h *CarpoolHandler) WithdrawRevenue(c *gin.Context) {
+	subject, ok := servermiddleware.GetAuthSubjectFromContext(c)
+	if !ok || subject.UserID <= 0 {
+		response.Unauthorized(c, "Unauthorized")
+		return
+	}
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "Invalid carpool record id")
+		return
+	}
+	var req service.CarpoolRevenueWithdrawInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	item, err := h.carpoolService.WithdrawMyRevenue(c.Request.Context(), subject.UserID, id, req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, item)
+}

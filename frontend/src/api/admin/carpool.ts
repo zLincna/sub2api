@@ -2,6 +2,12 @@ import { apiClient } from '../client'
 import type { BasePaginationResponse } from '@/types'
 import type {
   CarpoolAdminManagementResponse,
+  CarpoolRevenueAdminListResponse,
+  CarpoolRevenueConfig,
+  CarpoolRevenueConfigInput,
+  CarpoolRevenueContribution,
+  CarpoolRevenueRecord,
+  CarpoolRevenueRecordInput,
   CarpoolNoticeInput,
   CarpoolNoticeVersion,
   CarpoolSession,
@@ -63,6 +69,36 @@ export const adminCarpoolAPI = {
 
   async deleteVoucher(id: number): Promise<void> {
     await apiClient.delete(`/admin/carpool/vouchers/${id}`)
+  },
+
+  async getRevenueConfig(): Promise<CarpoolRevenueConfig> {
+    const { data } = await apiClient.get('/admin/carpool/revenue/config')
+    return data
+  },
+
+  async updateRevenueConfig(input: CarpoolRevenueConfigInput): Promise<CarpoolRevenueConfig> {
+    const { data } = await apiClient.put('/admin/carpool/revenue/config', input)
+    return data
+  },
+
+  async listRevenueContributions(params: { page?: number; page_size?: number; status?: string } = {}): Promise<CarpoolRevenueAdminListResponse> {
+    const { data } = await apiClient.get('/admin/carpool/revenue/contributions', { params })
+    return data
+  },
+
+  async pauseRevenueContribution(id: number, reason: string): Promise<CarpoolRevenueContribution> {
+    const { data } = await apiClient.post(`/admin/carpool/revenue/contributions/${id}/pause`, { reason })
+    return data
+  },
+
+  async resumeRevenueContribution(id: number): Promise<CarpoolRevenueContribution> {
+    const { data } = await apiClient.post(`/admin/carpool/revenue/contributions/${id}/resume`)
+    return data
+  },
+
+  async createRevenueRecord(input: CarpoolRevenueRecordInput): Promise<CarpoolRevenueRecord> {
+    const { data } = await apiClient.post('/admin/carpool/revenue/records', input)
+    return data
   },
 
   async listNotices(): Promise<CarpoolNoticeVersion[]> {

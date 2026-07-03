@@ -129,6 +129,12 @@ func registerCarpoolRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		carpool.GET("/sessions/:id/vouchers", h.Admin.Carpool.ListVouchers)
 		carpool.POST("/sessions/:id/vouchers", h.Admin.Carpool.CreateVoucher)
 		carpool.DELETE("/vouchers/:id", h.Admin.Carpool.DeleteVoucher)
+		carpool.GET("/revenue/config", h.Admin.Carpool.RevenueConfig)
+		carpool.PUT("/revenue/config", h.Admin.Carpool.UpdateRevenueConfig)
+		carpool.GET("/revenue/contributions", h.Admin.Carpool.RevenueContributions)
+		carpool.POST("/revenue/contributions/:id/pause", h.Admin.Carpool.PauseRevenueContribution)
+		carpool.POST("/revenue/contributions/:id/resume", h.Admin.Carpool.ResumeRevenueContribution)
+		carpool.POST("/revenue/records", h.Admin.Carpool.CreateRevenueRecord)
 		carpool.GET("/notices", h.Admin.Carpool.ListNotices)
 		carpool.POST("/notices", h.Admin.Carpool.CreateNotice)
 	}

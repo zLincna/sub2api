@@ -113,6 +113,25 @@ func NewGatewayHandler(
 	}
 }
 
+func (h *GatewayHandler) planCarpoolRevenueDispatch(ctx context.Context, apiKey *service.APIKey, userID int64, model, platform, requestKey string) *service.CarpoolRevenueGatewayDispatchDecision {
+	if h == nil || h.gatewayService == nil || apiKey == nil {
+		return nil
+	}
+	decision, err := h.gatewayService.PlanCarpoolRevenueGatewayDispatch(ctx, service.CarpoolRevenueGatewayDispatchInput{
+		RequestUserID:   userID,
+		RequestAPIKeyID: apiKey.ID,
+		OriginalGroupID: apiKey.GroupID,
+		RequestedModel:  model,
+		RequestPlatform: platform,
+		RequestKey:      requestKey,
+	})
+	if err != nil {
+		logger.LegacyPrintf("handler.gateway", "carpool revenue dispatch plan failed: user=%d api_key=%d model=%s err=%v", userID, apiKey.ID, model, err)
+		return nil
+	}
+	return decision
+}
+
 // Messages handles Claude API compatible messages endpoint
 // POST /v1/messages
 func (h *GatewayHandler) Messages(c *gin.Context) {
@@ -290,6 +309,11 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 
 	if platform == service.PlatformGemini {
 		fs := NewFailoverState(h.maxAccountSwitchesGemini, hasBoundSession)
+		revenueDecision := h.planCarpoolRevenueDispatch(c.Request.Context(), apiKey, subject.UserID, reqModel, platform, sessionKey)
+		routingGroupID := apiKey.GroupID
+		if revenueDecision != nil {
+			routingGroupID = revenueDecision.RoutingGroupID(apiKey.GroupID)
+		}
 
 		// 单账号分组提前设置 SingleAccountRetry 标记，让 Service 层首次 503 就不设模型限流标记。
 		// 避免单账号分组收到 503 (MODEL_CAPACITY_EXHAUSTED) 时设 29s 限流，导致后续请求连续快速失败。
@@ -299,7 +323,17 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		}
 
 		for {
-			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), apiKey.GroupID, sessionKey, reqModel, fs.FailedAccountIDs, "", int64(0)) // Gemini 不使用会话限制
+			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), routingGroupID, sessionKey, reqModel, fs.FailedAccountIDs, "", int64(0)) // Gemini 不使用会话限制
+			if err != nil && revenueDecision != nil && revenueDecision.Routed {
+				reqLog.Warn("gateway.carpool_revenue_select_failed_fallback",
+					zap.Int64("contribution_id", revenueDecision.ContributionID),
+					zap.Int64("subscription_group_id", revenueDecision.SubscriptionGroupID),
+					zap.Error(err),
+				)
+				revenueDecision = nil
+				routingGroupID = apiKey.GroupID
+				selection, err = h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), routingGroupID, sessionKey, reqModel, fs.FailedAccountIDs, "", int64(0))
+			}
 			if err != nil {
 				if len(fs.FailedAccountIDs) == 0 {
 					cls := classifyNoAccountErrorFromGin(c, h.gatewayService, apiKey, reqModel, reqModel, service.PlatformGemini)
@@ -407,7 +441,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 				}
 				// Slot acquired: no longer waiting in queue.
 				releaseWait()
-				if err := h.gatewayService.BindStickySession(c.Request.Context(), apiKey.GroupID, sessionKey, account.ID); err != nil {
+				if err := h.gatewayService.BindStickySession(c.Request.Context(), routingGroupID, sessionKey, account.ID); err != nil {
 					reqLog.Warn("gateway.bind_sticky_session_failed", zap.Int64("account_id", account.ID), zap.Error(err))
 				}
 			}
@@ -432,7 +466,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 					reqStream,
 					body,
 					hasBoundSession,
-					service.WithForwardGeminiSession(derefGroupID(apiKey.GroupID), sessionKey),
+					service.WithForwardGeminiSession(derefGroupID(routingGroupID), sessionKey),
 				)
 			} else {
 				result, err = h.geminiCompatService.Forward(requestCtx, c, account, body)
@@ -535,6 +569,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 					RequestPayloadHash: requestPayloadHash,
 					ForceCacheBilling:  forceCacheBilling,
 					APIKeyService:      h.apiKeyService,
+					RevenueDispatch:    revenueDecision,
 					ChannelUsageFields: channelMapping.ToUsageFields(reqModel, result.UpstreamModel),
 				}); err != nil {
 					logger.L().With(
@@ -584,7 +619,22 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 				zap.Bool("has_bound_session", hasBoundSession),
 				zap.Int("failed_account_count", len(fs.FailedAccountIDs)),
 			)
-			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), currentAPIKey.GroupID, sessionKey, reqModel, fs.FailedAccountIDs, parsedReq.MetadataUserID, subject.UserID)
+			revenueDecision := h.planCarpoolRevenueDispatch(c.Request.Context(), currentAPIKey, subject.UserID, reqModel, platform, sessionKey)
+			routingGroupID := currentAPIKey.GroupID
+			if revenueDecision != nil {
+				routingGroupID = revenueDecision.RoutingGroupID(currentAPIKey.GroupID)
+			}
+			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), routingGroupID, sessionKey, reqModel, fs.FailedAccountIDs, parsedReq.MetadataUserID, subject.UserID)
+			if err != nil && revenueDecision != nil && revenueDecision.Routed {
+				reqLog.Warn("gateway.carpool_revenue_select_failed_fallback",
+					zap.Int64("contribution_id", revenueDecision.ContributionID),
+					zap.Int64("subscription_group_id", revenueDecision.SubscriptionGroupID),
+					zap.Error(err),
+				)
+				revenueDecision = nil
+				routingGroupID = currentAPIKey.GroupID
+				selection, err = h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), routingGroupID, sessionKey, reqModel, fs.FailedAccountIDs, parsedReq.MetadataUserID, subject.UserID)
+			}
 			if err != nil {
 				if len(fs.FailedAccountIDs) == 0 {
 					cls := classifyNoAccountErrorFromGin(c, h.gatewayService, currentAPIKey, reqModel, reqModel, platform)
@@ -707,7 +757,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 					zap.String("session_key", sessionKey),
 					zap.Int64("account_id", account.ID),
 				)
-				if err := h.gatewayService.BindStickySession(c.Request.Context(), currentAPIKey.GroupID, sessionKey, account.ID); err != nil {
+				if err := h.gatewayService.BindStickySession(c.Request.Context(), routingGroupID, sessionKey, account.ID); err != nil {
 					reqLog.Warn("gateway.bind_sticky_session_failed", zap.Int64("account_id", account.ID), zap.Error(err))
 				}
 			}
@@ -921,7 +971,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 			// - 粘性账号因负载/RPM 被跳过、选中了其他账号：不覆盖原绑定，
 			//   下次请求粘性账号恢复后仍可命中
 			if sessionKey != "" && (sessionBoundAccountID == 0 || sessionBoundAccountID == account.ID) {
-				if err := h.gatewayService.BindStickySession(c.Request.Context(), currentAPIKey.GroupID, sessionKey, account.ID); err != nil {
+				if err := h.gatewayService.BindStickySession(c.Request.Context(), routingGroupID, sessionKey, account.ID); err != nil {
 					reqLog.Warn("gateway.bind_sticky_session_failed", zap.Int64("account_id", account.ID), zap.Error(err))
 				}
 			}
@@ -965,6 +1015,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 					RequestPayloadHash: requestPayloadHash,
 					ForceCacheBilling:  forceCacheBilling,
 					APIKeyService:      h.apiKeyService,
+					RevenueDispatch:    revenueDecision,
 					ChannelUsageFields: channelMapping.ToUsageFields(reqModel, result.UpstreamModel),
 				}); err != nil {
 					logger.L().With(

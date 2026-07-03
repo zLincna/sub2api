@@ -5,6 +5,8 @@ import type {
   CarpoolJoinResponse,
   CarpoolNoticeVersion,
   CarpoolParticipant,
+  CarpoolRevenueDetail,
+  CarpoolRevenueWithdrawal,
   CarpoolUserDetail,
 } from '@/types/carpool'
 
@@ -36,6 +38,26 @@ export const carpoolAPI = {
 
   async requestRefund(id: number, input: { refund_method: string }): Promise<CarpoolParticipant> {
     const { data } = await apiClient.post(`/carpool/my/${id}/refund`, input)
+    return data
+  },
+
+  async myRevenue(id: number): Promise<CarpoolRevenueDetail> {
+    const { data } = await apiClient.get(`/carpool/my/${id}/revenue`)
+    return data
+  },
+
+  async enableRevenue(id: number): Promise<CarpoolRevenueDetail> {
+    const { data } = await apiClient.post(`/carpool/my/${id}/revenue/enable`)
+    return data
+  },
+
+  async disableRevenue(id: number): Promise<CarpoolRevenueDetail> {
+    const { data } = await apiClient.post(`/carpool/my/${id}/revenue/disable`)
+    return data
+  },
+
+  async withdrawRevenue(id: number, input: { amount: number }): Promise<CarpoolRevenueWithdrawal> {
+    const { data } = await apiClient.post(`/carpool/my/${id}/revenue/withdraw`, input)
     return data
   },
 }

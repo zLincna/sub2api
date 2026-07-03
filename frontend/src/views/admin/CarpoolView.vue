@@ -23,6 +23,190 @@
         </button>
       </div>
 
+      <section v-if="activeTab === 'revenue'" class="space-y-5">
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <div class="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">投入中转配置</h3>
+                <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">当前为第一阶段：用户按自己的拼车额度独立开启，收益独立记录，提现后进入余额。</p>
+              </div>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-dark-200">
+                <input v-model="revenueConfigForm.enabled" type="checkbox" />
+                启用
+              </label>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">用户分成比例</span>
+                <input v-model.number="revenueConfigForm.user_share_ratio" type="number" min="0" max="1" step="0.01" class="input mt-1" />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">平台分成比例</span>
+                <input v-model.number="revenueConfigForm.platform_share_ratio" type="number" min="0" max="1" step="0.01" class="input mt-1" />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">最低提取金额</span>
+                <input v-model.number="revenueConfigForm.min_withdraw_amount" type="number" min="0" step="0.01" class="input mt-1" />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">提现冷却分钟</span>
+                <input v-model.number="revenueConfigForm.withdraw_cooldown_minutes" type="number" min="0" class="input mt-1" />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">冻结分钟</span>
+                <input v-model.number="revenueConfigForm.freeze_minutes" type="number" min="0" class="input mt-1" />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">结算方式</span>
+                <select v-model="revenueConfigForm.settlement_cycle" class="input mt-1">
+                  <option value="manual">人工/手动</option>
+                  <option value="daily">每日</option>
+                  <option value="weekly">每周</option>
+                </select>
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-dark-200">
+                <input v-model="revenueConfigForm.allow_user_withdraw" type="checkbox" />
+                允许用户提取到余额
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-dark-300">调度策略</span>
+                <select v-model="revenueConfigForm.priority_policy" class="input mt-1">
+                  <option value="user_first">用户额度优先</option>
+                  <option value="balanced">均衡分配</option>
+                  <option value="manual">人工控制</option>
+                </select>
+              </label>
+            </div>
+            <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">网关真实调度</h4>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认关闭；建议先开启影子模式观察，再设置小流量比例。</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-700 dark:text-dark-200">
+                  <label class="flex items-center gap-2">
+                    <input v-model="revenueConfigForm.gateway_dispatch_enabled" type="checkbox" />
+                    启用调度
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input v-model="revenueConfigForm.gateway_shadow_mode" type="checkbox" />
+                    影子模式
+                  </label>
+                </div>
+              </div>
+              <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <label class="block text-sm">
+                  <span class="text-gray-600 dark:text-dark-300">真实流量比例 %</span>
+                  <input v-model.number="revenueConfigForm.gateway_traffic_percent" type="number" min="0" max="100" step="0.1" class="input mt-1" />
+                </label>
+                <label class="block text-sm">
+                  <span class="text-gray-600 dark:text-dark-300">贡献者保留比例</span>
+                  <input v-model.number="revenueConfigForm.gateway_min_remain_ratio" type="number" min="0" max="0.95" step="0.01" class="input mt-1" />
+                </label>
+                <label class="block text-sm">
+                  <span class="text-gray-600 dark:text-dark-300">单个投入每日最大消耗</span>
+                  <input v-model.number="revenueConfigForm.gateway_max_daily_quota" type="number" min="0" step="0.01" class="input mt-1" />
+                </label>
+                <label class="block text-sm">
+                  <span class="text-gray-600 dark:text-dark-300">允许来源分组ID</span>
+                  <input v-model="revenueConfigForm.gateway_allowed_group_ids" class="input mt-1" placeholder="留空=全部，多个用逗号分隔" />
+                </label>
+                <label class="block text-sm md:col-span-2">
+                  <span class="text-gray-600 dark:text-dark-300">允许模型</span>
+                  <input v-model="revenueConfigForm.gateway_allowed_models" class="input mt-1" placeholder="留空=全部，支持 * 通配符，如 gpt-5*, claude-*" />
+                </label>
+              </div>
+            </div>
+            <textarea v-model="revenueConfigForm.risk_notes" class="input mt-4 min-h-24" placeholder="风控说明、收益规则、用户提示"></textarea>
+            <div class="mt-4 flex justify-end">
+              <button type="button" class="btn btn-primary" :disabled="revenueSaving" @click="saveRevenueConfig">{{ revenueSaving ? '保存中...' : '保存配置' }}</button>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">手动补录收益</h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">用于第一阶段人工对账或测试。真实中转流量结算后续再接入。</p>
+            <div class="mt-4 space-y-3">
+              <select v-model.number="revenueRecordForm.contribution_id" class="input">
+                <option :value="0">选择投入用户</option>
+                <option v-for="row in revenueRows" :key="row.contribution.id" :value="row.contribution.id">
+                  {{ row.user?.username || row.user?.email || `用户 ${row.contribution.user_id}` }} · {{ row.session?.session_no || row.contribution.session_id }}
+                </option>
+              </select>
+              <div class="grid grid-cols-2 gap-3">
+                <input v-model.number="revenueRecordForm.request_count" type="number" min="0" class="input" placeholder="请求数" />
+                <input v-model.number="revenueRecordForm.quota_cost" type="number" min="0" step="0.01" class="input" placeholder="消耗额度" />
+                <input v-model.number="revenueRecordForm.gross_revenue" type="number" min="0" step="0.01" class="input" placeholder="毛收入" />
+                <input v-model.number="revenueRecordForm.upstream_cost" type="number" min="0" step="0.01" class="input" placeholder="上游成本" />
+              </div>
+              <input v-model.number="revenueRecordForm.net_revenue" type="number" min="0" step="0.01" class="input" placeholder="净收益" />
+              <input v-model="revenueRecordForm.notes" class="input" placeholder="备注" />
+              <button type="button" class="btn btn-secondary w-full" :disabled="revenueSaving || !revenueRecordForm.contribution_id" @click="createRevenueRecord">补录收益</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-900">
+          <div class="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white">投入用户</h3>
+              <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">只展示已开启或曾开启投入中转的拼车成员。</p>
+            </div>
+            <div class="flex gap-2">
+              <select v-model="revenueStatus" class="input w-36" @change="loadRevenueContributions">
+                <option value="all">全部状态</option>
+                <option value="active">投入中</option>
+                <option value="paused_by_user">用户暂停</option>
+                <option value="paused_by_admin">管理员暂停</option>
+                <option value="disabled">未开启</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" @click="loadRevenueContributions">刷新</button>
+            </div>
+          </div>
+          <div v-if="revenueRows.length === 0" class="py-12 text-center text-sm text-gray-500 dark:text-dark-400">暂无投入用户</div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-dark-700">
+              <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 dark:bg-dark-800 dark:text-dark-300">
+                <tr>
+                  <th class="px-4 py-3">用户/车辆</th>
+                  <th class="px-4 py-3">状态</th>
+                  <th class="px-4 py-3">收益</th>
+                  <th class="px-4 py-3">用量</th>
+                  <th class="px-4 py-3">更新时间</th>
+                  <th class="px-4 py-3 text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
+                <tr v-for="row in revenueRows" :key="row.contribution.id">
+                  <td class="px-4 py-4">
+                    <p class="font-medium text-gray-900 dark:text-white">{{ row.user?.username || row.user?.email || `用户 ${row.contribution.user_id}` }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ row.vehicle_type?.name || row.contribution.vehicle_type_id }} · {{ row.session?.session_no || row.contribution.session_id }}</p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <span class="rounded bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-200">{{ revenueStatusLabel(row.contribution.status) }}</span>
+                    <p v-if="row.contribution.paused_reason" class="mt-1 max-w-40 truncate text-xs text-gray-500 dark:text-dark-400">{{ row.contribution.paused_reason }}</p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <p class="font-medium text-gray-900 dark:text-white">可提 ¥{{ money(row.summary.available_revenue) }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">累计 ¥{{ money(row.summary.total_revenue) }} · 已提 ¥{{ money(row.summary.withdrawn_revenue) }}</p>
+                  </td>
+                  <td class="px-4 py-4">
+                    <p class="font-medium text-gray-900 dark:text-white">{{ compactNumber(row.summary.request_count) }} 次</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">额度 {{ money(row.summary.quota_cost) }}</p>
+                  </td>
+                  <td class="px-4 py-4 text-xs text-gray-500 dark:text-dark-400">{{ formatTime(row.contribution.updated_at) }}</td>
+                  <td class="px-4 py-4 text-right">
+                    <button v-if="row.contribution.status === 'active'" type="button" class="btn btn-secondary btn-sm" @click="pauseRevenue(row.contribution.id)">暂停</button>
+                    <button v-else type="button" class="btn btn-secondary btn-sm" @click="resumeRevenue(row.contribution.id)">恢复</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section v-if="activeTab === 'management'" class="space-y-5">
         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-900">
           <div class="space-y-4 border-b border-gray-100 px-5 py-4 dark:border-dark-700">
@@ -723,6 +907,7 @@ import type {
   CarpoolAdminManagementResponse,
   CarpoolAdminSessionRow,
   CarpoolNoticeVersion,
+  CarpoolRevenueContributionAdminRow,
   CarpoolSession,
   CarpoolVehicleType,
   CarpoolVoucher,
@@ -730,10 +915,11 @@ import type {
 import { useAppStore } from '@/stores'
 
 const appStore = useAppStore()
-const activeTab = ref<'management' | 'progress' | 'types' | 'sessions' | 'notice' | 'stats'>('management')
+const activeTab = ref<'management' | 'progress' | 'revenue' | 'types' | 'sessions' | 'notice' | 'stats'>('management')
 const tabs = [
   { key: 'management', label: '拼车管理' },
   { key: 'progress', label: '拼车情况' },
+  { key: 'revenue', label: '投入中转' },
   { key: 'types', label: '车类型' },
   { key: 'sessions', label: '发车交付' },
   { key: 'notice', label: '用户须知' },
@@ -746,8 +932,10 @@ const sessions = ref<CarpoolSession[]>([])
 const progressSessionList = ref<CarpoolSession[]>([])
 const notices = ref<CarpoolNoticeVersion[]>([])
 const groups = ref<AdminGroup[]>([])
+const revenueRows = ref<CarpoolRevenueContributionAdminRow[]>([])
 const sessionStatus = ref('full')
 const managementStatus = ref('')
+const revenueStatus = ref('all')
 const managementVehicleTypeId = ref(0)
 const managementKeyword = ref('')
 const managementDetail = ref<CarpoolAdminSessionRow | null>(null)
@@ -759,6 +947,7 @@ const previewVoucher = ref<CarpoolVoucher | null>(null)
 const selectedGroupAccounts = ref<Account[]>([])
 const groupAccountLoading = ref(false)
 const assigning = ref(false)
+const revenueSaving = ref(false)
 const editingProvision = reactive({
   status: 'provisioning',
   communication_type: 'system_chat',
@@ -780,6 +969,34 @@ const noticeForm = reactive({
   title: '拼车用户须知',
   content_md: '',
   active: true,
+})
+const revenueConfigForm = reactive({
+  enabled: false,
+  user_share_ratio: 0.7,
+  platform_share_ratio: 0.3,
+  min_withdraw_amount: 1,
+  withdraw_cooldown_minutes: 0,
+  settlement_cycle: 'manual',
+  freeze_minutes: 0,
+  allow_user_withdraw: true,
+  priority_policy: 'user_first',
+  risk_notes: '',
+  gateway_dispatch_enabled: false,
+  gateway_shadow_mode: true,
+  gateway_traffic_percent: 0,
+  gateway_allowed_group_ids: '',
+  gateway_allowed_models: '',
+  gateway_min_remain_ratio: 0.1,
+  gateway_max_daily_quota: 0,
+})
+const revenueRecordForm = reactive({
+  contribution_id: 0,
+  request_count: 1,
+  quota_cost: 0,
+  gross_revenue: 0,
+  upstream_cost: 0,
+  net_revenue: 0,
+  notes: '',
 })
 const carpoolProductOptions = [
   { value: 'openai', label: 'OpenAI' },
@@ -919,6 +1136,8 @@ async function loadAll() {
   await loadSessions()
   await loadProgressSessions()
   await loadGroups()
+  await loadRevenueConfig()
+  await loadRevenueContributions()
 }
 
 async function loadSessions() {
@@ -933,6 +1152,106 @@ async function loadProgressSessions() {
 
 async function loadManagement() {
   management.value = await adminCarpoolAPI.management({ page: 1, page_size: 50, status: managementStatus.value || undefined })
+}
+
+async function loadRevenueConfig() {
+  const cfg = await adminCarpoolAPI.getRevenueConfig()
+  Object.assign(revenueConfigForm, {
+    enabled: Boolean(cfg.enabled),
+    user_share_ratio: Number(cfg.user_share_ratio || 0.7),
+    platform_share_ratio: Number(cfg.platform_share_ratio || 0.3),
+    min_withdraw_amount: Number(cfg.min_withdraw_amount || 0),
+    withdraw_cooldown_minutes: Number(cfg.withdraw_cooldown_minutes || 0),
+    settlement_cycle: cfg.settlement_cycle || 'manual',
+    freeze_minutes: Number(cfg.freeze_minutes || 0),
+    allow_user_withdraw: Boolean(cfg.allow_user_withdraw),
+    priority_policy: cfg.priority_policy || 'user_first',
+    risk_notes: cfg.risk_notes || '',
+    gateway_dispatch_enabled: Boolean(cfg.gateway_dispatch_enabled),
+    gateway_shadow_mode: cfg.gateway_shadow_mode !== false,
+    gateway_traffic_percent: Number(cfg.gateway_traffic_percent || 0),
+    gateway_allowed_group_ids: cfg.gateway_allowed_group_ids || '',
+    gateway_allowed_models: cfg.gateway_allowed_models || '',
+    gateway_min_remain_ratio: Number(cfg.gateway_min_remain_ratio ?? 0.1),
+    gateway_max_daily_quota: Number(cfg.gateway_max_daily_quota || 0),
+  })
+}
+
+async function loadRevenueContributions() {
+  const data = await adminCarpoolAPI.listRevenueContributions({ page: 1, page_size: 100, status: revenueStatus.value || 'all' })
+  revenueRows.value = data.items || []
+}
+
+async function saveRevenueConfig() {
+  revenueSaving.value = true
+  try {
+    await adminCarpoolAPI.updateRevenueConfig({
+      enabled: revenueConfigForm.enabled,
+      user_share_ratio: Number(revenueConfigForm.user_share_ratio || 0),
+      platform_share_ratio: Number(revenueConfigForm.platform_share_ratio || 0),
+      min_withdraw_amount: Number(revenueConfigForm.min_withdraw_amount || 0),
+      withdraw_cooldown_minutes: Number(revenueConfigForm.withdraw_cooldown_minutes || 0),
+      settlement_cycle: revenueConfigForm.settlement_cycle || 'manual',
+      freeze_minutes: Number(revenueConfigForm.freeze_minutes || 0),
+      allow_user_withdraw: revenueConfigForm.allow_user_withdraw,
+      priority_policy: revenueConfigForm.priority_policy || 'user_first',
+      risk_notes: revenueConfigForm.risk_notes || '',
+      gateway_dispatch_enabled: revenueConfigForm.gateway_dispatch_enabled,
+      gateway_shadow_mode: revenueConfigForm.gateway_shadow_mode,
+      gateway_traffic_percent: Number(revenueConfigForm.gateway_traffic_percent || 0),
+      gateway_allowed_group_ids: revenueConfigForm.gateway_allowed_group_ids || '',
+      gateway_allowed_models: revenueConfigForm.gateway_allowed_models || '',
+      gateway_min_remain_ratio: Number(revenueConfigForm.gateway_min_remain_ratio || 0),
+      gateway_max_daily_quota: Number(revenueConfigForm.gateway_max_daily_quota || 0),
+    })
+    appStore.showSuccess('投入中转配置已保存')
+    await loadRevenueConfig()
+  } finally {
+    revenueSaving.value = false
+  }
+}
+
+async function pauseRevenue(id: number) {
+  const reason = window.prompt('请输入暂停原因', '管理员暂停投入中转') || ''
+  await adminCarpoolAPI.pauseRevenueContribution(id, reason)
+  appStore.showSuccess('已暂停')
+  await loadRevenueContributions()
+}
+
+async function resumeRevenue(id: number) {
+  await adminCarpoolAPI.resumeRevenueContribution(id)
+  appStore.showSuccess('已恢复')
+  await loadRevenueContributions()
+}
+
+async function createRevenueRecord() {
+  if (!revenueRecordForm.contribution_id) {
+    appStore.showWarning('请选择投入用户')
+    return
+  }
+  revenueSaving.value = true
+  try {
+    await adminCarpoolAPI.createRevenueRecord({
+      contribution_id: revenueRecordForm.contribution_id,
+      request_count: Number(revenueRecordForm.request_count || 0),
+      quota_cost: Number(revenueRecordForm.quota_cost || 0),
+      gross_revenue: Number(revenueRecordForm.gross_revenue || 0),
+      upstream_cost: Number(revenueRecordForm.upstream_cost || 0),
+      net_revenue: Number(revenueRecordForm.net_revenue || 0),
+      notes: revenueRecordForm.notes || '手动补录收益',
+      settlement_period: new Date().toISOString().slice(0, 10),
+    })
+    revenueRecordForm.request_count = 1
+    revenueRecordForm.quota_cost = 0
+    revenueRecordForm.gross_revenue = 0
+    revenueRecordForm.upstream_cost = 0
+    revenueRecordForm.net_revenue = 0
+    revenueRecordForm.notes = ''
+    appStore.showSuccess('收益记录已补录')
+    await loadRevenueContributions()
+  } finally {
+    revenueSaving.value = false
+  }
 }
 
 function resetManagementFilters() {
@@ -1237,6 +1556,18 @@ function statusLabel(value?: string) {
     refund_pending: '待退款',
     refunded_balance: '已退余额',
     refunded_gateway: '已原路退',
+  }
+  return labels[String(value || '')] || value || '-'
+}
+
+function revenueStatusLabel(value?: string) {
+  const labels: Record<string, string> = {
+    disabled: '未开启',
+    active: '投入中',
+    paused_by_user: '用户暂停',
+    paused_by_admin: '管理员暂停',
+    expired: '已过期',
+    risk_hold: '风控冻结',
   }
   return labels[String(value || '')] || value || '-'
 }

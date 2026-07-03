@@ -123,6 +123,10 @@ func RegisterUserRoutes(
 			carpool.GET("/my", h.Carpool.My)
 			carpool.GET("/my/:id/detail", h.Carpool.MyDetail)
 			carpool.POST("/my/:id/refund", h.Carpool.RequestRefund)
+			carpool.GET("/my/:id/revenue", h.Carpool.MyRevenue)
+			carpool.POST("/my/:id/revenue/enable", h.Carpool.EnableRevenue)
+			carpool.POST("/my/:id/revenue/disable", h.Carpool.DisableRevenue)
+			carpool.POST("/my/:id/revenue/withdraw", h.Carpool.WithdrawRevenue)
 		}
 
 		// 用户订阅

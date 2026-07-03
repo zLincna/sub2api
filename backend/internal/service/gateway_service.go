@@ -647,6 +647,7 @@ type GatewayService struct {
 	debugClaudeMimic      atomic.Bool
 	channelService        *ChannelService
 	resolver              *ModelPricingResolver
+	carpoolService        *CarpoolService
 	debugGatewayBodyFile  atomic.Pointer[os.File] // non-nil when SUB2API_DEBUG_GATEWAY_BODY is set
 	tlsFPProfileService   *TLSFingerprintProfileService
 	balanceNotifyService  *BalanceNotifyService
@@ -732,6 +733,19 @@ func NewGatewayService(
 		svc.initDebugGatewayBodyFile(path)
 	}
 	return svc
+}
+
+func (s *GatewayService) SetCarpoolService(carpoolService *CarpoolService) {
+	if s != nil {
+		s.carpoolService = carpoolService
+	}
+}
+
+func (s *GatewayService) PlanCarpoolRevenueGatewayDispatch(ctx context.Context, input CarpoolRevenueGatewayDispatchInput) (*CarpoolRevenueGatewayDispatchDecision, error) {
+	if s == nil || s.carpoolService == nil {
+		return nil, nil
+	}
+	return s.carpoolService.PlanRevenueGatewayDispatch(ctx, input)
 }
 
 // GenerateSessionHash 从预解析请求计算粘性会话 hash
@@ -8861,6 +8875,7 @@ type RecordUsageInput struct {
 	ForceCacheBilling  bool               // 强制缓存计费：将 input_tokens 转为 cache_read 计费（用于粘性会话切换）
 	APIKeyService      APIKeyQuotaUpdater // 可选：用于更新API Key配额
 	QuotaPlatform      string             // user×platform 配额计量平台：handler 在请求 ctx 内经 QuotaPlatform() 算定后传入（后扣运行在 worker 池 background ctx 上，取不到 ForcePlatform）
+	RevenueDispatch    *CarpoolRevenueGatewayDispatchDecision
 
 	ChannelUsageFields // 渠道映射信息（由 handler 在 Forward 前解析）
 }
@@ -9371,6 +9386,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		ForceCacheBilling:  input.ForceCacheBilling,
 		APIKeyService:      input.APIKeyService,
 		QuotaPlatform:      input.QuotaPlatform,
+		RevenueDispatch:    input.RevenueDispatch,
 		ChannelUsageFields: input.ChannelUsageFields,
 	}, &recordUsageOpts{})
 }
@@ -9392,6 +9408,7 @@ type RecordUsageLongContextInput struct {
 	ForceCacheBilling     bool               // 强制缓存计费：将 input_tokens 转为 cache_read 计费（用于粘性会话切换）
 	APIKeyService         APIKeyQuotaUpdater // API Key 配额服务（可选）
 	QuotaPlatform         string             // user×platform 配额计量平台：handler 在请求 ctx 内经 QuotaPlatform() 算定后传入（后扣运行在 worker 池 background ctx 上，取不到 ForcePlatform）
+	RevenueDispatch       *CarpoolRevenueGatewayDispatchDecision
 
 	ChannelUsageFields // 渠道映射信息（由 handler 在 Forward 前解析）
 }
@@ -9412,6 +9429,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		ForceCacheBilling:  input.ForceCacheBilling,
 		APIKeyService:      input.APIKeyService,
 		QuotaPlatform:      input.QuotaPlatform,
+		RevenueDispatch:    input.RevenueDispatch,
 		ChannelUsageFields: input.ChannelUsageFields,
 	}, &recordUsageOpts{
 		LongContextThreshold:  input.LongContextThreshold,
@@ -9434,6 +9452,7 @@ type recordUsageCoreInput struct {
 	ForceCacheBilling  bool
 	APIKeyService      APIKeyQuotaUpdater
 	QuotaPlatform      string
+	RevenueDispatch    *CarpoolRevenueGatewayDispatchDecision
 	ChannelUsageFields
 }
 
@@ -9537,7 +9556,7 @@ func (s *GatewayService) recordUsageCore(ctx context.Context, input *recordUsage
 		quotaPlatform = PlatformFromAPIKey(apiKey)
 	}
 	requestID := usageLog.RequestID
-	_, billingErr := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
+	applied, billingErr := applyUsageBilling(ctx, requestID, usageLog, &postUsageBillingParams{
 		Cost:                  cost,
 		User:                  user,
 		APIKey:                apiKey,
@@ -9553,9 +9572,21 @@ func (s *GatewayService) recordUsageCore(ctx context.Context, input *recordUsage
 	if billingErr != nil {
 		return billingErr
 	}
+	if applied {
+		s.settleCarpoolRevenueGatewayUsage(ctx, input.RevenueDispatch, usageLog, cost)
+	}
 	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.gateway")
 
 	return nil
+}
+
+func (s *GatewayService) settleCarpoolRevenueGatewayUsage(ctx context.Context, decision *CarpoolRevenueGatewayDispatchDecision, usageLog *UsageLog, cost *CostBreakdown) {
+	if s == nil || s.carpoolService == nil || !decision.ShouldSettle() {
+		return
+	}
+	if err := s.carpoolService.SettleRevenueGatewayUsage(ctx, decision, usageLog, cost); err != nil {
+		logger.LegacyPrintf("service.gateway", "carpool revenue settlement failed: contribution=%d request=%s err=%v", decision.ContributionID, usageLog.RequestID, err)
+	}
 }
 
 // calculateRecordUsageCost 根据请求类型和选项计算费用。

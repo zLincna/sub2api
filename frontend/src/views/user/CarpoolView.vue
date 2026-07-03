@@ -287,7 +287,7 @@
               </div>
             </section>
 
-            <section v-else class="space-y-4">
+            <section v-else-if="detailTab === 'members'" class="space-y-4">
               <section class="overflow-hidden rounded-lg border border-gray-100 dark:border-dark-700">
                 <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-dark-700">
                   <div>
@@ -370,6 +370,76 @@
                   </div>
                 </div>
               </section>
+            </section>
+
+            <section v-else-if="detailTab === 'revenue'" class="space-y-4">
+              <div class="overflow-hidden rounded-lg border border-gray-100 dark:border-dark-700">
+                <div class="flex flex-col gap-3 border-b border-gray-100 px-4 py-3 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">投入中转</h4>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">开启后仅投入你自己的拼车额度，产生的收益会先进入独立收益账户，可手动提取到余额。</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button v-if="revenueEnabled" type="button" class="btn btn-secondary btn-sm" :disabled="revenueSubmitting" @click="disableRevenue">暂停投入</button>
+                    <button v-else type="button" class="btn btn-primary btn-sm" :disabled="revenueSubmitting || !revenueCanEnable" @click="enableRevenue">开启投入</button>
+                  </div>
+                </div>
+                <div class="space-y-4 p-4">
+                  <div v-if="revenueUnavailableText" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-100">
+                    {{ revenueUnavailableText }}
+                  </div>
+                  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div v-for="item in revenueSummaryCards" :key="item.label" class="rounded-lg bg-gray-50 p-4 dark:bg-dark-800">
+                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ item.label }}</p>
+                      <p class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{{ item.value }}</p>
+                    </div>
+                  </div>
+                  <div class="rounded-lg border border-gray-100 p-4 dark:border-dark-700">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h5 class="text-sm font-semibold text-gray-900 dark:text-white">提取收益到余额</h5>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">最低提取 ¥{{ money(detailRevenue?.config?.min_withdraw_amount || 0) }}，提取后和充值余额一样可用于正常消费。</p>
+                      </div>
+                      <div class="flex gap-2">
+                        <input v-model.number="revenueWithdrawAmount" type="number" min="0" step="0.01" class="input w-36" placeholder="提取金额" />
+                        <button type="button" class="btn btn-primary btn-sm" :disabled="revenueSubmitting || !revenueCanWithdraw" @click="withdrawRevenue">提取</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid gap-4 lg:grid-cols-2">
+                    <section class="rounded-lg border border-gray-100 dark:border-dark-700">
+                      <div class="border-b border-gray-100 px-4 py-3 dark:border-dark-700">
+                        <h5 class="text-sm font-semibold text-gray-900 dark:text-white">收益记录</h5>
+                      </div>
+                      <div class="divide-y divide-gray-100 dark:divide-dark-700">
+                        <div v-if="!detailRevenue?.records?.length" class="p-4 text-sm text-gray-500 dark:text-dark-400">暂无收益记录</div>
+                        <div v-for="record in detailRevenue?.records || []" :key="record.id" class="p-4 text-sm">
+                          <div class="flex items-center justify-between gap-3">
+                            <p class="font-medium text-gray-900 dark:text-white">¥{{ money(record.user_share_amount) }}</p>
+                            <span class="text-xs text-gray-500 dark:text-dark-400">{{ revenueRecordStatusLabel(record.status) }}</span>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ formatTime(record.occurred_at) }} · {{ compactNumber(record.request_count) }} 次 · {{ record.notes || record.request_id || '中转收益' }}</p>
+                        </div>
+                      </div>
+                    </section>
+                    <section class="rounded-lg border border-gray-100 dark:border-dark-700">
+                      <div class="border-b border-gray-100 px-4 py-3 dark:border-dark-700">
+                        <h5 class="text-sm font-semibold text-gray-900 dark:text-white">提取记录</h5>
+                      </div>
+                      <div class="divide-y divide-gray-100 dark:divide-dark-700">
+                        <div v-if="!detailRevenue?.withdrawals?.length" class="p-4 text-sm text-gray-500 dark:text-dark-400">暂无提取记录</div>
+                        <div v-for="item in detailRevenue?.withdrawals || []" :key="item.id" class="p-4 text-sm">
+                          <div class="flex items-center justify-between gap-3">
+                            <p class="font-medium text-gray-900 dark:text-white">¥{{ money(item.amount) }}</p>
+                            <span class="text-xs text-gray-500 dark:text-dark-400">{{ withdrawalStatusLabel(item.status) }}</span>
+                          </div>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ formatTime(item.requested_at) }} · 提取后剩余 ¥{{ money(item.available_after) }}</p>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
         </div>
@@ -556,7 +626,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import PaymentStatusPanel from '@/components/payment/PaymentStatusPanel.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { carpoolAPI } from '@/api/carpool'
-import type { CarpoolAccountWindowUsage, CarpoolCard, CarpoolNoticeVersion, CarpoolParticipant, CarpoolUserDetail, CarpoolVehicleType, CarpoolVoucher } from '@/types/carpool'
+import type { CarpoolAccountWindowUsage, CarpoolCard, CarpoolNoticeVersion, CarpoolParticipant, CarpoolRevenueDetail, CarpoolUserDetail, CarpoolVehicleType, CarpoolVoucher } from '@/types/carpool'
 import type { CreateOrderResult } from '@/types/payment'
 import { decidePaymentLaunch, normalizeVisibleMethod, type PaymentRecoverySnapshot } from '@/components/payment/paymentFlow'
 import { getPaymentPopupFeatures } from '@/components/payment/providerConfig'
@@ -575,11 +645,14 @@ const notice = ref<CarpoolNoticeVersion | null>(null)
 const selected = ref<CarpoolCard | null>(null)
 const detailItem = ref<CarpoolParticipant | null>(null)
 const detailData = ref<CarpoolUserDetail | null>(null)
+const detailRevenue = ref<CarpoolRevenueDetail | null>(null)
 const detailLoading = ref(false)
-const detailTab = ref<'info' | 'members'>('info')
+const detailTab = ref<'info' | 'members' | 'revenue'>('info')
 const previewVoucher = ref<CarpoolVoucher | null>(null)
 const refundTarget = ref<CarpoolParticipant | null>(null)
 const refundSubmitting = ref(false)
+const revenueSubmitting = ref(false)
+const revenueWithdrawAmount = ref<number | null>(null)
 const noticeScrolled = ref(false)
 const noticeAccepted = ref(false)
 const paymentPhase = ref<'select' | 'paying'>('select')
@@ -590,6 +663,7 @@ const pageTabs = [
 const detailTabs = [
   { key: 'info', label: '拼车信息' },
   { key: 'members', label: '车成员与用量' },
+  { key: 'revenue', label: '投入中转' },
 ] as const
 const paymentState = ref<PaymentRecoverySnapshot>({
   orderId: 0,
@@ -675,6 +749,45 @@ const detailStateNotice = computed(() => {
   if (session.status === 'provisioning') return '管理员正在进行采购和订阅分配，当前暂未完成发车。请等待短信或站内状态更新。'
   if (session.status === 'active' && !deliverySummary(detailItem.value)) return '本轮已经发车，但暂未填写交付说明或凭证。如无法使用，请联系管理员确认订阅分组。'
   return ''
+})
+
+const revenueEnabled = computed(() => Boolean(detailRevenue.value?.contribution?.enabled && detailRevenue.value?.contribution?.status === 'active'))
+
+const revenueCanEnable = computed(() => detailRevenue.value?.available_reason === 'available')
+
+const revenueCanWithdraw = computed(() => {
+  const amount = Number(revenueWithdrawAmount.value || 0)
+  const min = Number(detailRevenue.value?.config?.min_withdraw_amount || 0)
+  const available = Number(detailRevenue.value?.summary?.available_revenue || 0)
+  return amount > 0 && amount >= min && amount <= available
+})
+
+const revenueUnavailableText = computed(() => {
+  if (revenueEnabled.value) return ''
+  const reason = detailRevenue.value?.available_reason || ''
+  if (!reason || reason === 'available') return ''
+  const labels: Record<string, string> = {
+    global_disabled: '后台暂未开启投入中转功能。',
+    vehicle_unsupported: '当前车类型未开放投入中转。',
+    waiting_session: '当前拼车还未成团，暂时不能投入中转。',
+    session_not_active: '当前拼车还未发车，发车并分配订阅后才能投入中转。',
+    participant_not_active: '当前拼车记录状态暂不支持投入中转。',
+    subscription_group_missing: '管理员还未分配订阅分组，暂时不能投入中转。',
+    subscription_missing: '当前账号没有可用的订阅额度，暂时不能投入中转。',
+    subscription_error: '订阅额度状态读取失败，请稍后再试。',
+  }
+  return labels[reason] || '当前状态暂不支持投入中转。'
+})
+
+const revenueSummaryCards = computed(() => {
+  const summary = detailRevenue.value?.summary
+  const ratio = Number(detailRevenue.value?.contribution?.share_ratio || detailRevenue.value?.config?.user_share_ratio || 0)
+  return [
+    { label: '可提取收益', value: `¥${money(summary?.available_revenue || 0)}` },
+    { label: '累计收益', value: `¥${money(summary?.total_revenue || 0)}` },
+    { label: '已提取', value: `¥${money(summary?.withdrawn_revenue || 0)}` },
+    { label: '我的分成', value: `${Math.round(ratio * 100)}%` },
+  ]
 })
 
 const renderedNoticeHtml = computed(() => {
@@ -771,7 +884,12 @@ async function openDetail(item: CarpoolParticipant) {
   detailTab.value = 'info'
   detailLoading.value = true
   try {
-    detailData.value = await carpoolAPI.myDetail(item.id)
+    const [detailResp, revenueResp] = await Promise.all([
+      carpoolAPI.myDetail(item.id),
+      carpoolAPI.myRevenue(item.id).catch(() => null),
+    ])
+    detailData.value = detailResp
+    detailRevenue.value = revenueResp
     if (detailData.value.participant) {
       detailItem.value = {
         ...item,
@@ -793,9 +911,51 @@ async function openDetail(item: CarpoolParticipant) {
 function closeDetail() {
   detailItem.value = null
   detailData.value = null
+  detailRevenue.value = null
   detailLoading.value = false
   detailTab.value = 'info'
   previewVoucher.value = null
+  revenueWithdrawAmount.value = null
+}
+
+async function refreshRevenueDetail() {
+  if (!detailItem.value) return
+  detailRevenue.value = await carpoolAPI.myRevenue(detailItem.value.id)
+}
+
+async function enableRevenue() {
+  if (!detailItem.value) return
+  revenueSubmitting.value = true
+  try {
+    detailRevenue.value = await carpoolAPI.enableRevenue(detailItem.value.id)
+    appStore.showSuccess('已开启投入中转')
+  } finally {
+    revenueSubmitting.value = false
+  }
+}
+
+async function disableRevenue() {
+  if (!detailItem.value) return
+  revenueSubmitting.value = true
+  try {
+    detailRevenue.value = await carpoolAPI.disableRevenue(detailItem.value.id)
+    appStore.showSuccess('已暂停投入中转')
+  } finally {
+    revenueSubmitting.value = false
+  }
+}
+
+async function withdrawRevenue() {
+  if (!detailItem.value || !revenueCanWithdraw.value) return
+  revenueSubmitting.value = true
+  try {
+    await carpoolAPI.withdrawRevenue(detailItem.value.id, { amount: Number(revenueWithdrawAmount.value || 0) })
+    revenueWithdrawAmount.value = null
+    await refreshRevenueDetail()
+    appStore.showSuccess('收益已提取到余额')
+  } finally {
+    revenueSubmitting.value = false
+  }
 }
 
 async function joinSelected() {
@@ -966,6 +1126,26 @@ function statusLabel(status?: string) {
     refund_pending: '待退款',
     refunded_balance: '已退余额',
     refunded_gateway: '已原路退款',
+    cancelled: '已取消',
+  }
+  return labels[String(status || '')] || status || '-'
+}
+
+function revenueRecordStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    pending: '待结算',
+    settled: '已结算',
+    frozen: '冻结中',
+    reversed: '已冲正',
+  }
+  return labels[String(status || '')] || status || '-'
+}
+
+function withdrawalStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    requested: '处理中',
+    completed: '已完成',
+    failed: '失败',
     cancelled: '已取消',
   }
   return labels[String(status || '')] || status || '-'
