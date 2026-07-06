@@ -150,6 +150,7 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 			service.OpenAIUpstreamTransportAny,
 			service.OpenAIEndpointCapabilityChatCompletions,
 			false,
+			false,
 			requestPlatform,
 		)
 		if err != nil && revenueDecision != nil && revenueDecision.Routed {
@@ -169,6 +170,7 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 				failedAccountIDs,
 				service.OpenAIUpstreamTransportAny,
 				service.OpenAIEndpointCapabilityChatCompletions,
+				false,
 				false,
 				requestPlatform,
 			)
