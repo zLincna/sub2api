@@ -35,6 +35,26 @@
               </button>
             </div>
             <button v-if="activeTab === 'hall'" type="button" class="btn btn-secondary btn-sm sm:w-auto" @click="loadAll">刷新</button>
+            <div v-else class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <div class="grid grid-cols-2 gap-2 text-xs sm:flex sm:items-center">
+                <div class="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-200">
+                  <span class="text-emerald-500 dark:text-emerald-300">中转收益</span>
+                  <span class="ml-1 font-semibold">¥{{ money(mineRevenueAvailableTotal) }}</span>
+                </div>
+                <div class="rounded-lg bg-primary-50 px-3 py-2 text-primary-700 dark:bg-primary-900/20 dark:text-primary-200">
+                  <span class="text-primary-500 dark:text-primary-300">已投入</span>
+                  <span class="ml-1 font-semibold">{{ mineRevenueEnabledCount }}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm sm:w-auto"
+                :disabled="bulkRevenueOpening || !hasRevenueManageCandidates"
+                @click="openBulkRevenueDialog"
+              >
+                {{ bulkRevenueOpening ? '加载中...' : bulkRevenueButtonLabel }}
+              </button>
+            </div>
           </div>
 
           <div v-if="activeTab === 'hall'" class="min-w-0">
@@ -167,8 +187,18 @@
                 <div class="flex flex-col gap-2 border-t border-gray-100 px-4 py-3 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
                   <p class="text-xs text-gray-500 dark:text-dark-400">支付时间：{{ formatTime(item.paid_at || item.created_at) }}</p>
                   <div class="flex justify-end gap-2">
-                  <button v-if="canRequestRefund(item)" type="button" class="btn btn-secondary btn-sm text-red-600 dark:text-red-300" @click="openRefundDialog(item)">发起退款</button>
-                  <button type="button" class="btn btn-secondary btn-sm" @click="openDetail(item)">查看详情</button>
+                    <button
+                      v-if="shouldShowRevenueCardAction(item)"
+                      type="button"
+                      class="btn btn-sm"
+                      :class="mineRevenueEnabled(item) ? 'btn-secondary text-emerald-600 dark:text-emerald-300' : 'btn-primary'"
+                      :disabled="revenueSubmittingId === item.id || (!mineRevenueEnabled(item) && !canEnableMineRevenue(item))"
+                      @click="toggleMineRevenue(item)"
+                    >
+                      {{ mineRevenueActionLabel(item) }}
+                    </button>
+                    <button v-if="canRequestRefund(item)" type="button" class="btn btn-secondary btn-sm text-red-600 dark:text-red-300" @click="openRefundDialog(item)">发起退款</button>
+                    <button type="button" class="btn btn-secondary btn-sm" @click="openDetail(item)">查看详情</button>
                   </div>
                 </div>
               </article>
@@ -614,6 +644,93 @@
         </div>
       </div>
     </div>
+
+    <div v-if="bulkRevenueOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-dark-900">
+        <div class="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5 dark:border-dark-700">
+          <div class="min-w-0">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">批量投入中转</h3>
+            <p class="mt-1 text-sm leading-6 text-gray-500 dark:text-dark-400">
+              只投入你自己已发车且可用的拼车额度，收益进入独立账户，可在详情中提取到余额。
+            </p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm shrink-0" @click="bulkRevenueOpen = false">关闭</button>
+        </div>
+
+        <div class="max-h-[68vh] space-y-4 overflow-y-auto p-6">
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-lg bg-emerald-50 p-4 dark:bg-emerald-900/20">
+              <p class="text-xs text-emerald-600 dark:text-emerald-300">可提取收益</p>
+              <p class="mt-1 text-xl font-semibold text-emerald-700 dark:text-emerald-100">¥{{ money(mineRevenueAvailableTotal) }}</p>
+            </div>
+            <div class="rounded-lg bg-primary-50 p-4 dark:bg-primary-900/20">
+              <p class="text-xs text-primary-600 dark:text-primary-300">已投入车辆</p>
+              <p class="mt-1 text-xl font-semibold text-primary-700 dark:text-primary-100">{{ mineRevenueEnabledCount }}</p>
+            </div>
+            <div class="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+              <p class="text-xs text-amber-600 dark:text-amber-300">本次选择</p>
+              <p class="mt-1 text-xl font-semibold text-amber-700 dark:text-amber-100">{{ bulkRevenueSelectedIds.length }} 辆</p>
+            </div>
+          </div>
+
+          <div v-if="bulkRevenueList.length === 0" class="rounded-lg border border-gray-100 bg-gray-50 p-8 text-center text-sm text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-400">
+            暂无支持投入中转的已发车拼车。
+          </div>
+
+          <div v-else class="space-y-3">
+            <label
+              v-for="item in bulkRevenueList"
+              :key="item.id"
+              class="block rounded-lg border p-4 transition"
+              :class="canEnableMineRevenue(item) ? 'cursor-pointer border-gray-200 hover:border-primary-300 dark:border-dark-700' : 'border-gray-100 bg-gray-50 opacity-80 dark:border-dark-700 dark:bg-dark-800'"
+            >
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div class="flex min-w-0 gap-3">
+                  <input
+                    type="checkbox"
+                    class="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    :checked="bulkRevenueSelectedIds.includes(item.id)"
+                    :disabled="!canEnableMineRevenue(item)"
+                    @change="toggleBulkRevenueSelection(item.id)"
+                  />
+                  <div class="min-w-0">
+                    <div class="mb-2 flex flex-wrap gap-2">
+                      <span class="rounded bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-200">{{ item.edges?.vehicle_type ? segmentLabel(item.edges.vehicle_type) : '拼车订单' }}</span>
+                      <span class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-dark-700 dark:text-dark-300">{{ item.edges?.session?.session_no || '等待分配轮次' }}</span>
+                      <span v-if="mineRevenueEnabled(item)" class="rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">已投入</span>
+                    </div>
+                    <h4 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ item.edges?.vehicle_type?.name || item.vehicle_type_id }}</h4>
+                    <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-dark-400">{{ mineRevenueStatusText(item) }}</p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-right text-xs sm:min-w-[220px]">
+                  <div class="rounded bg-gray-50 p-2 dark:bg-dark-800">
+                    <p class="text-gray-400">服务到期</p>
+                    <p class="mt-1 font-medium text-gray-900 dark:text-white">{{ formatTime(item.edges?.session?.service_ended_at) }}</p>
+                  </div>
+                  <div class="rounded bg-gray-50 p-2 dark:bg-dark-800">
+                    <p class="text-gray-400">可提取</p>
+                    <p class="mt-1 font-medium text-emerald-600 dark:text-emerald-300">¥{{ money(mineRevenueDetail(item.id)?.summary?.available_revenue || 0) }}</p>
+                  </div>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3 border-t border-gray-100 px-6 py-4 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-xs leading-5 text-gray-500 dark:text-dark-400">
+            本次将开启 {{ bulkRevenueSelectedIds.length }} 辆车的投入中转。已投入车辆不会重复开启。
+          </p>
+          <div class="flex justify-end gap-2">
+            <button type="button" class="btn btn-secondary" @click="bulkRevenueOpen = false">取消</button>
+            <button type="button" class="btn btn-primary" :disabled="bulkRevenueSubmitting || bulkRevenueSelectedIds.length === 0" @click="submitBulkRevenueEnable">
+              {{ bulkRevenueSubmitting ? '开启中...' : '确认投入中转' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -652,6 +769,12 @@ const previewVoucher = ref<CarpoolVoucher | null>(null)
 const refundTarget = ref<CarpoolParticipant | null>(null)
 const refundSubmitting = ref(false)
 const revenueSubmitting = ref(false)
+const revenueSubmittingId = ref<number | null>(null)
+const bulkRevenueOpen = ref(false)
+const bulkRevenueOpening = ref(false)
+const bulkRevenueSubmitting = ref(false)
+const bulkRevenueSelectedIds = ref<number[]>([])
+const mineRevenueDetails = ref<Record<number, CarpoolRevenueDetail | null>>({})
 const revenueWithdrawAmount = ref<number | null>(null)
 const noticeScrolled = ref(false)
 const noticeAccepted = ref(false)
@@ -790,6 +913,37 @@ const revenueSummaryCards = computed(() => {
   ]
 })
 
+const revenueManageCandidates = computed(() => {
+  return mine.value.filter((item) => {
+    const vt = item.edges?.vehicle_type
+    const session = item.edges?.session
+    return Boolean(vt?.support_revenue_pool && session?.status === 'active')
+  })
+})
+
+const bulkRevenueList = computed(() => {
+  return revenueManageCandidates.value
+})
+
+const hasRevenueManageCandidates = computed(() => revenueManageCandidates.value.length > 0)
+
+const mineRevenueEnabledCount = computed(() => revenueManageCandidates.value.filter((item) => mineRevenueEnabled(item)).length)
+
+const mineRevenueAvailableTotal = computed(() => {
+  return revenueManageCandidates.value.reduce((sum, item) => {
+    const detail = mineRevenueDetails.value[item.id]
+    return sum + Number(detail?.summary?.available_revenue || 0)
+  }, 0)
+})
+
+const bulkRevenueButtonLabel = computed(() => {
+  if (!hasRevenueManageCandidates.value) return '暂无可投入车辆'
+  const available = revenueManageCandidates.value.filter((item) => canEnableMineRevenue(item)).length
+  if (available > 0) return `批量投入中转（${available}）`
+  if (mineRevenueEnabledCount.value > 0) return '查看投入中转'
+  return '暂无可投入车辆'
+})
+
 const renderedNoticeHtml = computed(() => {
   const content = notice.value?.content_md?.trim() || [
     '拼车为多人共同等待成团，人满后由管理员采购和交付。',
@@ -869,6 +1023,7 @@ async function loadAll() {
     cards.value = cardData
     notice.value = noticeData
     mine.value = myData
+    await hydrateMineRevenueDetails()
   } finally {
     loading.value = false
   }
@@ -876,6 +1031,7 @@ async function loadAll() {
 
 async function loadMine() {
   mine.value = await carpoolAPI.my()
+  await hydrateMineRevenueDetails()
 }
 
 async function openDetail(item: CarpoolParticipant) {
@@ -928,6 +1084,10 @@ async function enableRevenue() {
   revenueSubmitting.value = true
   try {
     detailRevenue.value = await carpoolAPI.enableRevenue(detailItem.value.id)
+    mineRevenueDetails.value = {
+      ...mineRevenueDetails.value,
+      [detailItem.value.id]: detailRevenue.value,
+    }
     appStore.showSuccess('已开启投入中转')
   } finally {
     revenueSubmitting.value = false
@@ -939,9 +1099,152 @@ async function disableRevenue() {
   revenueSubmitting.value = true
   try {
     detailRevenue.value = await carpoolAPI.disableRevenue(detailItem.value.id)
+    mineRevenueDetails.value = {
+      ...mineRevenueDetails.value,
+      [detailItem.value.id]: detailRevenue.value,
+    }
     appStore.showSuccess('已暂停投入中转')
   } finally {
     revenueSubmitting.value = false
+  }
+}
+
+function mineRevenueDetail(participantID: number) {
+  return mineRevenueDetails.value[participantID] || null
+}
+
+function mineRevenueEnabled(item: CarpoolParticipant) {
+  const detail = mineRevenueDetail(item.id)
+  return Boolean(detail?.contribution?.enabled && detail.contribution.status === 'active')
+}
+
+function canEnableMineRevenue(item: CarpoolParticipant) {
+  const detail = mineRevenueDetail(item.id)
+  return Boolean(detail?.available_reason === 'available' && !mineRevenueEnabled(item))
+}
+
+function shouldShowRevenueCardAction(item: CarpoolParticipant) {
+  return Boolean(item.edges?.vehicle_type?.support_revenue_pool && item.edges?.session?.status === 'active')
+}
+
+function mineRevenueActionLabel(item: CarpoolParticipant) {
+  if (revenueSubmittingId.value === item.id) return '处理中...'
+  if (mineRevenueEnabled(item)) return '暂停中转'
+  if (canEnableMineRevenue(item)) return '投入中转'
+  return '暂不可投入'
+}
+
+function mineRevenueStatusText(item: CarpoolParticipant) {
+  if (mineRevenueEnabled(item)) return '当前已开启投入中转，收益会进入独立收益账户。'
+  const detail = mineRevenueDetail(item.id)
+  const reason = detail?.available_reason || ''
+  if (reason === 'available') return '当前车辆可投入中转。'
+  const labels: Record<string, string> = {
+    global_disabled: '后台暂未开启投入中转功能。',
+    vehicle_unsupported: '当前车类型未开放投入中转。',
+    waiting_session: '当前拼车还未成团，暂时不能投入中转。',
+    session_not_active: '当前拼车还未发车，发车并分配订阅后才能投入中转。',
+    participant_not_active: '当前拼车记录状态暂不支持投入中转。',
+    subscription_group_missing: '管理员还未分配订阅分组，暂时不能投入中转。',
+    subscription_missing: '当前账号没有可用的订阅额度，暂时不能投入中转。',
+    subscription_error: '订阅额度状态读取失败，请稍后再试。',
+  }
+  return labels[reason] || '当前状态暂不支持投入中转。'
+}
+
+async function hydrateMineRevenueDetails() {
+  const candidates = mine.value.filter((item) => item.edges?.vehicle_type?.support_revenue_pool)
+  if (!candidates.length) {
+    mineRevenueDetails.value = {}
+    return
+  }
+  const entries = await Promise.all(candidates.map(async (item) => {
+    try {
+      const detail = await carpoolAPI.myRevenue(item.id)
+      return [item.id, detail] as const
+    } catch {
+      return [item.id, null] as const
+    }
+  }))
+  mineRevenueDetails.value = Object.fromEntries(entries)
+}
+
+async function openBulkRevenueDialog() {
+  bulkRevenueOpen.value = true
+  bulkRevenueOpening.value = true
+  try {
+    await hydrateMineRevenueDetails()
+    bulkRevenueSelectedIds.value = revenueManageCandidates.value
+      .filter((item) => canEnableMineRevenue(item))
+      .map((item) => item.id)
+  } finally {
+    bulkRevenueOpening.value = false
+  }
+}
+
+function toggleBulkRevenueSelection(id: number) {
+  const item = revenueManageCandidates.value.find((row) => row.id === id)
+  if (!item || !canEnableMineRevenue(item)) return
+  if (bulkRevenueSelectedIds.value.includes(id)) {
+    bulkRevenueSelectedIds.value = bulkRevenueSelectedIds.value.filter((itemID) => itemID !== id)
+    return
+  }
+  bulkRevenueSelectedIds.value = [...bulkRevenueSelectedIds.value, id]
+}
+
+async function toggleMineRevenue(item: CarpoolParticipant) {
+  if (mineRevenueEnabled(item)) {
+    revenueSubmittingId.value = item.id
+    try {
+      mineRevenueDetails.value = {
+        ...mineRevenueDetails.value,
+        [item.id]: await carpoolAPI.disableRevenue(item.id),
+      }
+      appStore.showSuccess('已暂停投入中转')
+    } finally {
+      revenueSubmittingId.value = null
+    }
+    return
+  }
+  if (!canEnableMineRevenue(item)) return
+  revenueSubmittingId.value = item.id
+  try {
+    mineRevenueDetails.value = {
+      ...mineRevenueDetails.value,
+      [item.id]: await carpoolAPI.enableRevenue(item.id),
+    }
+    appStore.showSuccess('已开启投入中转')
+  } finally {
+    revenueSubmittingId.value = null
+  }
+}
+
+async function submitBulkRevenueEnable() {
+  const ids = [...bulkRevenueSelectedIds.value]
+  if (!ids.length) return
+  bulkRevenueSubmitting.value = true
+  try {
+    const results = await Promise.allSettled(ids.map((id) => carpoolAPI.enableRevenue(id)))
+    const nextDetails = { ...mineRevenueDetails.value }
+    let successCount = 0
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        nextDetails[ids[index]] = result.value
+        successCount += 1
+      }
+    })
+    mineRevenueDetails.value = nextDetails
+    bulkRevenueSelectedIds.value = revenueManageCandidates.value
+      .filter((item) => canEnableMineRevenue(item))
+      .map((item) => item.id)
+    if (successCount > 0) {
+      appStore.showSuccess(`已开启 ${successCount} 辆车投入中转`)
+    }
+    if (successCount < ids.length) {
+      appStore.showWarning(`${ids.length - successCount} 辆车开启失败，请稍后重试`)
+    }
+  } finally {
+    bulkRevenueSubmitting.value = false
   }
 }
 
