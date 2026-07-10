@@ -7704,6 +7704,12 @@
         </div>
         <!-- /Tab: SMS -->
 
+        <!-- Tab: Model Marketplace -->
+        <div v-show="activeTab === 'models'">
+          <ModelMarketplaceSettings />
+        </div>
+        <!-- /Tab: Model Marketplace -->
+
         <!-- Tab: Backup -->
         <div v-show="activeTab === 'backup'">
           <BackupSettings />
@@ -7718,7 +7724,7 @@
 
         <!-- Save Button -->
         <div
-          v-show="activeTab !== 'backup' && activeTab !== 'lottery'"
+          v-show="activeTab !== 'backup' && activeTab !== 'lottery' && activeTab !== 'models'"
           class="flex justify-end"
         >
           <button
@@ -7839,6 +7845,7 @@ import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
 import LotterySettings from "@/views/admin/LotteryView.vue";
+import ModelMarketplaceSettings from "@/views/admin/ModelMarketplaceSettingsView.vue";
 import EmailTemplateEditor from "@/views/admin/settings/EmailTemplateEditor.vue";
 import { useClipboard } from "@/composables/useClipboard";
 import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
@@ -7892,6 +7899,7 @@ type SettingsTab =
   | "payment"
   | "email"
   | "sms"
+  | "models"
   | "backup"
   | "lottery";
 const settingsTabs = [
@@ -7904,6 +7912,7 @@ const settingsTabs = [
   { key: "payment" as SettingsTab, icon: "creditCard" as const },
   { key: "email" as SettingsTab, icon: "mail" as const },
   { key: "sms" as SettingsTab, icon: "mail" as const },
+  { key: "models" as SettingsTab, icon: "cube" as const },
   { key: "backup" as SettingsTab, icon: "database" as const },
   { key: "lottery" as SettingsTab, icon: "gift" as const },
 ];

@@ -396,6 +396,11 @@ const (
 	// sidebar entry is hidden. Defaults to false (opt-in feature).
 	SettingKeyAvailableChannelsEnabled = "available_channels_enabled"
 
+	// SettingKeyModelMarketplaceConfig stores the administrator-maintained
+	// user-facing model marketplace list as JSON. It is display-only and does
+	// not participate in gateway scheduling or billing.
+	SettingKeyModelMarketplaceConfig = "model_marketplace_config"
+
 	// =========================
 	// Overload Cooldown (529)
 	// =========================

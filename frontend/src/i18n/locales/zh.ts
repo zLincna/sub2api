@@ -448,6 +448,7 @@ export default {
     users: '用户管理',
     groups: '分组管理',
     channels: '渠道管理',
+    modelMarketplace: '模型广场',
     availableChannels: '可用渠道',
     subscriptions: '订阅管理',
     accounts: '账号管理',
@@ -1206,6 +1207,49 @@ export default {
       imageOutputPrice: '图片输出',
       perRequestPrice: '每次请求',
       intervals: '阶梯定价',
+      unitPerMillion: '/ 1M token',
+      unitPerRequest: '/ 次'
+    }
+  },
+
+  // Model Marketplace (user-facing)
+  modelMarketplace: {
+    title: '模型广场',
+    description: '查看当前账号可用的模型、平台、分组倍率和计费信息',
+    badge: '可用模型一览',
+    searchPlaceholder: '搜索模型、平台、渠道或分组...',
+    copyModel: '复制模型 ID',
+    copied: '模型 ID 已复制',
+    emptyTitle: '暂无匹配模型',
+    emptyDescription: '请调整筛选条件，或联系管理员配置可用渠道与模型。',
+    noGroups: '暂无可用分组',
+    availableGroups: '可用分组',
+    channelsCount: '{count} 个渠道可用',
+    platformCount: '{count} 个模型',
+    stats: {
+      models: '可用模型',
+      platforms: '模型平台',
+      groups: '可用分组',
+      channels: '可用渠道'
+    },
+    filters: {
+      allPlatforms: '全部平台',
+      allBilling: '全部计费',
+      noPricing: '未配置价格'
+    },
+    pricing: {
+      billingMode: '计费模式',
+      billingModeToken: '按 Token',
+      billingModePerRequest: '按次',
+      billingModeImage: '按图片',
+      noPricing: '未配置价格',
+      inputPrice: '输入',
+      outputPrice: '输出',
+      cacheWritePrice: '缓存写入',
+      cacheReadPrice: '缓存读取',
+      imageOutputPrice: '图片输出',
+      perRequestPrice: '每次请求',
+      groupRate: '分组倍率',
       unitPerMillion: '/ 1M token',
       unitPerRequest: '/ 次'
     }
@@ -6019,6 +6063,7 @@ export default {
         gateway: '网关服务',
         email: '邮件设置',
         sms: '短信配置',
+        models: '模型管理',
         carpool: '拼车配置',
         backup: '数据备份',
         payment: '支付设置',

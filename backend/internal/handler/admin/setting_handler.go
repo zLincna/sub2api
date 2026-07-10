@@ -373,6 +373,33 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 	response.Success(c, systemSettingsResponseData(payload, authSourceDefaults))
 }
 
+// GetModelMarketplaceConfig returns the administrator-maintained display list.
+// GET /api/v1/admin/settings/model-marketplace
+func (h *SettingHandler) GetModelMarketplaceConfig(c *gin.Context) {
+	config, err := h.settingService.GetModelMarketplaceConfig(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, config)
+}
+
+// UpdateModelMarketplaceConfig validates and persists the display list.
+// PUT /api/v1/admin/settings/model-marketplace
+func (h *SettingHandler) UpdateModelMarketplaceConfig(c *gin.Context) {
+	var req service.ModelMarketplaceConfig
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	config, err := h.settingService.UpdateModelMarketplaceConfig(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, config)
+}
+
 // openaiFastPolicySettingsToDTO converts service -> dto for OpenAI fast policy.
 func openaiFastPolicySettingsToDTO(s *service.OpenAIFastPolicySettings) *dto.OpenAIFastPolicySettings {
 	if s == nil {

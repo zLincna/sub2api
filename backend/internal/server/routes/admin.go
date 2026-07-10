@@ -503,6 +503,8 @@ func registerSettingsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	{
 		adminSettings.GET("", h.Admin.Setting.GetSettings)
 		adminSettings.PUT("", h.Admin.Setting.UpdateSettings)
+		adminSettings.GET("/model-marketplace", h.Admin.Setting.GetModelMarketplaceConfig)
+		adminSettings.PUT("/model-marketplace", h.Admin.Setting.UpdateModelMarketplaceConfig)
 		adminSettings.POST("/test-smtp", h.Admin.Setting.TestSMTPConnection)
 		adminSettings.POST("/send-test-email", h.Admin.Setting.SendTestEmail)
 		adminSettings.POST("/send-test-sms", h.Admin.Setting.SendTestSMS)

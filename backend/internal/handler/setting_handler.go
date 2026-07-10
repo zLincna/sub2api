@@ -107,6 +107,19 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 	})
 }
 
+// GetModelMarketplaceConfig returns the user-facing model marketplace display
+// configuration. It is public so authenticated user pages can load it without
+// coupling the data to the large public settings payload.
+// GET /api/v1/settings/model-marketplace
+func (h *SettingHandler) GetModelMarketplaceConfig(c *gin.Context) {
+	config, err := h.settingService.GetModelMarketplaceConfig(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, config)
+}
+
 // UnsubscribeNotificationEmail handles optional notification email opt-outs.
 // GET /api/v1/settings/email-unsubscribe?token=...
 func (h *SettingHandler) UnsubscribeNotificationEmail(c *gin.Context) {

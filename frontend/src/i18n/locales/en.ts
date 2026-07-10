@@ -448,6 +448,7 @@ export default {
     users: 'Users',
     groups: 'Groups',
     channels: 'Channels',
+    modelMarketplace: 'Model Marketplace',
     availableChannels: 'Available Channels',
     subscriptions: 'Subscriptions',
     accounts: 'Accounts',
@@ -1202,6 +1203,49 @@ export default {
       imageOutputPrice: 'Image Output',
       perRequestPrice: 'Per Request',
       intervals: 'Tiered Pricing',
+      unitPerMillion: '/ 1M tokens',
+      unitPerRequest: '/ request'
+    }
+  },
+
+  // Model Marketplace (user-facing)
+  modelMarketplace: {
+    title: 'Model Marketplace',
+    description: 'Browse the models, platforms, groups, rates, and pricing available to your account',
+    badge: 'Available models',
+    searchPlaceholder: 'Search models, platforms, channels, or groups...',
+    copyModel: 'Copy model ID',
+    copied: 'Model ID copied',
+    emptyTitle: 'No matching models',
+    emptyDescription: 'Adjust your filters, or ask an admin to configure available channels and models.',
+    noGroups: 'No available groups',
+    availableGroups: 'Available Groups',
+    channelsCount: '{count} channels available',
+    platformCount: '{count} models',
+    stats: {
+      models: 'Models',
+      platforms: 'Platforms',
+      groups: 'Groups',
+      channels: 'Channels'
+    },
+    filters: {
+      allPlatforms: 'All Platforms',
+      allBilling: 'All Billing',
+      noPricing: 'No Pricing'
+    },
+    pricing: {
+      billingMode: 'Billing Mode',
+      billingModeToken: 'Per Token',
+      billingModePerRequest: 'Per Request',
+      billingModeImage: 'Per Image',
+      noPricing: 'No Pricing',
+      inputPrice: 'Input',
+      outputPrice: 'Output',
+      cacheWritePrice: 'Cache Write',
+      cacheReadPrice: 'Cache Read',
+      imageOutputPrice: 'Image Output',
+      perRequestPrice: 'Per Request',
+      groupRate: 'Group Rate',
       unitPerMillion: '/ 1M tokens',
       unitPerRequest: '/ request'
     }
@@ -5860,6 +5904,7 @@ export default {
         gateway: 'Gateway',
         email: 'Email',
         sms: 'SMS',
+        models: 'Models',
         carpool: 'Carpool',
         backup: 'Backup',
         payment: 'Payment',

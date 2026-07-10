@@ -11,6 +11,7 @@ import type {
   NotifyEmailEntry,
 } from "@/types";
 import type { BalanceRechargeBonusRule } from "@/types/payment";
+import type { ModelMarketplaceConfig } from "@/api/modelMarketplace";
 
 export interface DefaultSubscriptionSetting {
   group_id: number;
@@ -1469,6 +1470,23 @@ export async function resetWebSearchUsage(payload: {
   );
 }
 
+export async function getModelMarketplaceConfig(): Promise<ModelMarketplaceConfig> {
+  const { data } = await apiClient.get<ModelMarketplaceConfig>(
+    "/admin/settings/model-marketplace",
+  );
+  return data;
+}
+
+export async function updateModelMarketplaceConfig(
+  config: ModelMarketplaceConfig,
+): Promise<ModelMarketplaceConfig> {
+  const { data } = await apiClient.put<ModelMarketplaceConfig>(
+    "/admin/settings/model-marketplace",
+    config,
+  );
+  return data;
+}
+
 export const settingsAPI = {
   getSettings,
   updateSettings,
@@ -1497,6 +1515,8 @@ export const settingsAPI = {
   updateWebSearchEmulationConfig,
   testWebSearchEmulation,
   resetWebSearchUsage,
+  getModelMarketplaceConfig,
+  updateModelMarketplaceConfig,
 };
 
 export default settingsAPI;
