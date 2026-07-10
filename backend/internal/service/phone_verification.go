@@ -841,3 +841,11 @@ func randomPhoneVerificationCode(length int) string {
 	}
 	return b.String()
 }
+
+func parsePositiveIntOrDefault(raw string, fallback int) int {
+	value, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || value <= 0 {
+		return fallback
+	}
+	return value
+}

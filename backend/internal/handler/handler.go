@@ -62,6 +62,7 @@ type Handlers struct {
 	AvailableChannel *AvailableChannelHandler
 	Lottery          *LotteryHandler
 	Carpool          *CarpoolHandler
+	BatchImage       *BatchImageHandler
 }
 
 // BuildInfo contains build-time information

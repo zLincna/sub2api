@@ -121,6 +121,7 @@ func ProvideHandlers(
 	availableChannelHandler *AvailableChannelHandler,
 	lotteryHandler *LotteryHandler,
 	carpoolHandler *CarpoolHandler,
+	batchImageHandler *BatchImageHandler,
 	_ *service.IdempotencyCoordinator,
 	_ *service.IdempotencyCleanupService,
 ) *Handlers {
@@ -143,6 +144,7 @@ func ProvideHandlers(
 		AvailableChannel: availableChannelHandler,
 		Lottery:          lotteryHandler,
 		Carpool:          carpoolHandler,
+		BatchImage:       batchImageHandler,
 	}
 }
 
@@ -166,6 +168,7 @@ var ProviderSet = wire.NewSet(
 	NewAvailableChannelHandler,
 	NewLotteryHandler,
 	NewCarpoolHandler,
+	NewBatchImageHandler,
 
 	// Admin handlers
 	admin.NewDashboardHandler,
