@@ -77,13 +77,13 @@
               </button>
             </div>
 
-            <select v-model="selectedBillingMode" class="input h-9 w-full text-sm sm:w-36">
-              <option value="all">{{ t('modelMarketplace.filters.allBilling') }}</option>
-              <option :value="BILLING_MODE_TOKEN">{{ t('modelMarketplace.pricing.billingModeToken') }}</option>
-              <option :value="BILLING_MODE_PER_REQUEST">{{ t('modelMarketplace.pricing.billingModePerRequest') }}</option>
-              <option :value="BILLING_MODE_IMAGE">{{ t('modelMarketplace.pricing.billingModeImage') }}</option>
-              <option value="none">{{ t('modelMarketplace.filters.noPricing') }}</option>
-            </select>
+            <div class="marketplace-billing-select w-full sm:w-40">
+              <Select
+                v-model="selectedBillingMode"
+                :options="billingModeOptions"
+                :searchable="false"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -270,6 +270,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
+import Select from '@/components/common/Select.vue'
 import userChannelsAPI, {
   type UserAvailableChannel,
   type UserAvailableGroup,
@@ -376,6 +377,14 @@ const platformFilters = computed(() => [
   ...Array.from(new Set(marketplaceModels.value.map((item) => item.platform)))
     .sort((a, b) => platformLabel(a).localeCompare(platformLabel(b)))
     .map((platform) => ({ value: platform, label: platformLabel(platform) })),
+])
+
+const billingModeOptions = computed(() => [
+  { value: 'all', label: t('modelMarketplace.filters.allBilling') },
+  { value: BILLING_MODE_TOKEN, label: t('modelMarketplace.pricing.billingModeToken') },
+  { value: BILLING_MODE_PER_REQUEST, label: t('modelMarketplace.pricing.billingModePerRequest') },
+  { value: BILLING_MODE_IMAGE, label: t('modelMarketplace.pricing.billingModeImage') },
+  { value: 'none', label: t('modelMarketplace.filters.noPricing') },
 ])
 
 const filteredModels = computed(() => {
@@ -784,3 +793,12 @@ async function loadChannels(): Promise<void> {
 
 onMounted(loadChannels)
 </script>
+
+<style scoped>
+.marketplace-billing-select :deep(.select-trigger) {
+  min-height: 2.25rem;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+}
+</style>

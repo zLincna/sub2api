@@ -458,6 +458,7 @@ export default {
         id: 'ID',
         email: '邮箱',
         username: '用户名',
+        phone: '手机号',
         notes: '备注',
         role: '角色',
         groups: '分组',
