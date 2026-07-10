@@ -154,6 +154,7 @@ export default {
     batchImage: '批量生图',
     usage: '使用记录',
     redeem: '兑换',
+    carpool: '拼车大厅',
     affiliate: '邀请返利',
     affiliateManagement: '邀请返利',
     affiliateInviteRecords: '邀请记录',
@@ -170,6 +171,7 @@ export default {
     redeemCodes: '兑换码',
     ops: '运维监控',
     promoCodes: '优惠码',
+    carpoolManagement: '拼车管理',
     settings: '系统设置',
     myAccount: '我的账户',
     lightMode: '浅色模式',
@@ -191,6 +193,14 @@ export default {
     channelMonitor: '渠道监控',
     channelStatus: '渠道状态',
     riskControl: '风控中心',
+  },
+
+  lottery: {
+    sourceTypes: {
+      daily_login: '每日登录',
+      spend: '消费赠送',
+      recharge: '充值赠送',
+    },
   },
 
   // Auth

@@ -154,6 +154,7 @@ export default {
     batchImage: 'Batch Images',
     usage: 'Usage',
     redeem: 'Redeem',
+    carpool: 'Carpool Hall',
     affiliate: 'Affiliate Rebates',
     affiliateManagement: 'Affiliate Rebates',
     affiliateInviteRecords: 'Invite Records',
@@ -170,6 +171,7 @@ export default {
     redeemCodes: 'Redeem Codes',
     ops: 'Ops',
     promoCodes: 'Promo Codes',
+    carpoolManagement: 'Carpool Management',
     settings: 'Settings',
     myAccount: 'My Account',
     lightMode: 'Light Mode',
@@ -191,6 +193,14 @@ export default {
     channelMonitor: 'Channel Monitor',
     channelStatus: 'Channel Status',
     riskControl: 'Risk Control',
+  },
+
+  lottery: {
+    sourceTypes: {
+      daily_login: 'Daily Login',
+      spend: 'Spend Reward',
+      recharge: 'Recharge Reward',
+    },
   },
 
   // Auth
