@@ -7855,6 +7855,7 @@ import EmailTemplateEditor from "@/views/admin/settings/EmailTemplateEditor.vue"
 import { useClipboard } from "@/composables/useClipboard";
 import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
 import { extractApiErrorMessage, extractI18nErrorMessage } from "@/utils/apiError";
+import { isAliyunSmsRegistrationConfigured } from "@/utils/aliyunSms";
 import { useAppStore } from "@/stores";
 import { useAdminSettingsStore } from "@/stores/adminSettings";
 import { normalizeVisibleMethod } from "@/components/payment/paymentFlow";
@@ -8842,17 +8843,9 @@ const form = reactive<SettingsForm>({
   allow_user_view_error_requests: false,
 });
 
-const aliyunSmsConfigured = computed(() => {
-  const hasSecret =
-    form.aliyun_sms_access_key_secret.trim() !== "" ||
-    form.aliyun_sms_access_key_secret_configured;
-  return Boolean(
-    (form.aliyun_sms_access_key_id || "").trim() &&
-      hasSecret &&
-      (form.aliyun_sms_sign_name || "").trim() &&
-      (form.aliyun_sms_template_code || "").trim(),
-  );
-});
+const aliyunSmsConfigured = computed(() =>
+  isAliyunSmsRegistrationConfigured(form),
+);
 
 type OpenAIAdvancedSchedulerOverrideKey =
   | "openai_advanced_scheduler_lb_top_k"
