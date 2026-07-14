@@ -1189,6 +1189,22 @@
                   </div>
                 </div>
 
+                <!-- User Scope -->
+                <div class="mt-3">
+                  <label
+                    class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                  >
+                    {{ t("admin.settings.openaiFastPolicy.userIds") }}
+                  </label>
+                  <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">
+                    {{ t("admin.settings.openaiFastPolicy.userIdsHint") }}
+                  </p>
+                  <OpenAIFastPolicyUserSelector
+                    :model-value="rule.user_ids || []"
+                    @update:model-value="rule.user_ids = $event"
+                  />
+                </div>
+
                 <!-- Error Message (only when action=block) -->
                 <div v-if="rule.action === 'block'" class="mt-3">
                   <label
@@ -7852,6 +7868,7 @@ import BackupSettings from "@/views/admin/BackupView.vue";
 import LotterySettings from "@/views/admin/LotteryView.vue";
 import ModelMarketplaceSettings from "@/views/admin/ModelMarketplaceSettingsView.vue";
 import EmailTemplateEditor from "@/views/admin/settings/EmailTemplateEditor.vue";
+import OpenAIFastPolicyUserSelector from "@/views/admin/settings/OpenAIFastPolicyUserSelector.vue";
 import { useClipboard } from "@/composables/useClipboard";
 import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
 import { extractApiErrorMessage, extractI18nErrorMessage } from "@/utils/apiError";
@@ -9729,6 +9746,7 @@ async function loadSettings() {
       openaiFastPolicyForm.rules =
         settings.openai_fast_policy_settings.rules.map((rule) => ({
           ...rule,
+          user_ids: rule.user_ids ? [...rule.user_ids] : [],
           model_whitelist: rule.model_whitelist
             ? [...rule.model_whitelist]
             : [],
@@ -10265,6 +10283,10 @@ async function saveSettings() {
             service_tier: rule.service_tier,
             action: rule.action,
             scope: rule.scope,
+            user_ids:
+              rule.user_ids && rule.user_ids.length > 0
+                ? [...rule.user_ids]
+                : undefined,
             error_message:
               rule.action === "block" ? rule.error_message : undefined,
             model_whitelist: hasWhitelist ? whitelist : undefined,
@@ -10342,6 +10364,7 @@ async function saveSettings() {
       openaiFastPolicyForm.rules =
         updated.openai_fast_policy_settings.rules.map((rule) => ({
           ...rule,
+          user_ids: rule.user_ids ? [...rule.user_ids] : [],
           model_whitelist: rule.model_whitelist
             ? [...rule.model_whitelist]
             : [],
@@ -10804,6 +10827,7 @@ function addOpenAIFastPolicyRule() {
     service_tier: "priority",
     action: "filter",
     scope: "all",
+    user_ids: [],
     error_message: "",
     model_whitelist: [],
     fallback_action: "pass",
