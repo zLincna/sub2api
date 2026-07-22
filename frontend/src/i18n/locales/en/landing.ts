@@ -22,6 +22,32 @@ export default {
       stickySession: 'Session Persistence',
       realtimeBilling: 'Pay As You Go'
     },
+    carpoolSpotlight: {
+      badge: 'Carpool Hall · Launch When Full',
+      title: 'Share premium Codex / OpenAI accounts with flexible seats',
+      description:
+        'Join 2-10 seat carpools with shared costs. Once all members pay, admins purchase the account and static residential IP, then members can view progress, delivery proof, member details, and usage data.',
+      cta: 'View Carpool Hall',
+      guarantee: 'Refunds follow the failed-carpool rules',
+      items: {
+        shared: {
+          title: 'Shared Cost',
+          desc: 'Flexible 1-10 seat vehicle types split package costs across members.'
+        },
+        queue: {
+          title: 'Queued Launch',
+          desc: 'Each vehicle type shows one active round; a new queue starts after it fills.'
+        },
+        visible: {
+          title: 'Visible Usage',
+          desc: 'Members can see car members, total usage, and personal usage after launch.'
+        },
+        revenue: {
+          title: 'Revenue Plan Ready',
+          desc: 'Reserved for future in-car voting to join the relay pool and settle revenue to balance.'
+        }
+      }
+    },
     // Pain points section
     painPoints: {
       title: 'Sound Familiar?',
@@ -55,7 +81,19 @@ export default {
       multiAccount: 'Always Reliable',
       multiAccountDesc: 'Smart routing across multiple upstream accounts with automatic failover. Say goodbye to errors.',
       balanceQuota: 'Pay What You Use',
-      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.'
+      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.',
+      gptPool: 'Stable GPT Account Pool',
+      gptPoolDesc: '100+ Pro 20x account pool with multi-account routing and load balancing to reduce single-account volatility.',
+      claudeCode: 'Low-Multiplier Claude Code',
+      claudeCodeDesc: 'Access premium Claude Code model capability at low multipliers for development, code analysis, and automation workflows.',
+      opsTeam: 'Professional Operations',
+      opsTeamDesc: 'A professional team maintains accounts, routes, and server clusters while continuously monitoring availability.',
+      noWater: 'No Dilution',
+      noWaterDesc: 'No lower-tier models disguised as premium models, and no hidden downgrades. Model quality is the bottom line.',
+      transparentProfit: 'Transparent Pricing',
+      transparentProfitDesc: 'We aim to keep margin below 10%, spending most costs on accounts, servers, and stability.',
+      benefits: 'Frequent Benefits',
+      benefitsDesc: 'Top-up bonuses stay active. Daily login, spending, and recharge can earn lottery chances with prizes up to 999 balance.'
     },
     // Comparison section
     comparison: {

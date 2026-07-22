@@ -22,6 +22,32 @@ export default {
       stickySession: '会话保持',
       realtimeBilling: '按量计费'
     },
+    carpoolSpotlight: {
+      badge: '拼车大厅 · 人满发车',
+      title: '纯血 Codex / OpenAI 账号拼车，少人也能低成本上车',
+      description:
+        '支持 2-10 人灵活拼车，成员确认支付后自动计入当前轮次；人满后由管理员采购账号与静态住宅 IP，车内成员可查看拼车进度、交付凭证、成员信息和用量数据。',
+      cta: '查看拼车大厅',
+      guarantee: '未成团支持按规则退款',
+      items: {
+        shared: {
+          title: '多人平摊成本',
+          desc: '1-10 人车灵活配置，包车成本按人数拆分，适合小团队和个人用户。'
+        },
+        queue: {
+          title: '排队自动发车',
+          desc: '每种车型只展示当前一辆车，满员后自动进入下一轮排队。'
+        },
+        visible: {
+          title: '成员与用量可见',
+          desc: '发车后可查看车内成员、总用量与个人用量，费用更透明。'
+        },
+        revenue: {
+          title: '预留中转投入',
+          desc: '后续支持车内投票投入号池，收益自动结算到余额。'
+        }
+      }
+    },
     // 用户痛点区块
     painPoints: {
       title: '你是否也遇到这些问题？',
@@ -55,7 +81,19 @@ export default {
       multiAccount: '稳定可靠',
       multiAccountDesc: '智能调度多个上游账号，自动切换和负载均衡，告别频繁报错。',
       balanceQuota: '用多少付多少',
-      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。'
+      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。',
+      gptPool: 'GPT 稳定号池',
+      gptPoolDesc: '100+ Pro 20x 账号池，多账号调度与负载均衡，尽量降低单号波动对使用体验的影响。',
+      claudeCode: '低倍率 Claude Code',
+      claudeCodeDesc: '低倍率接入 Claude Code 顶级模型能力，适合开发、代码分析、自动化工作流等高强度场景。',
+      opsTeam: '专业团队运维',
+      opsTeamDesc: '专业团队维护账号、线路与服务器集群，持续监控可用性，提供更可靠的使用环境。',
+      noWater: '绝不掺水',
+      noWaterDesc: '不拿低级模型冒充高级模型，不做暗中降级。模型质量是底线，掺水可耻。',
+      transparentProfit: '价格透明',
+      transparentProfitDesc: '坚持合理利润，目标利润率控制在 10% 以下，把主要成本花在账号、服务器和稳定性上。',
+      benefits: '活动多多',
+      benefitsDesc: '充值赠送持续开放，登录签到、消费、充值可获得抽奖机会，最高可中 999 余额奖励。'
     },
     // 优势对比
     comparison: {

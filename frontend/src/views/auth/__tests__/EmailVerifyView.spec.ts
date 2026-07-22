@@ -449,6 +449,8 @@ describe('EmailVerifyView', () => {
       turnstile_token: undefined,
       promo_code: 'PROMO',
       invitation_code: 'INVITE',
+      phone: '',
+      phone_verify_code: undefined,
     })
     expect(apiClientPostMock).not.toHaveBeenCalled()
     expect(pushMock).toHaveBeenCalledWith('/dashboard')
